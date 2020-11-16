@@ -1,0 +1,15 @@
+SOURCE:
+  - A
+  - B
+
+A:
+  - C
+
+B:
+  - C
+
+C:
+  - SINK
+
+SINK:
+

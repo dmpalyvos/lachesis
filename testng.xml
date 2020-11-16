@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite" verbose="1">
+  <test name="Unit-Tests">
+    <packages>
+      <package name="io.palyvos.scheduler.metric"/>
+      <package name="io.palyvos.scheduler.task"/>
+      <package name="io.palyvos.scheduler.util"/>
+      <package name="io.palyvos.scheduler.policy.translators.concrete.normalizers"/>
+    </packages>
+  </test>
+</suite>
