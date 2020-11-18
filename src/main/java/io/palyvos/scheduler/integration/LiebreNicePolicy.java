@@ -66,7 +66,7 @@ public class LiebreNicePolicy {
   static class Config {
 
     @Parameter(names = "--metric")
-    private SchedulerMetric metric;
+    private BasicSchedulerMetric metric;
 
     @Parameter(names = "--pid", required = true)
     private int pid;

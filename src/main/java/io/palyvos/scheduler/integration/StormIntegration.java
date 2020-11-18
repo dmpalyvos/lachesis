@@ -154,7 +154,7 @@ public class StormIntegration {
     private int window = 30;
 
     @Parameter(names = "--metric", description = "Metric to use for scheduling")
-    private SchedulerMetric metric = BasicSchedulerMetric.SUBTASK_GLOBAL_RATE;
+    private BasicSchedulerMetric metric = BasicSchedulerMetric.SUBTASK_GLOBAL_RATE;
 
     @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
     private int maxPriority = -20;
