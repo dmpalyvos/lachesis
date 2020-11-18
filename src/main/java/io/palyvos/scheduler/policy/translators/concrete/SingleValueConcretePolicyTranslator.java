@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.policy.translators.concrete;
 
 import io.palyvos.scheduler.policy.translators.SingleValueScheduleFileReporter;
+import io.palyvos.scheduler.policy.translators.SingleValueScheduleGraphiteReporter;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -24,6 +25,8 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
   protected final DecisionNormalizer normalizer;
   private final Map<ExternalThread, Long> lastSchedule = new HashMap<>();
   private final SingleValueScheduleFileReporter reporter = new SingleValueScheduleFileReporter();
+  private final SingleValueScheduleGraphiteReporter graphiteReporter = new SingleValueScheduleGraphiteReporter(
+      "129.16.20.158", 2003);
 
   public SingleValueConcretePolicyTranslator(DecisionNormalizer normalizer) {
     Validate.notNull(normalizer, "normalizer");
@@ -62,10 +65,15 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
       Map<ExternalThread, Long> normalizedSchedule) {
     long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     normalizedSchedule.entrySet().stream().forEach(threadPriorityEntry ->
-        reporter.add(now,
-            threadPriorityEntry.getKey().name(),
-            threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey())
-        ));
+    {
+      reporter.add(now,
+          threadPriorityEntry.getKey().name(),
+          threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey()));
+      graphiteReporter.add(now,
+          threadPriorityEntry.getKey().name(),
+          threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey()));
+    });
+
   }
 
   protected abstract Future<?> apply(ExternalThread thread, long priority,

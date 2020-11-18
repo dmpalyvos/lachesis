@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
+import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.MetricFileReporter;
@@ -55,8 +56,8 @@ public class StormIntegration {
         config.queryGraphPath);
     tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new LinuxMetricProvider(config.pid),
-        new StormMetricProvider(adapter));
+        new StormGraphiteMetricProvider("129.16.20.158", 80),
+        new LinuxMetricProvider(config.pid));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority, config.maxPriority);
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
@@ -68,15 +69,11 @@ public class StormIntegration {
     metricProvider.register(SchedulerMetric.SUBTASK_GLOBAL_RATE);
 
     // Registered only for viz purposes, would be auto-registered otherwise
-    metricProvider.register(SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL);
-    metricProvider.register(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
     metricProvider.register(SchedulerMetric.SUBTASK_SELECTIVITY);
     metricProvider.register(SchedulerMetric.SUBTASK_COST);
 
     final Collection<MetricFileReporter<SchedulerMetric>> reporters = MetricFileReporter
         .reportersFor(metricProvider,
-            SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL,
-            SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL,
             SchedulerMetric.SUBTASK_TUPLES_IN_RECENT,
             SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT,
             SchedulerMetric.SUBTASK_SELECTIVITY,

@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.adapters.liebre;
+package io.palyvos.scheduler.adapters.storm;
 
 import java.util.List;
 import java.util.Map;
@@ -8,29 +8,22 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 /**
  * JSON Object mapping for LiebreAdapter metrics from Graphite.
  */
-class LiebreMetricReport {
+//TODO: Generalize and move to util
+class GraphiteMetricReport {
 
-  public static final String NAME_TAG = "name";
   public static final int DATAPOINT_VALUE_INDEX = 0;
-  public static final int STREAM_NAME_INDEX = 3;
   private String target;
   private Map<String, String> tags;
-  // datapoints is a list of lists ((value, ts), ...)
+  // Datapoints is a list of lists ((value, ts), ...)
   private List<List<Double>> datapoints;
 
   public String name() {
-    return tags.get(NAME_TAG);
-  }
-
-  public String simpleName() {
-    //FIXME: This is specialized only to stream names and specific query!
-    String[] name = name().split("\\.");
-    return name[name.length- STREAM_NAME_INDEX];
+    return target;
   }
 
   public double average() {
     return datapoints.stream().map(dp -> dp.get(DATAPOINT_VALUE_INDEX)).filter(value -> value != null)
-        .mapToDouble(v -> v).average().orElse(-1);
+        .mapToDouble(v -> v).average().orElse(0);
   }
 
   public double sum() {

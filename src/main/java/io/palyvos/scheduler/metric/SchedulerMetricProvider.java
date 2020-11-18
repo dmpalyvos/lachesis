@@ -42,6 +42,7 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
   public void register(SchedulerMetric metric) {
     Validate.notNull(metric, "metric");
     LOG.trace("Attempting to register metric {}", metric);
+    //FIXME: Ignore if metric registered already!
     for (MetricProvider provider : providers) {
       if (provider.canProvide(metric)) {
         LOG.info("Registering metric {} with provider {}", metric, provider.getClass().getSimpleName());
