@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 public class SubtaskCostTest {
 
 
-  public static final SchedulerMetric METRIC = SchedulerMetric.SUBTASK_COST;
+  public static final SchedulerMetric METRIC = BasicSchedulerMetric.SUBTASK_COST;
 
   @Test(expectedExceptions = {IllegalStateException.class})
   void noData() {

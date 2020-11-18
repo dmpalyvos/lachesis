@@ -49,7 +49,7 @@ public class AbstractMetricProviderTest {
   @Test(expectedExceptions = {IllegalArgumentException.class})
   void registerWrongClass() {
     AbstractMetricProvider provider = new TestMetricProvider();
-    provider.register(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
+    provider.register(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
   @Test(expectedExceptions = {NullPointerException.class})
@@ -73,14 +73,14 @@ public class AbstractMetricProviderTest {
     AbstractMetricProvider provider = new TestMetricProvider();
     provider.register(TestMetric.SUBTASK_TUPLES_IN_TOTAL);
     Assert
-        .assertTrue(provider.canProvide(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL), "canProvide");
+        .assertTrue(provider.canProvide(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL), "canProvide");
   }
 
   @Test
   void toProvidedMetric() {
     AbstractMetricProvider provider = new TestMetricProvider();
     // Based on the equal name mapping
-    Assert.assertEquals(provider.toProvidedMetric(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL),
+    Assert.assertEquals(provider.toProvidedMetric(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL),
         TestMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
@@ -88,13 +88,13 @@ public class AbstractMetricProviderTest {
   void toProvidedMetricNonRegistered() {
     AbstractMetricProvider provider = new TestMetricProvider();
     // Based on the equal name mapping
-    provider.toProvidedMetric(SchedulerMetric.SUBTASK_COST);
+    provider.toProvidedMetric(BasicSchedulerMetric.SUBTASK_COST);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   void getWrongClass() {
     AbstractMetricProvider provider = new TestMetricProvider();
-    provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
+    provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
@@ -103,7 +103,7 @@ public class AbstractMetricProviderTest {
     provider.register(TestMetric.SUBTASK_TUPLES_IN_TOTAL);
     Map<String, Double> values = new HashMap<>();
     values.put("test", 0.1);
-    provider.replaceMetricValues(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, values);
+    provider.replaceMetricValues(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, values);
   }
 
   @Test

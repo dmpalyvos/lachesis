@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 @Test
 public class SubtaskSelectivityTest {
 
-  public static final SchedulerMetric METRIC = SchedulerMetric.SUBTASK_SELECTIVITY;
+  public static final SchedulerMetric METRIC = BasicSchedulerMetric.SUBTASK_SELECTIVITY;
 
   @Test(expectedExceptions = {IllegalStateException.class})
   void noData() {

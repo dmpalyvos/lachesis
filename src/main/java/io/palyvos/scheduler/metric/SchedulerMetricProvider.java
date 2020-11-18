@@ -98,7 +98,7 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
 
   @Override
   public SchedulerMetric toProvidedMetric(Metric metric) {
-    Validate.isInstanceOf(SchedulerMetric.class, metric);
+    Validate.isInstanceOf(BasicSchedulerMetric.class, metric);
     return (SchedulerMetric) metric;
   }
 

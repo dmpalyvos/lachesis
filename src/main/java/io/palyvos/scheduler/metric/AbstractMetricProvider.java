@@ -25,7 +25,7 @@ public abstract class AbstractMetricProvider<T extends Metric<T>> implements Met
     Map<SchedulerMetric, T> mapping = new HashMap<>();
     for (T metric : values) {
       try {
-        mapping.put(SchedulerMetric.valueOf(metric.toString()), metric);
+        mapping.put(BasicSchedulerMetric.valueOf(metric.toString()), metric);
       } catch (Exception e) {
         LOG.trace("Metric {} does not correspond to any instance of {}",
             metric,

@@ -16,28 +16,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public enum BaseCompositeMetric implements CompositeMetric {
-  TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL) {
+  TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
-      computeTaskQueueSize(this, SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL, provider,
+      computeTaskQueueSize(this, BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL, provider,
           internalProvider);
     }
   },
-  TASK_QUEUE_SIZE_RECENT_FROM_SUBTASK_DATA(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
+  TASK_QUEUE_SIZE_RECENT_FROM_SUBTASK_DATA(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
-      computeTaskQueueSize(this, SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT, provider,
+      computeTaskQueueSize(this, BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT, provider,
           internalProvider);
     }
   },
-  SUBTASK_SELECTIVITY(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
+  SUBTASK_SELECTIVITY(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
-      final Map<String, Double> subtaskIn = provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
-      final Map<String, Double> subtaskOut = provider.get(SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
+      final Map<String, Double> subtaskIn = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
+      final Map<String, Double> subtaskOut = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
       final Map<String, Double> selectivity = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         Double in = subtaskIn.get(subtask.id());
@@ -56,11 +56,11 @@ public enum BaseCompositeMetric implements CompositeMetric {
       internalProvider.replaceMetricValues(this, selectivity);
     }
   },
-  SUBTASK_CPU_UTILIZATION(SchedulerMetric.THREAD_CPU_UTILIZATION) {
+  SUBTASK_CPU_UTILIZATION(BasicSchedulerMetric.THREAD_CPU_UTILIZATION) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
-      final Map<String, Double> threadUtilization = provider.get(SchedulerMetric.THREAD_CPU_UTILIZATION);
+      final Map<String, Double> threadUtilization = provider.get(BasicSchedulerMetric.THREAD_CPU_UTILIZATION);
       Map<String, Double> utilization = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         // Sum utilization for all threads of the subtask
@@ -76,13 +76,13 @@ public enum BaseCompositeMetric implements CompositeMetric {
       internalProvider.replaceMetricValues(this, utilization);
     }
   },
-  SUBTASK_COST(SchedulerMetric.SUBTASK_CPU_UTILIZATION, SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
+  SUBTASK_COST(BasicSchedulerMetric.SUBTASK_CPU_UTILIZATION, BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT, BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
-      final Map<String, Double> utilization = provider.get(SchedulerMetric.SUBTASK_CPU_UTILIZATION);
-      final Map<String, Double> subtaskIn = provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
-      final Map<String, Double> subtaskOut = provider.get(SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
+      final Map<String, Double> utilization = provider.get(BasicSchedulerMetric.SUBTASK_CPU_UTILIZATION);
+      final Map<String, Double> subtaskIn = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
+      final Map<String, Double> subtaskOut = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
       final Map<String, Double> cost = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         Double in = subtaskIn.get(subtask.id());
@@ -102,12 +102,12 @@ public enum BaseCompositeMetric implements CompositeMetric {
       return (out != null) ? out : 0.0;
     }
   },
-  SUBTASK_GLOBAL_SELECTIVITY(SchedulerMetric.SUBTASK_SELECTIVITY) {
+  SUBTASK_GLOBAL_SELECTIVITY(BasicSchedulerMetric.SUBTASK_SELECTIVITY) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalSelectivity = new HashMap<>();
-      final Map<String, Double> selectivity = provider.get(SchedulerMetric.SUBTASK_SELECTIVITY);
+      final Map<String, Double> selectivity = provider.get(BasicSchedulerMetric.SUBTASK_SELECTIVITY);
       final TaskGraphTraverser traverser = provider.taskGraphTraverser();
       traverser.forEachSubtaskFromSinkBFS(subtask -> {
         double subtaskGlobalSelectivity =
@@ -136,13 +136,13 @@ public enum BaseCompositeMetric implements CompositeMetric {
       return downstreamSelectivitySum - downstreamSelectivityMult;
     }
   },
-  SUBTASK_GLOBAL_AVERAGE_COST(SchedulerMetric.SUBTASK_COST, SchedulerMetric.SUBTASK_SELECTIVITY) {
+  SUBTASK_GLOBAL_AVERAGE_COST(BasicSchedulerMetric.SUBTASK_COST, BasicSchedulerMetric.SUBTASK_SELECTIVITY) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalCost = new HashMap<>();
-      final Map<String, Double> selectivity = provider.get(SchedulerMetric.SUBTASK_SELECTIVITY);
-      final Map<String, Double> costs = provider.get(SchedulerMetric.SUBTASK_COST);
+      final Map<String, Double> selectivity = provider.get(BasicSchedulerMetric.SUBTASK_SELECTIVITY);
+      final Map<String, Double> costs = provider.get(BasicSchedulerMetric.SUBTASK_COST);
       final TaskGraphTraverser traverser = provider.taskGraphTraverser();
       traverser.forEachSubtaskFromSinkBFS(subtask -> {
         final Collection<Subtask> downstream = provider.taskIndex().downstream(subtask);
@@ -159,13 +159,13 @@ public enum BaseCompositeMetric implements CompositeMetric {
   /**
    * output_tuples/cost
    */
-  SUBTASK_GLOBAL_RATE(SchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, SchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST) {
+  SUBTASK_GLOBAL_RATE(BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST) {
     @Override
     public void compute(SchedulerMetricProvider provider,
         CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalRates = new HashMap<>();
-      final Map<String, Double> globalSelectivity = provider.get(SchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY);
-      final Map<String, Double> globalCosts = provider.get(SchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
+      final Map<String, Double> globalSelectivity = provider.get(BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY);
+      final Map<String, Double> globalCosts = provider.get(BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         double subtaskGlobalCost = globalCosts.get(subtask.id());
         double subtaskGlobalSelectivity = globalSelectivity.get(subtask.id());

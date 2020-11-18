@@ -42,7 +42,7 @@ public class SchedulerMetricProviderTest {
 
     subtaskTuplesIn1.put(tasks.get(0).id(), 20.0);
     subtaskTuplesIn2.put(tasks.get(0).id(), 10.0);
-    metricProvider.register(SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
+    metricProvider.register(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
     mockMetricProvider1.replaceMetricValues(MockMetric.SUBTASK_TUPLES_IN_TOTAL, subtaskTuplesIn1);
     mockMetricProvider1.replaceMetricValues(MockMetric.SUBTASK_TUPLES_OUT_TOTAL,
         Collections.emptyMap());
@@ -52,7 +52,7 @@ public class SchedulerMetricProviderTest {
     metricProvider.run();
     List<Double> actual = tasks.stream().
         map(task -> metricProvider
-            .get(SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA, task.id()))
+            .get(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA, task.id()))
         .collect(Collectors.toList());
 
     AssertHelper.assertNoNullElements(actual);
@@ -79,7 +79,7 @@ public class SchedulerMetricProviderTest {
 
     subtaskTuplesIn.put(tasks.get(0).id(), 10.0);
     queueSize.put(tasks.get(0).id(), 100.0);
-    metricProvider.register(SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
+    metricProvider.register(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
     mockMetricProvider.replaceMetricValues(MockMetric.SUBTASK_TUPLES_IN_TOTAL, subtaskTuplesIn);
     mockMetricProvider.replaceMetricValues(MockMetric.SUBTASK_TUPLES_OUT_TOTAL, subtaskTuplesOut);
     queueSizeMetricProvider
@@ -87,7 +87,7 @@ public class SchedulerMetricProviderTest {
     metricProvider.run();
     List<Double> actual = tasks.stream().
         map(task -> metricProvider
-            .get(SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA, task.id()))
+            .get(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA, task.id()))
         .collect(Collectors.toList());
 
     AssertHelper.assertNoNullElements(actual);
