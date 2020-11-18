@@ -5,9 +5,8 @@ import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.liebre.LiebreMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
-import io.palyvos.scheduler.metric.BaseSchedulerMetric;
-import io.palyvos.scheduler.metric.MetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetric;
+import io.palyvos.scheduler.metric.MetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
@@ -67,7 +66,7 @@ public class LiebreNicePolicy {
   static class Config {
 
     @Parameter(names = "--metric")
-    private BaseSchedulerMetric metric;
+    private SchedulerMetric metric;
 
     @Parameter(names = "--pid", required = true)
     private int pid;

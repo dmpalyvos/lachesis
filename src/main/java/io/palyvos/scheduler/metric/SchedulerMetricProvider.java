@@ -27,7 +27,7 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
   public SchedulerMetricProvider(MetricProvider<?>... providers) {
     Validate.notEmpty(providers, "At least one provider required!");
     List<MetricProvider<?>> providerList = new ArrayList<>(Arrays.asList(providers));
-    providerList.add(new InternalMetricProvider(this));
+    providerList.add(new CompositeMetricProvider(this));
     this.providers = Collections.unmodifiableList(providerList);
   }
 
@@ -44,6 +44,7 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
     LOG.trace("Attempting to register metric {}", metric);
     for (MetricProvider provider : providers) {
       if (provider.canProvide(metric)) {
+        LOG.info("Registering metric {} with provider {}", metric, provider.getClass().getSimpleName());
         Metric providedMetric = provider.toProvidedMetric(metric);
         provider.register(providedMetric);
         registry.put(metric, new ProviderEntry(provider, providedMetric));
@@ -96,7 +97,7 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
 
   @Override
   public SchedulerMetric toProvidedMetric(Metric metric) {
-    Validate.isInstanceOf(BaseSchedulerMetric.class, metric);
+    Validate.isInstanceOf(SchedulerMetric.class, metric);
     return (SchedulerMetric) metric;
   }
 

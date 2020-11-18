@@ -6,10 +6,9 @@ import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.adapters.storm.StormMetricProvider;
-import io.palyvos.scheduler.metric.BaseSchedulerMetric;
+import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.MetricFileReporter;
 import io.palyvos.scheduler.metric.MetricProvider;
-import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
@@ -65,25 +64,25 @@ public class StormIntegration {
     ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
     metricProvider.setTaskIndex(adapter.taskIndex());
 
-    metricProvider.register(BaseSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
-    metricProvider.register(BaseSchedulerMetric.SUBTASK_GLOBAL_RATE);
+    metricProvider.register(SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
+    metricProvider.register(SchedulerMetric.SUBTASK_GLOBAL_RATE);
 
     // Registered only for viz purposes, would be auto-registered otherwise
-    metricProvider.register(BaseSchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL);
-    metricProvider.register(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
-    metricProvider.register(BaseSchedulerMetric.SUBTASK_SELECTIVITY);
-    metricProvider.register(BaseSchedulerMetric.SUBTASK_COST);
+    metricProvider.register(SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL);
+    metricProvider.register(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
+    metricProvider.register(SchedulerMetric.SUBTASK_SELECTIVITY);
+    metricProvider.register(SchedulerMetric.SUBTASK_COST);
 
     final Collection<MetricFileReporter<SchedulerMetric>> reporters = MetricFileReporter
         .reportersFor(metricProvider,
-            BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL,
-            BaseSchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL,
-            BaseSchedulerMetric.SUBTASK_TUPLES_IN_RECENT,
-            BaseSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT,
-            BaseSchedulerMetric.SUBTASK_SELECTIVITY,
-            BaseSchedulerMetric.SUBTASK_COST,
-            BaseSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
-            BaseSchedulerMetric.SUBTASK_GLOBAL_RATE);
+            SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL,
+            SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL,
+            SchedulerMetric.SUBTASK_TUPLES_IN_RECENT,
+            SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT,
+            SchedulerMetric.SUBTASK_SELECTIVITY,
+            SchedulerMetric.SUBTASK_COST,
+            SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
+            SchedulerMetric.SUBTASK_GLOBAL_RATE);
 
     while (true) {
       long start = System.currentTimeMillis();
@@ -158,7 +157,7 @@ public class StormIntegration {
     private int window = 30;
 
     @Parameter(names = "--metric", description = "Metric to use for scheduling")
-    private BaseSchedulerMetric metric = BaseSchedulerMetric.SUBTASK_GLOBAL_RATE;
+    private SchedulerMetric metric = SchedulerMetric.SUBTASK_GLOBAL_RATE;
 
     @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
     private int maxPriority = -20;

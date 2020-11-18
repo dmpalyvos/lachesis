@@ -12,13 +12,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Test for {@link BaseSchedulerMetric#TASK_QUEUE_SIZE_FROM_SUBTASK_DATA}. Task and subtask IDs are
+ * Test for {@link SchedulerMetric#TASK_QUEUE_SIZE_FROM_SUBTASK_DATA}. Task and subtask IDs are
  * equal in this test.
  */
 @Test
 public class TaskQueueSizeFromSubtaskDataTest {
 
-  public static final BaseSchedulerMetric METRIC = BaseSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA;
+  public static final SchedulerMetric METRIC = SchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA;
 
   @Test(expectedExceptions = {IllegalStateException.class})
   void noData() {

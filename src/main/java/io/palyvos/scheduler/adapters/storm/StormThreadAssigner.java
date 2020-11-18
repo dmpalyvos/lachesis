@@ -17,6 +17,7 @@ class StormThreadAssigner {
   private static final Pattern EXECUTOR_THREAD_PATTERN = Pattern
       .compile("Thread-\\d+-(.+)-executor\\[\\d+ \\d+\\]");
   private static final String ACKER_NAME = "_acker";
+  public static final String METRIC_REPORTER_NAME = "MetricReporter";
 
   public static void assign(Collection<Task> tasks, Collection<ExternalThread> threads) {
     final Map<String, Queue<Subtask>> taskIndex = new HashMap<>();
@@ -27,7 +28,7 @@ class StormThreadAssigner {
       Matcher matcher = EXECUTOR_THREAD_PATTERN.matcher(thread.name());
       if (matcher.matches()) {
         final String taskName = matcher.group(1);
-        if (taskName.contains(ACKER_NAME)) {
+        if (taskName.contains(ACKER_NAME) || taskName.contains(METRIC_REPORTER_NAME)) {
           continue;
         }
         Queue<Subtask> subtasks = taskIndex.get(taskName);

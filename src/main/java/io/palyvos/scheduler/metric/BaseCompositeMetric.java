@@ -15,35 +15,29 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public enum BaseSchedulerMetric implements SchedulerMetric {
-  /**
-   * Relatively long time compared to query runtime
-   */
-  SUBTASK_TUPLES_IN_TOTAL,
-  SUBTASK_TUPLES_OUT_TOTAL,
-  /**
-   * Recent compared to query runtime
-   */
-  SUBTASK_TUPLES_IN_RECENT,
-  SUBTASK_TUPLES_OUT_RECENT,
-  TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(true, SUBTASK_TUPLES_IN_TOTAL, SUBTASK_TUPLES_OUT_TOTAL) {
+public enum BaseCompositeMetric implements CompositeMetric {
+  TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
-      computeTaskQueueSize(this, SUBTASK_TUPLES_IN_TOTAL, SUBTASK_TUPLES_OUT_TOTAL, provider);
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
+      computeTaskQueueSize(this, SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, SchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL, provider,
+          internalProvider);
     }
   },
-  TASK_QUEUE_SIZE_RECENT_FROM_SUBTASK_DATA(true, SUBTASK_TUPLES_IN_RECENT,
-      SUBTASK_TUPLES_OUT_RECENT) {
+  TASK_QUEUE_SIZE_RECENT_FROM_SUBTASK_DATA(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
-      computeTaskQueueSize(this, SUBTASK_TUPLES_IN_RECENT, SUBTASK_TUPLES_OUT_RECENT, provider);
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
+      computeTaskQueueSize(this, SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT, provider,
+          internalProvider);
     }
   },
-  SUBTASK_SELECTIVITY(true, SUBTASK_TUPLES_IN_RECENT, SUBTASK_TUPLES_OUT_RECENT) {
+  SUBTASK_SELECTIVITY(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
-      final Map<String, Double> subtaskIn = provider.get(SUBTASK_TUPLES_IN_RECENT);
-      final Map<String, Double> subtaskOut = provider.get(SUBTASK_TUPLES_OUT_RECENT);
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
+      final Map<String, Double> subtaskIn = provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
+      final Map<String, Double> subtaskOut = provider.get(SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
       final Map<String, Double> selectivity = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         Double in = subtaskIn.get(subtask.id());
@@ -59,14 +53,14 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
         }
         selectivity.put(subtask.id(), out / in);
       }
-      provider.replaceMetricValues(this, selectivity);
+      internalProvider.replaceMetricValues(this, selectivity);
     }
   },
-  THREAD_CPU_UTILIZATION,
-  SUBTASK_CPU_UTILIZATION(true, THREAD_CPU_UTILIZATION) {
+  SUBTASK_CPU_UTILIZATION(SchedulerMetric.THREAD_CPU_UTILIZATION) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
-      final Map<String, Double> threadUtilization = provider.get(THREAD_CPU_UTILIZATION);
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
+      final Map<String, Double> threadUtilization = provider.get(SchedulerMetric.THREAD_CPU_UTILIZATION);
       Map<String, Double> utilization = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         // Sum utilization for all threads of the subtask
@@ -79,15 +73,16 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
             .sum();
         utilization.put(subtask.id(), subtaskTotalUtilization);
       }
-      provider.replaceMetricValues(this, utilization);
+      internalProvider.replaceMetricValues(this, utilization);
     }
   },
-  SUBTASK_COST(true, SUBTASK_CPU_UTILIZATION, SUBTASK_TUPLES_IN_RECENT, SUBTASK_TUPLES_OUT_RECENT) {
+  SUBTASK_COST(SchedulerMetric.SUBTASK_CPU_UTILIZATION, SchedulerMetric.SUBTASK_TUPLES_IN_RECENT, SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
-      final Map<String, Double> utilization = provider.get(SUBTASK_CPU_UTILIZATION);
-      final Map<String, Double> subtaskIn = provider.get(SUBTASK_TUPLES_IN_RECENT);
-      final Map<String, Double> subtaskOut = provider.get(SUBTASK_TUPLES_OUT_RECENT);
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
+      final Map<String, Double> utilization = provider.get(SchedulerMetric.SUBTASK_CPU_UTILIZATION);
+      final Map<String, Double> subtaskIn = provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
+      final Map<String, Double> subtaskOut = provider.get(SchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
       final Map<String, Double> cost = new HashMap<>();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         Double in = subtaskIn.get(subtask.id());
@@ -97,7 +92,7 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
         double subtaskCost = subtaskUtilization / processedTuplesNonNull(in, out);
         cost.put(subtask.id(), Double.isFinite(subtaskCost) ? subtaskCost : Double.NaN);
       }
-      provider.replaceMetricValues(this, cost);
+      internalProvider.replaceMetricValues(this, cost);
     }
 
     private double processedTuplesNonNull(Double in, Double out) {
@@ -107,14 +102,12 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
       return (out != null) ? out : 0.0;
     }
   },
-  /**
-   * output_tuples/input_tuple
-   */
-  SUBTASK_GLOBAL_SELECTIVITY(true, SUBTASK_SELECTIVITY) {
+  SUBTASK_GLOBAL_SELECTIVITY(SchedulerMetric.SUBTASK_SELECTIVITY) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalSelectivity = new HashMap<>();
-      final Map<String, Double> selectivity = provider.get(SUBTASK_SELECTIVITY);
+      final Map<String, Double> selectivity = provider.get(SchedulerMetric.SUBTASK_SELECTIVITY);
       final TaskGraphTraverser traverser = provider.taskGraphTraverser();
       traverser.forEachSubtaskFromSinkBFS(subtask -> {
         double subtaskGlobalSelectivity =
@@ -122,7 +115,7 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
                 selectivity.get(subtask.id());
         globalSelectivity.put(subtask.id(), subtaskGlobalSelectivity);
       });
-      provider.replaceMetricValues(this, globalSelectivity);
+      internalProvider.replaceMetricValues(this, globalSelectivity);
     }
 
     private double downstreamSelectivity(Subtask subtask, Map<String, Double> globalSelectivity,
@@ -143,15 +136,13 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
       return downstreamSelectivitySum - downstreamSelectivityMult;
     }
   },
-  /**
-   * cost/input_tuple
-   */
-  SUBTASK_GLOBAL_AVERAGE_COST(true, SUBTASK_COST, SUBTASK_SELECTIVITY) {
+  SUBTASK_GLOBAL_AVERAGE_COST(SchedulerMetric.SUBTASK_COST, SchedulerMetric.SUBTASK_SELECTIVITY) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalCost = new HashMap<>();
-      final Map<String, Double> selectivity = provider.get(SUBTASK_SELECTIVITY);
-      final Map<String, Double> costs = provider.get(SUBTASK_COST);
+      final Map<String, Double> selectivity = provider.get(SchedulerMetric.SUBTASK_SELECTIVITY);
+      final Map<String, Double> costs = provider.get(SchedulerMetric.SUBTASK_COST);
       final TaskGraphTraverser traverser = provider.taskGraphTraverser();
       traverser.forEachSubtaskFromSinkBFS(subtask -> {
         final Collection<Subtask> downstream = provider.taskIndex().downstream(subtask);
@@ -162,64 +153,52 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
         }
         globalCost.put(subtask.id(), subtaskGlobalCost);
       });
-      provider.replaceMetricValues(this, globalCost);
+      internalProvider.replaceMetricValues(this, globalCost);
     }
   },
   /**
    * output_tuples/cost
    */
-  SUBTASK_GLOBAL_RATE(true, SUBTASK_GLOBAL_SELECTIVITY, SUBTASK_GLOBAL_AVERAGE_COST) {
+  SUBTASK_GLOBAL_RATE(SchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, SchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST) {
     @Override
-    public void compute(SchedulerMetricProvider provider) {
+    public void compute(SchedulerMetricProvider provider,
+        CompositeMetricProvider internalProvider) {
       final Map<String, Double> globalRates = new HashMap<>();
-      final Map<String, Double> globalSelectivity = provider.get(SUBTASK_GLOBAL_SELECTIVITY);
-      final Map<String, Double> globalCosts = provider.get(SUBTASK_GLOBAL_AVERAGE_COST);
+      final Map<String, Double> globalSelectivity = provider.get(SchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY);
+      final Map<String, Double> globalCosts = provider.get(SchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         double subtaskGlobalCost = globalCosts.get(subtask.id());
         double subtaskGlobalSelectivity = globalSelectivity.get(subtask.id());
         double subtaskGlobalRate = subtaskGlobalSelectivity / subtaskGlobalCost;
         globalRates.put(subtask.id(), subtaskGlobalRate);
       }
-      provider.replaceMetricValues(this, globalRates);
+      internalProvider.replaceMetricValues(this, globalRates);
     }
   };
 
-  private static final Logger LOG = LogManager.getLogger(BaseSchedulerMetric.class);
+  private static final Logger LOG = LogManager.getLogger(BaseCompositeMetric.class);
   protected final Set<SchedulerMetric> dependencies;
-  protected final boolean internal;
 
-  BaseSchedulerMetric() {
-    this(false);
-  }
-
-  BaseSchedulerMetric(boolean internal) {
-    this(internal, new SchedulerMetric[0]);
-  }
-
-  BaseSchedulerMetric(boolean internal, SchedulerMetric... dependencies) {
+  BaseCompositeMetric(SchedulerMetric... dependencies) {
     Validate.notNull(dependencies, "components");
     this.dependencies = new HashSet<>(Arrays.asList(dependencies));
-    this.internal = internal;
   }
 
   @Override
-  public void compute(SchedulerMetricProvider provider) {
+  public void compute(SchedulerMetricProvider provider,
+      CompositeMetricProvider internalProvider) {
     LOG.trace("No computation for {}", this);
   }
 
   @Override
-  public final boolean isInternal() {
-    return internal;
-  }
-
-  @Override
-  public Set<SchedulerMetric> dependencies() {
+  public Set<SchedulerMetric> compositeDependencies() {
     return dependencies;
   }
 
-  protected final void computeTaskQueueSize(BaseSchedulerMetric metric,
-      BaseSchedulerMetric inTuplesMetric, BaseSchedulerMetric outTuplesMetric,
-      SchedulerMetricProvider provider) {
+  protected final void computeTaskQueueSize(CompositeMetric metric,
+      SchedulerMetric inTuplesMetric, SchedulerMetric outTuplesMetric,
+      SchedulerMetricProvider provider,
+      CompositeMetricProvider compositeMetricProvider) {
     final Map<String, Double> subtaskIn = provider.get(inTuplesMetric);
     final Map<String, Double> subtaskOut = provider.get(outTuplesMetric);
     final Map<String, Double> qs = new HashMap<>();
@@ -233,6 +212,6 @@ public enum BaseSchedulerMetric implements SchedulerMetric {
           .sum();
       qs.put(task.id(), writtenUpstream - readByTask);
     }
-    provider.replaceMetricValues(metric, qs);
+    compositeMetricProvider.replaceMetricValues(metric, qs);
   }
 }

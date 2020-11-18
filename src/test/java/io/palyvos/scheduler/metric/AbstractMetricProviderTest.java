@@ -31,22 +31,8 @@ public class AbstractMetricProviderTest {
 
   private static class TestMetricProvider extends AbstractMetricProvider<TestMetric> {
 
-    static final Map<Metric, TestMetric> METRIC_MAPPING = new HashMap<>();
-
-    static {
-      for (BaseSchedulerMetric metric : BaseSchedulerMetric.values()) {
-        if (metric.isInternal()) {
-          continue;
-        }
-        try {
-          METRIC_MAPPING.put(metric, TestMetric.valueOf(metric.name()));
-        } catch (Exception e) {
-        }
-      }
-    }
-
     public TestMetricProvider() {
-      super(METRIC_MAPPING, TestMetric.class);
+      super(mappingFor(TestMetric.values()), TestMetric.class);
     }
 
     @Override
@@ -63,7 +49,7 @@ public class AbstractMetricProviderTest {
   @Test(expectedExceptions = {IllegalArgumentException.class})
   void registerWrongClass() {
     AbstractMetricProvider provider = new TestMetricProvider();
-    provider.register(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
+    provider.register(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
   @Test(expectedExceptions = {NullPointerException.class})
@@ -87,14 +73,14 @@ public class AbstractMetricProviderTest {
     AbstractMetricProvider provider = new TestMetricProvider();
     provider.register(TestMetric.SUBTASK_TUPLES_IN_TOTAL);
     Assert
-        .assertTrue(provider.canProvide(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL), "canProvide");
+        .assertTrue(provider.canProvide(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL), "canProvide");
   }
 
   @Test
   void toProvidedMetric() {
     AbstractMetricProvider provider = new TestMetricProvider();
     // Based on the equal name mapping
-    Assert.assertEquals(provider.toProvidedMetric(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL),
+    Assert.assertEquals(provider.toProvidedMetric(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL),
         TestMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
@@ -102,13 +88,13 @@ public class AbstractMetricProviderTest {
   void toProvidedMetricNonRegistered() {
     AbstractMetricProvider provider = new TestMetricProvider();
     // Based on the equal name mapping
-    provider.toProvidedMetric(BaseSchedulerMetric.SUBTASK_COST);
+    provider.toProvidedMetric(SchedulerMetric.SUBTASK_COST);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   void getWrongClass() {
     AbstractMetricProvider provider = new TestMetricProvider();
-    provider.get(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
+    provider.get(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
@@ -117,7 +103,7 @@ public class AbstractMetricProviderTest {
     provider.register(TestMetric.SUBTASK_TUPLES_IN_TOTAL);
     Map<String, Double> values = new HashMap<>();
     values.put("test", 0.1);
-    provider.replaceMetricValues(BaseSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, values);
+    provider.replaceMetricValues(SchedulerMetric.SUBTASK_TUPLES_IN_TOTAL, values);
   }
 
   @Test

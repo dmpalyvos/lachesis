@@ -18,7 +18,22 @@ public abstract class AbstractMetricProvider<T extends Metric<T>> implements Met
   private final Map<T, Map<String, Double>> allMetricValues = new HashMap<>();
   protected final Set<T> registeredMetrics = new HashSet<>();
   private final Class<T> metricClass;
-  private final Map<? extends Metric, T> mapping;
+  protected final Map<? extends Metric, T> mapping;
+
+  protected static final <T extends Metric<T>> Map<SchedulerMetric, T> mappingFor(
+      T...values) {
+    Map<SchedulerMetric, T> mapping = new HashMap<>();
+    for (T metric : values) {
+      try {
+        mapping.put(SchedulerMetric.valueOf(metric.toString()), metric);
+      } catch (Exception e) {
+        LOG.trace("Metric {} does not correspond to any instance of {}",
+            metric,
+            metric.getClass().getSimpleName());
+      }
+    }
+    return mapping;
+  }
 
   public AbstractMetricProvider(Map<? extends Metric, T> mapping, Class<T> metricClass) {
     Validate.notNull(mapping, "mapping");
@@ -103,7 +118,8 @@ public abstract class AbstractMetricProvider<T extends Metric<T>> implements Met
     if (newMetricValues.isEmpty()) {
       LOG.warn("Empty metric values for {}", metric);
     }
-    final Map<String, Double> metricValues = allMetricValues.computeIfAbsent(metric, k -> new HashMap<>());
+    final Map<String, Double> metricValues = allMetricValues
+        .computeIfAbsent(metric, k -> new HashMap<>());
     if (allMetricValues == null) {
       allMetricValues.put(metric, newMetricValues);
       return;
