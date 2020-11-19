@@ -7,4 +7,5 @@ public interface ConcretePolicyTranslator {
 
   void applyPolicy(Map<ExternalThread, Double> schedule);
 
+  int applyDirect(Map<ExternalThread, Long> normalizedSchedule);
 }

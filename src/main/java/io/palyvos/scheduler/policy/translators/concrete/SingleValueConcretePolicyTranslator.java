@@ -37,15 +37,23 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
   public void applyPolicy(Map<ExternalThread, Double> schedule) {
     Validate.notEmpty(schedule, "No scheduling decisions found!");
     final long start = System.currentTimeMillis();
-    final ExecutorService executor = Executors.newFixedThreadPool(TRANSLATOR_THREADS);
     if (!normalizer.isValid(schedule)) {
       LOG.warn("Invalid schedule detected. Skipping scheduling round...");
       return;
     }
     final Map<ExternalThread, Long> normalizedSchedule = normalizer.normalize(schedule);
     reportStatistics(schedule, normalizedSchedule);
+    final int updates = applyDirect(normalizedSchedule);
+    LOG.info("{} finished applying policy: {} priority updates ({} ms)", getClass().getSimpleName(),
+        updates, System.currentTimeMillis() - start);
+
+  }
+
+  @Override
+  public int applyDirect(Map<ExternalThread, Long> normalizedSchedule) {
     final List<Future<?>> futures = new ArrayList<>();
     SchedulerContext.switchToRootContext();
+    final ExecutorService executor = Executors.newFixedThreadPool(TRANSLATOR_THREADS);
     for (ExternalThread thread : normalizedSchedule.keySet()) {
       long priority = normalizedSchedule.get(thread);
       Long previousPriority = lastSchedule.put(thread, priority);
@@ -56,9 +64,7 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
     wait(futures);
     executor.shutdown();
     SchedulerContext.switchToSpeProcessContext();
-    LOG.info("{} finished applying policy: {} priority updates ({} ms)", getClass().getSimpleName(),
-        futures.size(), System.currentTimeMillis() - start);
-
+    return futures.size();
   }
 
   private void reportStatistics(Map<ExternalThread, Double> schedule,

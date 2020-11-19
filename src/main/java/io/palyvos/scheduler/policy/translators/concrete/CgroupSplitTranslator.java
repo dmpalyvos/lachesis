@@ -31,6 +31,11 @@ public class CgroupSplitTranslator implements ConcretePolicyTranslator {
   @Override
   public void applyPolicy(Map<ExternalThread, Double> schedule) {
     final Map<ExternalThread, Long> normalizedSchedule = normalizer.normalize(schedule);
+    applyDirect(normalizedSchedule);
+  }
+
+  @Override
+  public int applyDirect(Map<ExternalThread, Long> normalizedSchedule) {
     final Map<String, List<ExternalThread>> classification = new HashMap<>();
     Arrays.stream(cgroups).forEach(cgroup -> classification.put(cgroup, new ArrayList<>()));
     for (Map.Entry<ExternalThread, Long> decision : normalizedSchedule.entrySet()) {
@@ -52,5 +57,6 @@ public class CgroupSplitTranslator implements ConcretePolicyTranslator {
               .collect(Collectors.toList())).run();
     }
     SchedulerContext.switchToSpeProcessContext();
+    return 0; //FIXME
   }
 }

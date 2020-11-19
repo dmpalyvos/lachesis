@@ -9,21 +9,18 @@ import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.MetricFileReporter;
-import io.palyvos.scheduler.metric.MetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
-import io.palyvos.scheduler.task.ExternalThread;
-import io.palyvos.scheduler.task.Subtask;
 import io.palyvos.scheduler.util.JcmdCommand;
 import io.palyvos.scheduler.util.Log4jLevelConverter;
+import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +30,6 @@ import org.apache.logging.log4j.core.config.Configurator;
 public class StormIntegration {
 
   private static final Logger LOG = LogManager.getLogger();
-  private static long counter = 0;
 
   public static void main(String[] args) throws InterruptedException {
 
@@ -71,6 +67,8 @@ public class StormIntegration {
     // Registered only for viz purposes, would be auto-registered otherwise
     metricProvider.register(BasicSchedulerMetric.SUBTASK_SELECTIVITY);
     metricProvider.register(BasicSchedulerMetric.SUBTASK_COST);
+    metricProvider.register(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
+    metricProvider.register(BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
 
     final Collection<MetricFileReporter<SchedulerMetric>> reporters = MetricFileReporter
         .reportersFor(metricProvider,
@@ -84,7 +82,7 @@ public class StormIntegration {
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
-      schedule(metricProvider, config.metric, translator, adapter);
+      config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
       reporters.forEach(reporter -> reporter.report());
       LOG.info("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
@@ -121,22 +119,6 @@ public class StormIntegration {
     throw new IllegalStateException("Failed to retrieve storm worker PID!");
   }
 
-  private static void schedule(MetricProvider collector, SchedulerMetric metric,
-      ConcretePolicyTranslator translator,
-      StormAdapter adapter) {
-    Map<ExternalThread, Double> schedule = new HashMap<>();
-    for (Subtask subtask : adapter.taskIndex().subtasks()) {
-      try {
-        double value = collector.get(metric, subtask.id());
-        schedule.put(subtask.thread(), value);
-      } catch (Exception e) {
-        LOG.error("Failed to get metric {} for task {}: {}\n", metric, subtask, e.getMessage());
-        throw new RuntimeException(e);
-      }
-    }
-    translator.applyPolicy(schedule);
-  }
-
   static class Config {
 
     private int pid = -1;
@@ -153,8 +135,8 @@ public class StormIntegration {
     @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
     private int window = 30;
 
-    @Parameter(names = "--metric", description = "Metric to use for scheduling")
-    private BasicSchedulerMetric metric = BasicSchedulerMetric.SUBTASK_GLOBAL_RATE;
+    @Parameter(names = "--policy", description = "Scheduling policy to apply, either random, constant:{PRIORITY_VALUE}, or metric:{METRIC_NAME}", converter = ConcreteSchedulingPolicyConverter.class)
+    private ConcreteSchedulingPolicy policy;
 
     @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
     private int maxPriority = -20;
