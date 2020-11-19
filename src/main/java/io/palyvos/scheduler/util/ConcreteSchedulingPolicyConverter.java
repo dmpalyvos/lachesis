@@ -24,7 +24,7 @@ public class ConcreteSchedulingPolicyConverter implements IStringConverter<Concr
     if (constantMatcher.matches()) {
       return new ConstantConcreteSchedulingPolicy(Long.valueOf(constantMatcher.group(1)));
     }
-    if ("RANDOM".equals(argument)) {
+    if ("random".equals(argument)) {
       return new RandomConcreteSchedulingPolicy();
     }
     throw new IllegalArgumentException(String.format("Unknown policy requested: %s", argument));

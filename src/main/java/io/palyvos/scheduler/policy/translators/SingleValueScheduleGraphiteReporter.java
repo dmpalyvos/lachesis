@@ -13,17 +13,25 @@ public class SingleValueScheduleGraphiteReporter {
   private final SimpleGraphiteReporter reporter;
 
   public SingleValueScheduleGraphiteReporter(String host, int port) {
-    try {
-      this.reporter = new SimpleGraphiteReporter(host, port);
-    } catch (SocketException e) {
-      throw new IllegalStateException(e);
-    }
+    this.reporter = new SimpleGraphiteReporter(host, port);
+  }
+
+  public void open() {
+    reporter.open();
+  }
+
+  public void close() {
+    reporter.close();
   }
 
   public void add(long timestamp, String thread, long externalPriority, double internalPriority) {
+    //FIXME: Dirty patch to produce a graphite-compatible key. This needs to be SPE-specific!
+    String convertedThread = thread.replaceAll("[^A-Za-z0-9\\-]", "").replace("-", ".");
     try {
-      reporter.report(timestamp, String.format("lachesis.%s.external", thread), externalPriority);
-      reporter.report(timestamp, String.format("lachesis.%s.internal", thread), internalPriority);
+      reporter.report(timestamp, String.format("lachesis.%s.external", convertedThread),
+          externalPriority);
+      reporter.report(timestamp, String.format("lachesis.%s.internal", convertedThread),
+          internalPriority);
     } catch (IOException e) {
       e.printStackTrace();
     }

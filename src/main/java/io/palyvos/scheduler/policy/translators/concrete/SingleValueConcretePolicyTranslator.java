@@ -70,6 +70,7 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
   private void reportStatistics(Map<ExternalThread, Double> schedule,
       Map<ExternalThread, Long> normalizedSchedule) {
     long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+    graphiteReporter.open();
     normalizedSchedule.entrySet().stream().forEach(threadPriorityEntry ->
     {
       reporter.add(now,
@@ -79,7 +80,7 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
           threadPriorityEntry.getKey().name(),
           threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey()));
     });
-
+    graphiteReporter.close();
   }
 
   protected abstract Future<?> apply(ExternalThread thread, long priority,

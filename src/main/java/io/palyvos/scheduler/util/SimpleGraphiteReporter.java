@@ -1,33 +1,53 @@
 package io.palyvos.scheduler.util;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
-//FIXME: Not tested
 public class SimpleGraphiteReporter {
 
-  private final URI graphiteURI;
-  private final InetSocketAddress socketAddress;
-  private DatagramSocket socket;
+  private final int graphitePort;
+  private final String graphiteHost;
+  private Socket socket;
+  private DataOutputStream output;
 
-  public SimpleGraphiteReporter(String graphiteHost, int graphitePort) throws SocketException {
-    this.graphiteURI = URI.create(String.format("http://%s:%d", graphiteHost, graphitePort));
-    socketAddress = new InetSocketAddress(graphiteURI.getHost(), graphiteURI.getPort());
-    this.socket = new DatagramSocket();
+  public static void main(String[] args) throws IOException {
+    SimpleGraphiteReporter reporter = new SimpleGraphiteReporter("129.16.20.158", 2003);
+    reporter
+        .report(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()), "lachesis.test", 100);
   }
 
+  public SimpleGraphiteReporter(String graphiteHost, int graphitePort) {
+    this.graphiteHost = graphiteHost;
+    this.graphitePort = graphitePort;
+  }
+
+  public void open() {
+    try {
+      socket = new Socket(graphiteHost, graphitePort);
+      output = new DataOutputStream(socket.getOutputStream());
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   public void report(long timestampSeconds, String key, Object value) throws IOException {
-    byte[] message = String.format("%s %s %d\n", key, value, timestampSeconds).getBytes();
-    DatagramPacket packet = new DatagramPacket(message, message.length, socketAddress);
-    socket.send(packet);
+    output.writeBytes(String.format("%s %s %d\n", key, value, timestampSeconds));
   }
 
-  private void close() throws IOException {
-    socket.close();
+  public void close() {
+    try {
+      output.flush();
+      output.close();
+      socket.close();
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }
