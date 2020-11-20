@@ -15,7 +15,7 @@ public class StormMetricProvider extends AbstractMetricProvider<StormMetric> {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private final StormAdapter stormAdapter;
+  private final StormUiAdapter stormAdapter;
   final List<StormSpoutInfo> totalSpoutInfos = new ArrayList<>();
   final List<StormBoltInfo> totalBoltInfos = new ArrayList<>();
   final MetricHistoryProcessor<StormMetric> historyProcessor = new MetricHistoryProcessor<>(
@@ -26,7 +26,7 @@ public class StormMetricProvider extends AbstractMetricProvider<StormMetric> {
   long now = -1;
 
 
-  public StormMetricProvider(StormAdapter stormAdapter) {
+  public StormMetricProvider(StormUiAdapter stormAdapter) {
     super(mappingFor(StormMetric.values()), StormMetric.class);
     Validate.notNull(stormAdapter, "stormAdapter");
     this.stormAdapter = stormAdapter;

@@ -1,7 +1,9 @@
 package io.palyvos.scheduler.util;
 
 import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +33,17 @@ public class JcmdCommand implements ExternalCommand {
     return namedPids;
   }
 
-  public int pidFor(String javaCommand) {
+  public List<Integer> pidsFor(String javaCommand, String ignorePattern) {
     Map<String, Integer> pids = namedPids();
+    List<Integer> foundPids = new ArrayList<>();
     for (String name : pids.keySet()) {
-      if (name.contains(javaCommand)) {
-        return pids.get(name);
+      if (name.contains(javaCommand) && !name.contains(ignorePattern)) {
+        foundPids.add(pids.get(name));
       }
     }
-    throw new IllegalStateException(String.format("Failed to retrieve pid matching pattern: %s", javaCommand));
+    Validate.validState(!foundPids.isEmpty(), "Failed to retrieve pid matching pattern: %s",
+        javaCommand);
+    return foundPids;
   }
 
   @Override

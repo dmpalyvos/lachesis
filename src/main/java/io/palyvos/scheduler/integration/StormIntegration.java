@@ -2,9 +2,12 @@ package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
+import io.palyvos.scheduler.adapters.storm.StormConstants;
+import io.palyvos.scheduler.adapters.storm.StormUiAdapter;
 import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetric;
@@ -21,6 +24,7 @@ import io.palyvos.scheduler.util.Log4jLevelConverter;
 import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -43,17 +47,16 @@ public class StormIntegration {
     Configurator.setRootLevel(config.log);
     retrievePid(config);
 
-    SchedulerContext.initSpeProcessInfo(config.pid);
+    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
 
-    StormAdapter adapter = new StormAdapter(config.pid, "localhost", 8080, new LinuxAdapter(),
-        config.queryGraphPath);
+    StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);
     tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new StormGraphiteMetricProvider("129.16.20.158", 80),
-        new LinuxMetricProvider(config.pid));
+        new LinuxMetricProvider(config.pids));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority, config.maxPriority);
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
@@ -78,7 +81,7 @@ public class StormIntegration {
             BasicSchedulerMetric.SUBTASK_COST,
             BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
             BasicSchedulerMetric.SUBTASK_GLOBAL_RATE);
-
+    //FIXME: Init policy (e.g., register metric)
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
@@ -89,7 +92,7 @@ public class StormIntegration {
     }
   }
 
-  private static void tryUpdateTasks(StormAdapter adapter) throws InterruptedException {
+  private static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
     final int tries = 20;
     for (int i = 0; i < tries; i++) {
       try {
@@ -109,19 +112,20 @@ public class StormIntegration {
     for (int i = 0; i < tries; i++) {
       try {
         LOG.info("Trying to retrieve storm worker PID...");
-        config.pid = new JcmdCommand().pidFor(StormAdapter.STORM_WORKER_CLASS);
+        // Ignore PID of current command because it also contains workerPattern as an argument
+        config.pids = new JcmdCommand().pidsFor(config.workerPattern, StormIntegration.class.getName());
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
         Thread.sleep(5000);
       }
     }
-    throw new IllegalStateException("Failed to retrieve storm worker PID!");
+    throw new IllegalStateException("Failed to retrieve storm worker PID(s)!");
   }
 
   static class Config {
 
-    private int pid = -1;
+    private List<Integer> pids;
 
     @Parameter(names = "--log", converter = Log4jLevelConverter.class, description = "Logging level (e.g., DEBUG, INFO, etc)")
     private Level log = Level.DEBUG;
@@ -152,6 +156,10 @@ public class StormIntegration {
 
     @Parameter(names = "--help", help = true)
     private boolean help = false;
+
+    @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)")
+    private String workerPattern = StormConstants.STORM_WORKER_CLASS;
+
 
   }
 }
