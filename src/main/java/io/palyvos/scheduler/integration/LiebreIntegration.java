@@ -1,33 +1,38 @@
 package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.JCommander;
-import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
+import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
+import io.palyvos.scheduler.adapters.liebre.LiebreMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
-import io.palyvos.scheduler.adapters.storm.StormAdapter;
-import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
-import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetric;
-import io.palyvos.scheduler.metric.MetricFileReporter;
+import io.palyvos.scheduler.metric.MetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
-import io.palyvos.scheduler.util.JcmdCommand;
+import io.palyvos.scheduler.task.ExternalThread;
+import io.palyvos.scheduler.task.Subtask;
 import io.palyvos.scheduler.util.SchedulerContext;
-import java.util.Collection;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
-public class StormIntegration {
+public class LiebreIntegration {
 
-  private static final Logger LOG = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger(LiebreIntegration.class);
 
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws InterruptedException, IOException {
+
+    Thread.sleep(15000);
+
 
     ExecutionConfig config = new ExecutionConfig();
     JCommander jCommander = JCommander.newBuilder().addObject(config).build();
@@ -37,25 +42,25 @@ public class StormIntegration {
       return;
     }
     Configurator.setRootLevel(config.log);
-    config.retrievePids(StormIntegration.class);
+    config.retrievePids(LiebreIntegration.class);
 
     SchedulerContext.initSpeProcessInfo(config.pids.get(0));
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
 
-    StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);
-    tryUpdateTasks(adapter);
+    Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
+    LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath);
+    adapter.updateTasks();
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new StormGraphiteMetricProvider("129.16.20.158", 80),
-        new LinuxMetricProvider(config.pids));
+        new LinuxMetricProvider(config.pids.get(0)),
+        new LiebreMetricProvider("129.16.20.158", 80, "liebre.OS2"));
+    metricProvider.setTaskIndex(adapter.taskIndex());
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority, config.maxPriority);
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
     ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
-    metricProvider.setTaskIndex(adapter.taskIndex());
-
     config.policy.init(translator, metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
@@ -66,19 +71,5 @@ public class StormIntegration {
     }
   }
 
-  private static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
-    final int tries = 20;
-    for (int i = 0; i < tries; i++) {
-      try {
-        LOG.info("Trying to fetch storm tasks...");
-        adapter.updateTasks();
-        LOG.info("Success!");
-        return;
-      } catch (Exception exception) {
-        Thread.sleep(5000);
-      }
-    }
-    throw new IllegalStateException("Failed to retrieve storm tasks!");
-  }
 
 }
