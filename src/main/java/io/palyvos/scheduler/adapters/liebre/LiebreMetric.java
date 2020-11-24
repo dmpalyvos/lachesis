@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.adapters.liebre;
 
 import io.palyvos.scheduler.metric.Metric;
+import io.palyvos.scheduler.metric.graphite.GraphiteMetricReport;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,10 +72,15 @@ enum LiebreMetric implements Metric<LiebreMetric> {
   protected final SubtaskTuplesResult subtaskTuplesSum(LiebreMetricProvider provider,
       int sumWindowSeconds) {
     final Map<String, Double> streamWrites = provider
-        .fetchFromGraphite(movingSum(provider, "*.IN.count", sumWindowSeconds), LiebreMetricReport::last);
+        .fetchFromGraphite(
+            movingSum(groupByNode(provider, "IN.count", "avg"), sumWindowSeconds),
+            1,
+            GraphiteMetricReport::last);
     final Map<String, Double> streamReads = provider
-        .fetchFromGraphite(movingSum(provider, "*.OUT.count", sumWindowSeconds),
-            LiebreMetricReport::last);
+        .fetchFromGraphite(
+            movingSum(groupByNode(provider, "OUT.count", "avg"), sumWindowSeconds),
+            1,
+            GraphiteMetricReport::last);
     final Map<String, Double> subtaskIn = new HashMap<>();
     final Map<String, Double> subtaskOut = new HashMap<>();
     for (String stream : streamWrites.keySet()) {
@@ -92,9 +98,13 @@ enum LiebreMetric implements Metric<LiebreMetric> {
     return new SubtaskTuplesResult(subtaskIn, subtaskOut);
   }
 
-  private static String movingSum(LiebreMetricProvider provider, String key, int sumWindowSeconds) {
+  private static String groupByNode(LiebreMetricProvider provider, String key, String function) {
+    return String.format("groupByNode(%s.*.%s, 0, '%s')", provider.metricsPrefix, key, function);
+  }
+
+  private static String movingSum(String key, int sumWindowSeconds) {
     return String
-        .format("movingSum(%s.%s, '%dsec')", provider.metricsPrefix, key, sumWindowSeconds);
+        .format("movingSum(%s, '%dsec')", key, sumWindowSeconds);
   }
 
   private static final class SubtaskTuplesResult {

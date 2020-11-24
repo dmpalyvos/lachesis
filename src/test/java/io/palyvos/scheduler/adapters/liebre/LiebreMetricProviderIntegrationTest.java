@@ -12,14 +12,6 @@ import org.testng.annotations.Test;
 @Test
 public class LiebreMetricProviderIntegrationTest {
 
-//  @Test
-  void rawFetchTest() {
-    LiebreMetricProvider provider = new LiebreMetricProvider("129.16.20.158", 80, "liebre.OS2");
-    provider.register(LiebreMetric.SUBTASK_TUPLES_IN_TOTAL);
-    Arrays.stream(provider.rawFetchFromGraphite("movingSum(liebre.OS2.*.OUT.*, '10min')", 30))
-        .forEach(report -> System.out.println(report.name() + " " + report.last()));
-  }
-
   @Test
   void totalTuplesTest() {
     LiebreMetricProvider provider = new LiebreMetricProvider("129.16.20.158", 80, "liebre.OS2");

@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.adapters.storm;
 
 import io.palyvos.scheduler.metric.Metric;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Map;
 
 public enum StormGraphiteMetric implements Metric<StormGraphiteMetric> {
@@ -17,8 +18,10 @@ public enum StormGraphiteMetric implements Metric<StormGraphiteMetric> {
 
 
   public void compute(StormGraphiteMetricProvider stormGraphiteMetricProvider) {
+    //FIXME: Adjust default window size and default value depending on metric
     Map<String, Double> metricValues = stormGraphiteMetricProvider
-        .fetchFromGraphite(graphiteQuery, report -> report.average(0));
+        .fetchFromGraphite(graphiteQuery, SchedulerContext.METRIC_RECENT_PERIOD_SECONDS,
+            report -> report.average(0));
     stormGraphiteMetricProvider.replaceMetricValues(this, metricValues);
   }
 }

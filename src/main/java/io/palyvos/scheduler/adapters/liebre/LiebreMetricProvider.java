@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import io.palyvos.scheduler.metric.AbstractMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.Metric;
+import io.palyvos.scheduler.metric.graphite.GraphiteDataFetcher;
+import io.palyvos.scheduler.metric.graphite.GraphiteMetricReport;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,16 +23,13 @@ import org.apache.logging.log4j.Logger;
 public class LiebreMetricProvider extends AbstractMetricProvider<LiebreMetric> {
 
   private static final Logger LOG = LogManager.getLogger(LiebreMetricProvider.class);
-  static final int GRAPHITE_FROM_TIME_WINDOW_SECONDS = 30;
 
-  private final URI graphiteURI;
-  private final Gson gson = new GsonBuilder().create();
-  String metricsPrefix;
+  private final GraphiteDataFetcher graphiteDataFetcher;
+  final String metricsPrefix;
 
   public LiebreMetricProvider(String graphiteHost, int graphitePort, String metricsPrefix) {
     super(mappingFor(LiebreMetric.values()), LiebreMetric.class);
-    Validate.notBlank(metricsPrefix, "metricsPrefix");
-    this.graphiteURI = URI.create(String.format("http://%s:%d", graphiteHost, graphitePort));
+    this.graphiteDataFetcher = new GraphiteDataFetcher(graphiteHost, graphitePort);
     Validate.notBlank(metricsPrefix, "metricsPrefix");
     this.metricsPrefix = metricsPrefix;
   }
@@ -40,36 +39,8 @@ public class LiebreMetricProvider extends AbstractMetricProvider<LiebreMetric> {
     metric.compute(this);
   }
 
-  LiebreMetricReport[] rawFetchFromGraphite(String target, int fromSeconds) {
-    Validate.notEmpty(target, "empty target");
-    URIBuilder builder = new URIBuilder(graphiteURI);
-    builder.setPath("render");
-    builder.addParameter("target", target);
-    builder.addParameter("from", String.format("-%dsec", fromSeconds));
-    builder.addParameter("format", "json");
-    try {
-      URI uri = builder.build();
-      LOG.trace("Fetching {}", uri);
-      String response = Request.Get(uri).execute().returnContent().toString();
-      LiebreMetricReport[] reports = gson.fromJson(response, LiebreMetricReport[].class);
-      return reports;
-    } catch (IOException | URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
+  public Map<String, Double> fetchFromGraphite(String target, int windowSeconds,
+      Function<GraphiteMetricReport, Double> reduceFunction) {
+    return graphiteDataFetcher.fetchFromGraphite(target, windowSeconds, reduceFunction);
   }
-
-  Map<String, Double> fetchFromGraphite(String target,
-      Function<LiebreMetricReport, Double> reduceFunction) {
-    LiebreMetricReport[] reports = rawFetchFromGraphite(target, GRAPHITE_FROM_TIME_WINDOW_SECONDS);
-    Map<String, Double> result = new HashMap<>();
-    for (LiebreMetricReport report : reports) {
-      Double reportValue = reduceFunction.apply(report);
-      if (reportValue != null) {
-        //Null values can exist due to leftovers in graphite data
-        result.put(report.simpleName(), reportValue);
-      }
-    }
-    return result;
-  }
-
 }
