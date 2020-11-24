@@ -137,7 +137,7 @@ public class StormIntegration {
     private long period = 1;
 
     @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
-    private int window = 30;
+    private int window = 10;
 
     @Parameter(names = "--policy", description = "Scheduling policy to apply, either random, constant:{PRIORITY_VALUE}, or metric:{METRIC_NAME}", converter = ConcreteSchedulingPolicyConverter.class)
     private ConcreteSchedulingPolicy policy;

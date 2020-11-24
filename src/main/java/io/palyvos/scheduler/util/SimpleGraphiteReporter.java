@@ -17,12 +17,6 @@ public class SimpleGraphiteReporter {
   private Socket socket;
   private DataOutputStream output;
 
-  public static void main(String[] args) throws IOException {
-    SimpleGraphiteReporter reporter = new SimpleGraphiteReporter("129.16.20.158", 2003);
-    reporter
-        .report(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()), "lachesis.test", 100);
-  }
-
   public SimpleGraphiteReporter(String graphiteHost, int graphitePort) {
     this.graphiteHost = graphiteHost;
     this.graphitePort = graphitePort;

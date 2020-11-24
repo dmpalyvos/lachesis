@@ -3,6 +3,7 @@ package io.palyvos.scheduler.adapters.storm;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.palyvos.scheduler.metric.AbstractMetricProvider;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,11 +16,9 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//FIXME: Builder
 public class StormGraphiteMetricProvider extends AbstractMetricProvider<StormGraphiteMetric> {
 
   private static final Logger LOG = LogManager.getLogger();
-  static final int GRAPHITE_FROM_TIME_WINDOW_SECONDS = 10;
 
   private final URI graphiteURI;
   private final Gson gson = new GsonBuilder().create();
@@ -37,7 +36,7 @@ public class StormGraphiteMetricProvider extends AbstractMetricProvider<StormGra
   Map<String, Double> fetchFromGraphite(String target,
       Function<GraphiteMetricReport, Double> reduceFunction) {
     GraphiteMetricReport[] reports = rawFetchFromGraphite(target,
-        GRAPHITE_FROM_TIME_WINDOW_SECONDS);
+        SchedulerContext.METRIC_RECENT_PERIOD_SECONDS);
     Map<String, Double> result = new HashMap<>();
     for (GraphiteMetricReport report : reports) {
       Double reportValue = reduceFunction.apply(report);

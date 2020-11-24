@@ -13,13 +13,14 @@ import org.apache.logging.log4j.Logger;
 
 public class SchedulerContext {
 
+  public static final CharSequence SCHEDULER_NAME = "lachesis";
   private static final Logger LOG = LogManager.getLogger(SchedulerContext.class);
 
   private static final UserInfo ROOT_USER_INFO = new UserInfo("root", 0, "root", 0);
   private static UserInfo SPE_PROCESS_USER_INFO;
 
   //FIXME: Move to Config class
-  public static int METRIC_RECENT_PERIOD_SECONDS = 30;
+  public static int METRIC_RECENT_PERIOD_SECONDS = 10;
   public static int METRIC_TOTAL_PERIOD_SECONDS = 600;
   public static String STATISTICS_FOLDER = ".";
   public static boolean AUTO_FLUSH = true;
