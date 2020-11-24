@@ -7,6 +7,9 @@ import java.util.Collection;
 
 public interface ConcreteSchedulingPolicy {
 
+  void init(ConcretePolicyTranslator policyTranslator,
+      SchedulerMetricProvider metricProvider);
+
   void apply(Collection<Subtask> subtasks, ConcretePolicyTranslator policyTranslator,
       SchedulerMetricProvider metricProvider);
 

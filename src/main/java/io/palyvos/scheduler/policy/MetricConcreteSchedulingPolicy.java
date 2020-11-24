@@ -21,6 +21,12 @@ public class MetricConcreteSchedulingPolicy implements ConcreteSchedulingPolicy 
   }
 
   @Override
+  public void init(ConcretePolicyTranslator policyTranslator,
+      SchedulerMetricProvider metricProvider) {
+    metricProvider.register(metric);
+  }
+
+  @Override
   public void apply(Collection<Subtask> subtasks, ConcretePolicyTranslator policyTranslator,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> schedule = new HashMap<>();

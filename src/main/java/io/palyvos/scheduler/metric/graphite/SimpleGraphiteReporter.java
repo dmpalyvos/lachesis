@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.util;
+package io.palyvos.scheduler.metric.graphite;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

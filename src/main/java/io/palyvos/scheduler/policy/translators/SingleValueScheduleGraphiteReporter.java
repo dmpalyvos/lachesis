@@ -1,12 +1,7 @@
 package io.palyvos.scheduler.policy.translators;
 
-import io.palyvos.scheduler.util.SchedulerContext;
-import io.palyvos.scheduler.util.SimpleGraphiteReporter;
-import java.io.File;
-import java.io.FileWriter;
+import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.SocketException;
 
 public class SingleValueScheduleGraphiteReporter {
 

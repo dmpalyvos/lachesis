@@ -18,7 +18,7 @@ public enum StormGraphiteMetric implements Metric<StormGraphiteMetric> {
 
   public void compute(StormGraphiteMetricProvider stormGraphiteMetricProvider) {
     Map<String, Double> metricValues = stormGraphiteMetricProvider
-        .fetchFromGraphite(graphiteQuery, GraphiteMetricReport::average);
+        .fetchFromGraphite(graphiteQuery, report -> report.average(0));
     stormGraphiteMetricProvider.replaceMetricValues(this, metricValues);
   }
 }

@@ -17,6 +17,11 @@ public class ConstantConcreteSchedulingPolicy implements ConcreteSchedulingPolic
   }
 
   @Override
+  public void init(ConcretePolicyTranslator policyTranslator,
+      SchedulerMetricProvider metricProvider) {
+  }
+
+  @Override
   public void apply(Collection<Subtask> subtasks, ConcretePolicyTranslator policyTranslator,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Long> normalizedSchedule = new HashMap<>();
