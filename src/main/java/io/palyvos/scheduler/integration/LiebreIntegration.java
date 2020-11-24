@@ -31,9 +31,6 @@ public class LiebreIntegration {
 
   public static void main(String[] args) throws InterruptedException, IOException {
 
-    Thread.sleep(15000);
-
-
     ExecutionConfig config = new ExecutionConfig();
     JCommander jCommander = JCommander.newBuilder().addObject(config).build();
     jCommander.parse(args);
@@ -51,7 +48,7 @@ public class LiebreIntegration {
 
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath);
-    adapter.updateTasks();
+    config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
         new LiebreMetricProvider("129.16.20.158", 80, "liebre.OS2"));

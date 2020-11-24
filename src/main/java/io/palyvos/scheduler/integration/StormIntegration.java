@@ -45,7 +45,7 @@ public class StormIntegration {
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
 
     StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);
-    tryUpdateTasks(adapter);
+    config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new StormGraphiteMetricProvider("129.16.20.158", 80),
         new LinuxMetricProvider(config.pids));
@@ -66,19 +66,6 @@ public class StormIntegration {
     }
   }
 
-  private static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
-    final int tries = 20;
-    for (int i = 0; i < tries; i++) {
-      try {
-        LOG.info("Trying to fetch storm tasks...");
-        adapter.updateTasks();
-        LOG.info("Success!");
-        return;
-      } catch (Exception exception) {
-        Thread.sleep(5000);
-      }
-    }
-    throw new IllegalStateException("Failed to retrieve storm tasks!");
-  }
+
 
 }

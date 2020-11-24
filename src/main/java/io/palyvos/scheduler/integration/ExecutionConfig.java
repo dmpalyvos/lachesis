@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.Parameter;
+import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.adapters.storm.StormConstants;
 import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
@@ -64,6 +65,21 @@ class ExecutionConfig {
       }
     }
     throw new IllegalStateException("Failed to retrieve worker PID(s)!");
+  }
+
+  static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
+    final int tries = 20;
+    for (int i = 0; i < tries; i++) {
+      try {
+        LOG.info("Trying to fetch storm tasks...");
+        adapter.updateTasks();
+        LOG.info("Success!");
+        return;
+      } catch (Exception exception) {
+        Thread.sleep(5000);
+      }
+    }
+    throw new IllegalStateException("Failed to retrieve storm tasks!");
   }
 
 }
