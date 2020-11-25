@@ -8,50 +8,70 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
 
 enum LiebreMetric implements Metric<LiebreMetric> {
-  SUBTASK_TUPLES_RECENT {
+  SUBTASK_TUPLES_IN_RECENT {
     @Override
     protected void compute(LiebreMetricProvider provider) {
-      SubtaskTuplesResult result = subtaskTuplesSum(provider,
-          SchedulerContext.METRIC_RECENT_PERIOD_SECONDS);
-      provider.replaceMetricValues(SUBTASK_TUPLES_IN_RECENT, result.in);
-      provider.replaceMetricValues(SUBTASK_TUPLES_OUT_RECENT, result.out);
+      final Map<String, Double> streamReads = provider
+          .fetchFromGraphite(
+              groupByNode(movingAverage(graphiteQuery("OUT.count"),
+                  SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
+              SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
+              GraphiteMetricReport::last);
+      final Map<String, Double> subtaskIn = new HashMap<>();
+      for (String stream : streamReads.keySet()) {
+        String[] operators = stream.split("_");
+        Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
+        String reader = operators[1];
+        subtaskIn.put(reader, streamReads.get(stream));
+      }
+      provider.replaceMetricValues(SUBTASK_TUPLES_IN_RECENT, subtaskIn);
     }
   },
-  SUBTASK_TUPLES_IN_RECENT(SUBTASK_TUPLES_RECENT) {
+  SUBTASK_TUPLES_OUT_RECENT {
     @Override
     protected void compute(LiebreMetricProvider provider) {
-      //Computed at SUBTASK_TUPLES_RECENT
+      final Map<String, Double> subtaskOut = new HashMap<>();
+      final Map<String, Double> streamWrites = provider
+          .fetchFromGraphite(
+              groupByNode(movingAverage(graphiteQuery("IN.count"),
+                  SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
+              SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
+              GraphiteMetricReport::last);
+      for (String stream : streamWrites.keySet()) {
+        String[] operators = stream.split("_");
+        Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
+        String writer = operators[0];
+        subtaskOut.put(writer, streamWrites.get(stream));
+      }
+      provider.replaceMetricValues(SUBTASK_TUPLES_OUT_RECENT, subtaskOut);
     }
   },
-  SUBTASK_TUPLES_OUT_RECENT(SUBTASK_TUPLES_RECENT) {
+  TASK_QUEUE_SIZE_FROM_SUBTASK_DATA {
     @Override
     protected void compute(LiebreMetricProvider provider) {
-      //Computed at SUBTASK_TUPLES_RECENT
-    }
-  },
-  SUBTASK_TUPLES_TOTAL {
-    @Override
-    protected void compute(LiebreMetricProvider provider) {
-      SubtaskTuplesResult result = subtaskTuplesSum(provider,
-          SchedulerContext.METRIC_TOTAL_PERIOD_SECONDS);
-      provider.replaceMetricValues(SUBTASK_TUPLES_IN_TOTAL, result.in);
-      provider.replaceMetricValues(SUBTASK_TUPLES_OUT_TOTAL, result.out);
-    }
-  },
-  SUBTASK_TUPLES_IN_TOTAL(SUBTASK_TUPLES_TOTAL) {
-    @Override
-    protected void compute(LiebreMetricProvider provider) {
-      //Computed at SUBTASK_TUPLES_TOTAL
-    }
-  },
-  SUBTASK_TUPLES_OUT_TOTAL(SUBTASK_TUPLES_TOTAL) {
-    @Override
-    protected void compute(LiebreMetricProvider provider) {
-      //Computed at SUBTASK_TUPLES_TOTAL
+      final Map<String, Double> streamSizes = provider
+          .fetchFromGraphite(
+              groupByNode(movingAverage(graphiteQuery("QUEUE_SIZE"),
+                  SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
+              SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
+              GraphiteMetricReport::last);
+      final Map<String, Double> operatorQueueSizes = new HashMap<>();
+      for (String stream : streamSizes.keySet()) {
+        String[] operators = stream.split("_");
+        Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
+        String reader = operators[1];
+        operatorQueueSizes.put(reader, streamSizes.get(stream));
+      }
+      //FIXME: Does this make sense?
+      double average = operatorQueueSizes.values().stream().filter(Objects::nonNull)
+          .mapToDouble(Double::doubleValue).average().orElse(0);
+      provider.traverser.sourceTasks().forEach(task -> operatorQueueSizes.put(task.id(), average));
+      provider.replaceMetricValues(this, operatorQueueSizes);
     }
   };
 
@@ -69,54 +89,19 @@ enum LiebreMetric implements Metric<LiebreMetric> {
 
   protected abstract void compute(LiebreMetricProvider provider);
 
-  protected final SubtaskTuplesResult subtaskTuplesSum(LiebreMetricProvider provider,
-      int sumWindowSeconds) {
-    final Map<String, Double> streamWrites = provider
-        .fetchFromGraphite(
-            movingSum(groupByNode(provider, "IN.count", "avg"), sumWindowSeconds),
-            1,
-            GraphiteMetricReport::last);
-    final Map<String, Double> streamReads = provider
-        .fetchFromGraphite(
-            movingSum(groupByNode(provider, "OUT.count", "avg"), sumWindowSeconds),
-            1,
-            GraphiteMetricReport::last);
-    final Map<String, Double> subtaskIn = new HashMap<>();
-    final Map<String, Double> subtaskOut = new HashMap<>();
-    for (String stream : streamWrites.keySet()) {
-      String[] operators = stream.split("_");
-      Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
-      String writer = operators[0];
-      subtaskOut.put(writer, streamWrites.get(stream));
-    }
-    for (String stream : streamReads.keySet()) {
-      String[] operators = stream.split("_");
-      Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
-      String reader = operators[1];
-      subtaskIn.put(reader, streamReads.get(stream));
-    }
-    return new SubtaskTuplesResult(subtaskIn, subtaskOut);
+  private static String graphiteQuery(String key) {
+    return String.format("%s.*.%s", LiebreMetricProvider.LIEBRE_METRICS_PREFIX, key);
   }
 
-  private static String groupByNode(LiebreMetricProvider provider, String key, String function) {
-    return String.format("groupByNode(%s.*.%s, 0, '%s')", provider.metricsPrefix, key, function);
-  }
-
-  private static String movingSum(String key, int sumWindowSeconds) {
+  private static String groupByNode(String query, String function) {
     return String
-        .format("movingSum(%s, '%dsec')", key, sumWindowSeconds);
+        .format("groupByNode(%s, %d, '%s')", query, LiebreMetricProvider.LIEBRE_METRIC_NODE_IDX,
+            function);
   }
 
-  private static final class SubtaskTuplesResult {
-
-    final Map<String, Double> in;
-    final Map<String, Double> out;
-
-    public SubtaskTuplesResult(Map<String, Double> in,
-        Map<String, Double> out) {
-      this.in = Collections.unmodifiableMap(in);
-      this.out = Collections.unmodifiableMap(out);
-    }
+  private static String movingAverage(String key, int sumWindowSeconds) {
+    return String
+        .format("movingAverage(%s, '%dsec')", key, sumWindowSeconds);
   }
 
 }

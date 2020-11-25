@@ -37,7 +37,7 @@ class ExecutionConfig {
   int maxPriority = -20;
 
   @Parameter(names = "--minPriority", description = "Minimum translated priority value")
-  int minPriority = 10;
+  int minPriority = 0;
 
   @Parameter(names = "--logarithmic", description = "Take the logarithm of the priorities before converting to nice values")
   boolean logarithmic = false;
@@ -48,8 +48,8 @@ class ExecutionConfig {
   @Parameter(names = "--help", help = true)
   boolean help = false;
 
-  @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)")
-  String workerPattern = StormConstants.STORM_WORKER_CLASS;
+  @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)", required = true)
+  String workerPattern;
 
   void retrievePids(Class<?> mainClass) throws InterruptedException {
     final int tries = 20;
@@ -71,11 +71,12 @@ class ExecutionConfig {
     final int tries = 20;
     for (int i = 0; i < tries; i++) {
       try {
-        LOG.info("Trying to fetch storm tasks...");
+        LOG.info("Trying to fetch tasks...");
         adapter.updateTasks();
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
+        exception.printStackTrace();
         Thread.sleep(5000);
       }
     }
