@@ -61,7 +61,7 @@ public class StormIntegration {
       long start = System.currentTimeMillis();
       metricProvider.run();
       config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
-      LOG.info("Scheduling took {} ms", System.currentTimeMillis() - start);
+      LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }
   }

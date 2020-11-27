@@ -44,7 +44,7 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
     final Map<ExternalThread, Long> normalizedSchedule = normalizer.normalize(schedule);
     reportStatistics(schedule, normalizedSchedule);
     final int updates = applyDirect(normalizedSchedule);
-    LOG.info("{} finished applying policy: {} priority updates ({} ms)", getClass().getSimpleName(),
+    LOG.debug("{} finished applying policy: {} priority updates ({} ms)", getClass().getSimpleName(),
         updates, System.currentTimeMillis() - start);
 
   }
