@@ -73,7 +73,34 @@ enum LiebreMetric implements Metric<LiebreMetric> {
       provider.traverser.sourceTasks().forEach(task -> operatorQueueSizes.put(task.id(), average));
       provider.replaceMetricValues(this, operatorQueueSizes);
     }
-  };
+  },
+  TASK_ARRIVAL_TIME {
+    @Override
+    protected void compute(LiebreMetricProvider provider) {
+      final Map<String, Double> arrivalTimes = provider
+          .fetchFromGraphite(
+              groupByNode(movingAverage(graphiteQuery("ARRIVAL_TIME"),
+                  SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
+              SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
+              GraphiteMetricReport::last);
+      final Map<String, Double> operatorArrivalTimes = new HashMap<>();
+      final long now = System.currentTimeMillis();
+      for (String stream : arrivalTimes.keySet()) {
+        String[] operators = stream.split("_");
+        Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
+        String reader = operators[1];
+        final Double arrivalTime = arrivalTimes.get(stream);
+        final double latency = arrivalTime < 0 ? 0 : now - arrivalTime;
+        operatorArrivalTimes.put(reader, latency);
+      }
+      //FIXME: Does this make sense?
+      double average = operatorArrivalTimes.values().stream().filter(Objects::nonNull)
+          .mapToDouble(Double::doubleValue).average().orElse(0);
+      provider.traverser.sourceTasks()
+          .forEach(task -> operatorArrivalTimes.put(task.id(), average));
+      provider.replaceMetricValues(this, operatorArrivalTimes);
+    }
+  };;
 
 
   private final Set<LiebreMetric> dependencies;
