@@ -8,21 +8,29 @@ import java.io.PrintWriter;
 
 public class SingleValueScheduleFileReporter {
 
-  private static final String STATISTICS_FILE = "schedule.csv";
-  private final PrintWriter out;
+  private static final String INTERNAL_PRIORITIES_FILENAME = "schedule-internal.csv";
+  private static final String EXTERNAL_PRIORITIES_FILENAME = "schedule-external.csv";
+  private final PrintWriter internalOut;
+  private final PrintWriter externalOut;
 
   public SingleValueScheduleFileReporter() {
-    final String outputFile = SchedulerContext.STATISTICS_FOLDER + File.separator + STATISTICS_FILE;
+    final String internalPrioritiesFile =
+        SchedulerContext.STATISTICS_FOLDER + File.separator + INTERNAL_PRIORITIES_FILENAME;
+    final String externalPrioritiesFile =
+        SchedulerContext.STATISTICS_FOLDER + File.separator + EXTERNAL_PRIORITIES_FILENAME;
     try {
-      FileWriter outFile = new FileWriter(outputFile);
-      out = new PrintWriter(outFile, SchedulerContext.AUTO_FLUSH);
+      internalOut = new PrintWriter(new FileWriter(internalPrioritiesFile),
+          SchedulerContext.AUTO_FLUSH);
+      externalOut = new PrintWriter(new FileWriter(externalPrioritiesFile),
+          SchedulerContext.AUTO_FLUSH);
     } catch (IOException e) {
       throw new IllegalArgumentException(
-          String.format("Failed to open file %s for writing: %s", outputFile, e.getMessage()), e);
+          String.format("Failed to open file for writing: %s", e.getMessage()), e);
     }
   }
 
   public void add(long timestamp, String thread, long externalPriority, double internalPriority) {
-    out.format("%d,%s,%d,%f\n", timestamp, thread, externalPriority, internalPriority);
+    internalOut.format("%s,%d,%f\n", thread, timestamp, internalPriority);
+    externalOut.format("%s,%d,%d\n", thread, timestamp, externalPriority);
   }
 }
