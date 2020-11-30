@@ -210,7 +210,7 @@ public enum BaseCompositeMetric implements CompositeMetric {
       double readByTask = task.subtasks().stream()
           .map(subtask -> subtaskIn.get(subtask.id())).mapToDouble(v -> v != null ? v : 0)
           .sum();
-      qs.put(task.id(), writtenUpstream - readByTask);
+      qs.put(task.name(), writtenUpstream - readByTask);
     }
     compositeMetricProvider.replaceMetricValues(metric, qs);
   }

@@ -29,20 +29,16 @@ public class FlinkAdapter implements SpeAdapter {
   private final Gson gson = new Gson();
   private final List<Task> tasks = new ArrayList<>();
   private final OsAdapter osAdapter;
-  private final int pid;
+  private final List<Integer> pids;
   private TaskIndex taskIndex;
 
-  public FlinkAdapter(int pid, String host, int port) {
-    this(pid, host, port, new LinuxAdapter());
-  }
-
-  public FlinkAdapter(int pid, String host, int port, OsAdapter osAdapter) {
+  public FlinkAdapter(List<Integer> pids, String host, int port, OsAdapter osAdapter) {
     Validate.notBlank(host, "No host provided!");
     Validate.isTrue(port > 0, "Negative port provided!");
     Validate.notNull(osAdapter, "osAdapter");
-    Validate.isTrue(pid > 1, "invalid pid");
+    Validate.notEmpty(pids, "At least one worker PID required");
     this.flinkURI = URI.create(String.format("http://%s:%d", host, port));
-    this.pid = pid;
+    this.pids = pids;
     this.osAdapter = osAdapter;
   }
 
@@ -51,7 +47,7 @@ public class FlinkAdapter implements SpeAdapter {
     this.tasks.clear();
     jobs().stream().filter(job -> job.isRunning()).forEach(job ->
         tasks.addAll(fetchTasks(job)));
-    FlinkThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
+    FlinkThreadAssigner.assign(tasks, threads());
     this.taskIndex = new TaskIndex(this.tasks);
   }
 
@@ -75,7 +71,11 @@ public class FlinkAdapter implements SpeAdapter {
 
   @Override
   public Collection<ExternalThread> threads() {
-    return osAdapter.jvmThreads(pid);
+    List<ExternalThread> threads = new ArrayList<>();
+    for (int pid : pids) {
+      threads.addAll(osAdapter.jvmThreads(pid));
+    }
+    return Collections.unmodifiableList(threads);
   }
 
   @Override
@@ -97,8 +97,5 @@ public class FlinkAdapter implements SpeAdapter {
     LOG.debug(jobInfo);
     return jobInfo.plan.tasks(jobInfo.vertices);
   }
-
-
-
 
 }

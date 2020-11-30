@@ -19,9 +19,9 @@ class ExecutionConfig {
   List<Integer> pids;
 
   @Parameter(names = "--log", converter = Log4jLevelConverter.class, description = "Logging level (e.g., DEBUG, INFO, etc)")
-  Level log = Level.DEBUG;
+  Level log = Level.INFO;
 
-  @Parameter(names = "--queryGraph", required = true, description = "Path to the query graph yaml file")
+  @Parameter(names = "--queryGraph", description = "Path to the query graph yaml file")
   String queryGraphPath;
 
   @Parameter(names = "--period", description = "(Minimum) scheduling period, in seconds")
