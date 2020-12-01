@@ -17,9 +17,9 @@ class LiebreThreadAssigner {
     tasks.stream().forEach(task ->
         task.subtasks().forEach(
             subtask -> {
-              ExternalThread thread = threadIndex.get(subtask.name());
+              ExternalThread thread = threadIndex.get(subtask.id());
               Validate.validState(thread != null,
-                  "Subtask %s not mapped to any thread!", subtask.name());
+                  "Subtask %s not mapped to any thread!", subtask.id());
               subtask.assignThread(thread);
             }));
   }

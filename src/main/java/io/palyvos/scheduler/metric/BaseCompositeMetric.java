@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
@@ -210,7 +211,7 @@ public enum BaseCompositeMetric implements CompositeMetric {
       double readByTask = task.subtasks().stream()
           .map(subtask -> subtaskIn.get(subtask.id())).mapToDouble(v -> v != null ? v : 0)
           .sum();
-      qs.put(task.name(), writtenUpstream - readByTask);
+      qs.put(task.id(), writtenUpstream - readByTask);
     }
     compositeMetricProvider.replaceMetricValues(metric, qs);
   }

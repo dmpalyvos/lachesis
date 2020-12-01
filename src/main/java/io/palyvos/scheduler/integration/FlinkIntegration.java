@@ -2,10 +2,9 @@ package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.JCommander;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
-import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMeticProvider;
+import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
-import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
@@ -42,7 +41,7 @@ public class FlinkIntegration {
     FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost", 8081, new LinuxAdapter());
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new FlinkGraphiteMeticProvider("129.16.20.158", 80),
+        new FlinkGraphiteMetricProvider("129.16.20.158", 80, adapter.tasks()),
         new LinuxMetricProvider(config.pids));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
         config.maxPriority);
@@ -56,8 +55,8 @@ public class FlinkIntegration {
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
-      System.out.println(metricProvider.get(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA));
-//      config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
+//      System.out.println(metricProvider.get(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA));
+      config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }

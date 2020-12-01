@@ -30,7 +30,7 @@ public class TaskGraphTraverserTest {
       task.upstream().clear();
       task.downstream().clear();
       task.subtasks().clear();
-      task.subtasks().add(new Subtask(task.id(), task.name(), 0));
+      task.subtasks().add(new Subtask(task.id(), task.internalId(), 0));
     });
   }
 
@@ -89,7 +89,7 @@ public class TaskGraphTraverserTest {
     task2.upstream().add(task1);
     task2.downstream().add(task3);
     task3.upstream().add(task2);
-    task2.subtasks().add(new Subtask(task2.id(), task2.name(), 1));
+    task2.subtasks().add(new Subtask(task2.id(), task2.internalId(), 1));
     TaskGraphTraverser traverser = new TaskGraphTraverser(Arrays.asList(task1, task2, task3));
     List<String> traversalLog = new ArrayList<>();
     traverser.forEachSubtaskFromSinkBFS(subtask -> traversalLog.add(subtask.toString()));
@@ -124,7 +124,7 @@ public class TaskGraphTraverserTest {
     task2.upstream().add(task1);
     task2.downstream().add(task3);
     task3.upstream().add(task2);
-    task2.subtasks().add(new Subtask(task2.id(), task2.name(), 1));
+    task2.subtasks().add(new Subtask(task2.id(), task2.internalId(), 1));
     TaskGraphTraverser traverser = new TaskGraphTraverser(Arrays.asList(task1, task2, task3));
     List<String> traversalLog = new ArrayList<>();
     traverser.forEachSubtaskFromSourceBFS(subtask -> traversalLog.add(subtask.toString()));

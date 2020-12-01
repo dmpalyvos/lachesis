@@ -29,7 +29,7 @@ class FlinkPlan {
   public Collection<Task> tasks(Collection<FlinkVertex> vertices) {
     Validate.notEmpty(vertices, "No vertices provided!");
     Map<String, Task> tasks = vertices.stream().map(vertex -> vertex.toTask(this.jid))
-        .collect(Collectors.toMap(task -> task.id(), subtask -> subtask));
+        .collect(Collectors.toMap(task -> task.internalId(), subtask -> subtask));
     for (FlinkNode node : nodes) {
       List<String> inputIds = node.inputs.stream().map(input -> input.id)
           .collect(Collectors.toList());

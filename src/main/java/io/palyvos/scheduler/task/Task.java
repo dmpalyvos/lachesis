@@ -11,11 +11,12 @@ public class Task {
 
   public static final String DEFAULT_JOB_ID = "DEFAULT_JOB";
   private final String id;
-  private final String name;
+  private final String internalId;
   private final String jobId;
   private Set<Subtask> subtasks = new HashSet<>();
   private Set<Task> upstream = new HashSet<>();
   private Set<Task> downstream = new HashSet<>();
+  private final Set<Operator> operators = new HashSet<>();
   private final Set<HelperTask> helpers = new HashSet<>();
 
   public static Task ofSingleSubtask(String id) {
@@ -29,17 +30,17 @@ public class Task {
     return task;
   }
 
-  public Task(String id, String name, String jobId) {
+  public Task(String id, String internalId, String jobId) {
     Validate.notBlank(id, "Blank subtask id!");
-    Validate.notBlank(name, "Blank subtask name!");
+    Validate.notBlank(internalId, "Blank subtask name!");
     Validate.notBlank(jobId, "Blank subtask job id!");
     this.id = id;
-    this.name = name;
+    this.internalId = internalId;
     this.jobId = jobId;
   }
 
-  public String name() {
-    return name;
+  public String internalId() {
+    return internalId;
   }
 
   public String id() {
@@ -50,6 +51,9 @@ public class Task {
     return subtasks;
   }
 
+  public Collection<Operator> operators() {
+    return operators;
+  }
   public Collection<Task> upstream() {
     return upstream;
   }
@@ -76,22 +80,23 @@ public class Task {
     }
     Task task = (Task) o;
     return id.equals(task.id) &&
-        name.equals(task.name) &&
+        internalId.equals(task.internalId) &&
         jobId.equals(task.jobId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, jobId);
+    return Objects.hash(id, internalId, jobId);
   }
 
   @Override
   public String toString() {
     return new ToStringBuilder(this)
         .append("id", id)
-        .append("name", name)
+        .append("internalId", internalId)
         .append("jobId", jobId)
         .append("subtasks", subtasks)
+        .append("operators", operators)
         .append("helpers", helpers)
         .toString();
   }

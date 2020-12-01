@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.commons.lang3.Validate;
 
 class StormUiThreadAssigner {
@@ -18,7 +17,7 @@ class StormUiThreadAssigner {
     final Map<String, Queue<Subtask>> taskIndex = new HashMap<>();
     tasks.forEach(
         task -> taskIndex
-            .computeIfAbsent(task.name().trim(), (k) -> new ArrayDeque<>(task.subtasks())));
+            .computeIfAbsent(task.id().trim(), (k) -> new ArrayDeque<>(task.subtasks())));
     for (ExternalThread thread : threads) {
       Matcher matcher = StormConstants.EXECUTOR_THREAD_PATTERN.matcher(thread.name());
       if (matcher.matches()) {

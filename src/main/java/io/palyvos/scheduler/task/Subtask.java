@@ -14,23 +14,22 @@ public class Subtask {
   private static final Logger LOG = LogManager.getLogger(Subtask.class);
 
   private final String id;
-  private final String name;
+  private final String internalId;
   private final int index;
-  private final Set<Operator> operators = new HashSet<>();
   private final Set<HelperTask> helpers = new HashSet<>();
   private ExternalThread thread;
 
-  public Subtask(String id, String name, int index) {
+  public Subtask(String id, String internalId, int index) {
     Validate.notBlank(id, "Blank subtask id!");
-    Validate.notBlank(name, "Blank subtask name!");
+    Validate.notBlank(internalId, "Blank internal id!");
     Validate.isTrue(index >= 0, "Negative instance index!");
     this.id = id;
-    this.name = name;
+    this.internalId = internalId;
     this.index = index;
   }
 
-  public String name() {
-    return name;
+  public String internalId() {
+    return internalId;
   }
 
   public String id() {
@@ -56,10 +55,6 @@ public class Subtask {
     return helpers;
   }
 
-  public Collection<Operator> operators() {
-    return operators;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -71,21 +66,20 @@ public class Subtask {
     Subtask subtask = (Subtask) o;
     return index == subtask.index &&
         id.equals(subtask.id) &&
-        name.equals(subtask.name);
+        internalId.equals(subtask.internalId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, index);
+    return Objects.hash(id, internalId, index);
   }
 
   @Override
   public String toString() {
     return new ToStringBuilder(this)
         .append("id", id)
-        .append("name", name)
+        .append("internalId", internalId)
         .append("index", index)
-        .append("operators", operators)
         .append("helpers", helpers)
         .append("thread", thread)
         .toString();

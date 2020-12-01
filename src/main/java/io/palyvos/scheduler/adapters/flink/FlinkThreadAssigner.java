@@ -21,11 +21,11 @@ class FlinkThreadAssigner {
   public static void assign(Collection<Task> tasks, Collection<ExternalThread> threads) {
     Validate.noNullElements(tasks, "Null task in collection");
     Validate.noNullElements(threads, "Null thread in collection");
-    System.out.println("---------- SUBTASKS -----------");
-    tasks.forEach(subtask -> System.out.println(subtask.name()));
-    System.out.println("---------- THREADS ------------");
-    threads.forEach(thread -> System.out.println(thread));
-    System.out.println("---------- END ----------------");
+//    System.out.println("---------- SUBTASKS -----------");
+//    tasks.forEach(subtask -> System.out.println(subtask.name()));
+//    System.out.println("---------- THREADS ------------");
+//    threads.forEach(thread -> System.out.println(thread));
+//    System.out.println("---------- END ----------------");
     final Map<String, List<ExternalThread>> threadIndex = new HashMap<>();
     threads.forEach(
         thread -> threadIndex.computeIfAbsent(thread.name().trim(), (k) -> new ArrayList<>())
@@ -47,14 +47,14 @@ class FlinkThreadAssigner {
   public static Collection<ExternalThread> executorThreads(
       Map<String, List<ExternalThread>> threadIndex, Subtask subtask, int parallelism) {
     final String key = String
-        .format("%s (%d/%d)", subtask.name(), 1 + subtask.index(), parallelism);
+        .format("%s (%d/%d)", subtask.id(), 1 + subtask.index(), parallelism);
     return threadIndex.computeIfAbsent(key.trim(), (k) -> Collections.emptyList());
   }
 
   public static Collection<ExternalThread> legacySourceThreads(
       Map<String, List<ExternalThread>> threadIndex, Subtask subtask, int parallelism) {
     final String key = String
-        .format("%s %s (%d/%d)", LEGACY_SOURCE_THREAD_PREFIX, subtask.name(), 1 + subtask.index(),
+        .format("%s %s (%d/%d)", LEGACY_SOURCE_THREAD_PREFIX, subtask.id(), 1 + subtask.index(),
             parallelism);
     return threadIndex.computeIfAbsent(key.trim(), (k) -> Collections.emptyList());
   }
@@ -62,14 +62,14 @@ class FlinkThreadAssigner {
   public static Collection<ExternalThread> timeTriggerThreads(
       Map<String, List<ExternalThread>> threadIndex, Subtask subtask, int parallelism) {
     final String key = String
-        .format("%s %s (%d/%d)", TIME_TRIGGER_THREAD_PREFIX, subtask.name(), 1 + subtask.index(),
+        .format("%s %s (%d/%d)", TIME_TRIGGER_THREAD_PREFIX, subtask.id(), 1 + subtask.index(),
             parallelism);
     return threadIndex.computeIfAbsent(key.trim(), (k) -> Collections.emptyList());
   }
 
   public static Collection<ExternalThread> outputFlusherThreads(
       Map<String, List<ExternalThread>> threadIndex, Task task) {
-    final String key = String.format("%s %s", OUTPUT_FLUSHER_THREAD_PREFIX, task.name());
+    final String key = String.format("%s %s", OUTPUT_FLUSHER_THREAD_PREFIX, task.id());
     return threadIndex.computeIfAbsent(key.trim(), (k) -> Collections.emptyList());
   }
 
