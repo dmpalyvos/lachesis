@@ -1,8 +1,10 @@
 package io.palyvos.scheduler.util;
 
+import io.palyvos.scheduler.policy.MetricConcreteSchedulingPolicy;
 import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.Validate;
@@ -19,11 +21,12 @@ public class SchedulerContext {
   private static final UserInfo ROOT_USER_INFO = new UserInfo("root", 0, "root", 0);
   private static UserInfo SPE_PROCESS_USER_INFO;
 
-  //FIXME: Move to Config class
+  // Global configuration parameters
+  public static Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s;
   public static int METRIC_RECENT_PERIOD_SECONDS = 10;
   public static int METRIC_TOTAL_PERIOD_SECONDS = 600;
   public static String STATISTICS_FOLDER = ".";
-  public static boolean AUTO_FLUSH = true;
+  public static boolean STATISTICS_AUTO_FLUSH = true;
 
   static {
     ToStringBuilder.setDefaultStyle(ToStringStyle.NO_CLASS_NAME_STYLE);

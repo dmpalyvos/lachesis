@@ -5,6 +5,7 @@ import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
+import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
@@ -37,6 +38,7 @@ public class FlinkIntegration {
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost", 8081, new LinuxAdapter());
     config.tryUpdateTasks(adapter);

@@ -26,9 +26,9 @@ import org.apache.logging.log4j.core.config.Configurator;
 public class LiebreIntegration {
 
   private static final Logger LOG = LogManager.getLogger(LiebreIntegration.class);
+  public static final long DEFAULT_NICE_VALUE = 0;
 
   public static void main(String[] args) throws InterruptedException, IOException {
-
     ExecutionConfig config = new ExecutionConfig();
     JCommander jCommander = JCommander.newBuilder().addObject(config).build();
     jCommander.parse(args);
@@ -43,6 +43,7 @@ public class LiebreIntegration {
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath);
@@ -56,6 +57,13 @@ public class LiebreIntegration {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
     ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
+
+//    final Thread hook = new Thread(() -> {
+//      LOG.warn("Shutting down JVM...");
+//      translator.applyDirect(defaultNiceSchedule(adapter.taskIndex().subtasks()));
+//    });
+//    Runtime.getRuntime().addShutdownHook(hook);
+
     config.policy.init(translator, metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
@@ -64,6 +72,12 @@ public class LiebreIntegration {
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }
+  }
+
+  private static Map<ExternalThread, Long> defaultNiceSchedule(Collection<Subtask> subtasks) {
+    final Map<ExternalThread, Long> schedule = new HashMap<>();
+    subtasks.forEach(subtask -> schedule.put(subtask.thread(), DEFAULT_NICE_VALUE));
+    return schedule;
   }
 
 

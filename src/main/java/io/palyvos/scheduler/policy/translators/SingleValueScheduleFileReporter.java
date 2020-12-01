@@ -20,9 +20,9 @@ public class SingleValueScheduleFileReporter {
         SchedulerContext.STATISTICS_FOLDER + File.separator + EXTERNAL_PRIORITIES_FILENAME;
     try {
       internalOut = new PrintWriter(new FileWriter(internalPrioritiesFile),
-          SchedulerContext.AUTO_FLUSH);
+          SchedulerContext.STATISTICS_AUTO_FLUSH);
       externalOut = new PrintWriter(new FileWriter(externalPrioritiesFile),
-          SchedulerContext.AUTO_FLUSH);
+          SchedulerContext.STATISTICS_AUTO_FLUSH);
     } catch (IOException e) {
       throw new IllegalArgumentException(
           String.format("Failed to open file for writing: %s", e.getMessage()), e);

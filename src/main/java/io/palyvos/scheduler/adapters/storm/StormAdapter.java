@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,8 @@ import org.apache.logging.log4j.Logger;
 public class StormAdapter implements SpeAdapter {
 
   private static final Logger LOG = LogManager.getLogger();
+  public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
+      s -> s.replace("-", ".");
 
   private final QueryGraphParser queryGraphParser = new QueryGraphParser();
   private final List<Task> tasks = new ArrayList<>();

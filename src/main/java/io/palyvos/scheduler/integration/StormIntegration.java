@@ -2,6 +2,7 @@ package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.JCommander;
 import io.palyvos.scheduler.adapters.SpeAdapter;
+import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
@@ -43,6 +44,7 @@ public class StormIntegration {
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);
     config.tryUpdateTasks(adapter);

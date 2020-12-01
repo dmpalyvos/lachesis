@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.policy.translators;
 
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.IOException;
 
 public class SingleValueScheduleGraphiteReporter {
@@ -21,7 +22,7 @@ public class SingleValueScheduleGraphiteReporter {
 
   public void add(long timestamp, String thread, long externalPriority, double internalPriority) {
     //FIXME: Dirty patch to produce a graphite-compatible key. This needs to be SPE-specific!
-    String convertedThread = thread.replaceAll("[^A-Za-z0-9\\-]", "").replace("-", ".");
+    String convertedThread = graphiteCompatibleThreadName(thread);
     try {
       reporter.report(timestamp, String.format("lachesis.%s.external", convertedThread),
           externalPriority);
@@ -30,5 +31,10 @@ public class SingleValueScheduleGraphiteReporter {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private String graphiteCompatibleThreadName(String thread) {
+    String cleanedName = thread.replaceAll("[^A-Za-z0-9\\-]", "");
+    return SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER.apply(cleanedName);
   }
 }

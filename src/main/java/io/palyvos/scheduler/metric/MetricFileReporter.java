@@ -32,7 +32,7 @@ public class MetricFileReporter<T extends Metric> {
     final String outputFile = outputFile(metric);
     try {
       FileWriter outFile = new FileWriter(outputFile);
-      out = new PrintWriter(outFile, SchedulerContext.AUTO_FLUSH);
+      out = new PrintWriter(outFile, SchedulerContext.STATISTICS_AUTO_FLUSH);
     } catch (IOException e) {
       throw new IllegalArgumentException(
           String.format("Failed to open file %s for writing: %s", outputFile, e.getMessage()), e);

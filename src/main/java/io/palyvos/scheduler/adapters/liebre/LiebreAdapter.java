@@ -11,9 +11,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import org.apache.commons.lang3.Validate;
 
 public class LiebreAdapter implements SpeAdapter {
+
+  public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
+      s -> s.replace("-", ".");
 
   private final QueryGraphParser queryGraphParser = new QueryGraphParser();
   private final OsAdapter osAdapter;
@@ -42,7 +46,6 @@ public class LiebreAdapter implements SpeAdapter {
     LiebreThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
     this.taskIndex = new TaskIndex(tasks);
   }
-
 
 
   @Override

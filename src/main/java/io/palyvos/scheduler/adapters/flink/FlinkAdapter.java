@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,9 +29,11 @@ public class FlinkAdapter implements SpeAdapter {
 
   private static final Logger LOG = LogManager.getLogger(FlinkAdapter.class);
 
+  public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s;
+
   private static final String JOBS_PATH = "jobs";
-  public static final String JOBS_KEY = "jobs";
-  public static final Pattern MULTIPLE_OPERATOR_PATTERN = Pattern.compile("\\s*\\((.+)\\)\\s*");
+  private static final String JOBS_KEY = "jobs";
+  private static final Pattern MULTIPLE_OPERATOR_PATTERN = Pattern.compile("\\s*\\((.+)\\)\\s*");
   private final URI flinkURI;
   private final Gson gson = new Gson();
   private final List<Task> tasks = new ArrayList<>();
