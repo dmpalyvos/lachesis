@@ -9,9 +9,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class SimpleGraphiteReporter {
 
+  private static final Pattern GRAPHITE_REJECT_PATTERN = Pattern.compile("[^A-Za-z0-9\\-_>]");
   private final int graphitePort;
   private final String graphiteHost;
   private Socket socket;
@@ -43,5 +45,9 @@ public class SimpleGraphiteReporter {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  public static String cleanGraphiteId(String thread) {
+    return GRAPHITE_REJECT_PATTERN.matcher(thread).replaceAll("");
   }
 }

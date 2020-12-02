@@ -1,7 +1,9 @@
 package io.palyvos.scheduler.task;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
@@ -16,7 +18,7 @@ public class Task {
   private Set<Subtask> subtasks = new HashSet<>();
   private Set<Task> upstream = new HashSet<>();
   private Set<Task> downstream = new HashSet<>();
-  private final Set<Operator> operators = new HashSet<>();
+  private final List<Operator> operators = new ArrayList<>();
   private final Set<HelperTask> helpers = new HashSet<>();
 
   public static Task ofSingleSubtask(String id) {
@@ -51,9 +53,10 @@ public class Task {
     return subtasks;
   }
 
-  public Collection<Operator> operators() {
+  public List<Operator> operators() {
     return operators;
   }
+
   public Collection<Task> upstream() {
     return upstream;
   }

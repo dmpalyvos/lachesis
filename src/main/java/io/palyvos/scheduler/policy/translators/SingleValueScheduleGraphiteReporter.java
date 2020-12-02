@@ -6,6 +6,7 @@ import java.io.IOException;
 
 public class SingleValueScheduleGraphiteReporter {
 
+  public static final String SCHEDULE_GRAPHITE_PREFIX = "schedule";
   private final SimpleGraphiteReporter reporter;
 
   public SingleValueScheduleGraphiteReporter(String host, int port) {
@@ -24,17 +25,21 @@ public class SingleValueScheduleGraphiteReporter {
     //FIXME: Dirty patch to produce a graphite-compatible key. This needs to be SPE-specific!
     String convertedThread = graphiteCompatibleThreadName(thread);
     try {
-      reporter.report(timestamp, String.format("lachesis.%s.external", convertedThread),
-          externalPriority);
-      reporter.report(timestamp, String.format("lachesis.%s.internal", convertedThread),
-          internalPriority);
+      reporter.report(timestamp, graphiteKey(convertedThread, "external"), externalPriority);
+      reporter.report(timestamp, graphiteKey(convertedThread, "internal"), internalPriority);
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
+  private String graphiteKey(String thread, String priorityType) {
+    return String.format("%s.%s.%s.%s",
+            SchedulerContext.SCHEDULER_NAME, SCHEDULE_GRAPHITE_PREFIX, thread, priorityType);
+  }
+
   private String graphiteCompatibleThreadName(String thread) {
-    String cleanedName = thread.replaceAll("[^A-Za-z0-9\\-]", "");
+    String cleanedName = SimpleGraphiteReporter.cleanGraphiteId(thread);
     return SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER.apply(cleanedName);
   }
+
 }

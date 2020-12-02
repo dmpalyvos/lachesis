@@ -61,7 +61,7 @@ public class FlinkAdapter implements SpeAdapter {
     this.taskIndex = new TaskIndex(this.tasks);
   }
 
-  private Collection<Operator> operators(Task task) {
+  private List<Operator> operators(Task task) {
     String[] chainedOperators = task.id().split("->");
     List<String> operatorNames = new ArrayList<>();
     for (String name : chainedOperators) {
