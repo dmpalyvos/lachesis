@@ -13,6 +13,7 @@ public class LogDecisionNormalizer implements DecisionNormalizer {
   private final DecisionNormalizer delegate;
 
   public LogDecisionNormalizer(DecisionNormalizer delegate) {
+    Validate.notNull(delegate, "delegate");
     this.delegate = delegate;
   }
 

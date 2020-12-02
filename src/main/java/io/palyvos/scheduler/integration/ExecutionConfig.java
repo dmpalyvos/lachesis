@@ -30,6 +30,9 @@ class ExecutionConfig {
   @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
   int window = 10;
 
+  @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
+  double smoothingFactor = 1;
+
   @Parameter(names = "--policy", description = "Scheduling policy to apply, either random, constant:{PRIORITY_VALUE}, or metric:{METRIC_NAME}", converter = ConcreteSchedulingPolicyConverter.class)
   ConcreteSchedulingPolicy policy;
 

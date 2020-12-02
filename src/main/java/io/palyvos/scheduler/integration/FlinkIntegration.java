@@ -12,6 +12,7 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.translators.concrete.normalizers.ExponentialSmoothingDecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -56,13 +57,14 @@ public class FlinkIntegration {
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
+    normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, config.smoothingFactor);
     ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
     metricProvider.setTaskIndex(adapter.taskIndex());
     Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
         .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,
-            BasicSchedulerMetric.SUBTASK_TUPLES_IN_TOTAL,
-            BasicSchedulerMetric.SUBTASK_TUPLES_OUT_TOTAL);
+            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
     config.policy.init(translator, metricProvider);
+    metricProvider.register(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
