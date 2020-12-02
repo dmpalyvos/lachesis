@@ -92,7 +92,7 @@ public class SubtaskCostTest {
         map(task -> metricProvider.get(METRIC, task.id())).collect(Collectors.toList());
 
     AssertHelper.assertNoNullElements(actual);
-    Assert.assertEquals((double) actual.get(0), 30.0/(5.0));
+    Assert.assertEquals((double) actual.get(0), Double.NaN);
   }
 
   @Test
@@ -117,7 +117,7 @@ public class SubtaskCostTest {
         map(task -> metricProvider.get(METRIC, task.id())).collect(Collectors.toList());
 
     AssertHelper.assertNoNullElements(actual);
-    Assert.assertEquals((double) actual.get(0), 30.0/(5.0));
+    Assert.assertEquals((double) actual.get(0), 30.0/(100.0));
   }
 
   @Test

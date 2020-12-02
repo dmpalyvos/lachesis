@@ -85,22 +85,24 @@ public enum BaseCompositeMetric implements CompositeMetric {
       final Map<String, Double> subtaskIn = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_IN_RECENT);
       final Map<String, Double> subtaskOut = provider.get(BasicSchedulerMetric.SUBTASK_TUPLES_OUT_RECENT);
       final Map<String, Double> cost = new HashMap<>();
+      final Set<Subtask> sourceSubtasks = provider.taskGraphTraverser().sourceSubtasks();
       for (Subtask subtask : provider.taskIndex().subtasks()) {
         Double in = subtaskIn.get(subtask.id());
         Double out = subtaskOut.get(subtask.id());
         Double subtaskUtilization = utilization.get(subtask.id());
         Validate.notNull(subtaskUtilization, "Utilization for subtask %s missing!", subtask.id());
-        double subtaskCost = subtaskUtilization / processedTuplesNonNull(in, out);
+        final boolean isSource = sourceSubtasks.contains(subtask);
+        double subtaskCost = subtaskUtilization / processedTuplesNonNull(in, out, isSource);
         cost.put(subtask.id(), Double.isFinite(subtaskCost) ? subtaskCost : Double.NaN);
       }
       internalProvider.replaceMetricValues(this, cost);
     }
 
-    private double processedTuplesNonNull(Double in, Double out) {
-      if (in != null) {
-        return in;
+    private double processedTuplesNonNull(Double in, Double out, boolean isSource) {
+      if (in == null || isSource) {
+        return (out != null) ? out : 0.0;
       }
-      return (out != null) ? out : 0.0;
+        return in;
     }
   },
   SUBTASK_GLOBAL_SELECTIVITY(BasicSchedulerMetric.SUBTASK_SELECTIVITY) {
