@@ -99,10 +99,10 @@ public enum BaseCompositeMetric implements CompositeMetric {
     }
 
     private double processedTuplesNonNull(Double in, Double out, boolean isSource) {
-      if (in == null || isSource) {
+      if (isSource) {
         return (out != null) ? out : 0.0;
       }
-        return in;
+      return in != null ? in : 0.0;
     }
   },
   SUBTASK_GLOBAL_SELECTIVITY(BasicSchedulerMetric.SUBTASK_SELECTIVITY) {
