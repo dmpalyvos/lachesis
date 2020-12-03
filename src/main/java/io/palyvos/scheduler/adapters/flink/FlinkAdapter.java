@@ -57,22 +57,42 @@ public class FlinkAdapter implements SpeAdapter {
     jobs().stream().filter(job -> job.isRunning()).forEach(job ->
         tasks.addAll(fetchTasks(job)));
     FlinkThreadAssigner.assign(tasks, threads());
-    tasks.forEach(task -> task.operators().addAll(operators(task)));
+    tasks.forEach(task -> updateOperators(task));
     this.taskIndex = new TaskIndex(this.tasks);
   }
 
-  private List<Operator> operators(Task task) {
+  private void updateOperators(Task task) {
     String[] chainedOperators = task.id().split("->");
-    List<String> operatorNames = new ArrayList<>();
-    for (String name : chainedOperators) {
-      Matcher multipleOperatorMatcher = MULTIPLE_OPERATOR_PATTERN.matcher(name);
+    final List<String> headOperators = new ArrayList<>();
+    final List<String> allOperators = new ArrayList<>();
+    final List<String> tailOperators = new ArrayList<>();
+    for (int i = 0; i < chainedOperators.length; i++) {
+      final String operator = chainedOperators[i];
+      Matcher multipleOperatorMatcher = MULTIPLE_OPERATOR_PATTERN.matcher(operator);
       if (multipleOperatorMatcher.matches()) {
-        operatorNames.addAll(Arrays.asList(multipleOperatorMatcher.group(1).split(",")));
-      } else {
-        operatorNames.add(name);
+        // Handle branches like SOURCE -> (FILTER1, FILTER2)
+        Validate.validState(i == chainedOperators.length - 1,
+            "Found branch in operators before the tail of the chain!");
+        List<String> branchOperators = Arrays.asList(multipleOperatorMatcher.group(1).split(","));
+        allOperators.addAll(branchOperators);
+        tailOperators.addAll(branchOperators);
+        continue;
       }
+      if (i == 0) {
+        headOperators.add(operator);
+      }
+      if (i == chainedOperators.length - 1) {
+        tailOperators.add(operator);
+      }
+      allOperators.add(operator);
     }
-    // Bring operator names in-sync with Flink's graphite reporter
+    // Bring operator names in-sync with Flink's graphite reporter and add to Task object
+    task.headOperators().addAll(namesToOperators(headOperators));
+    task.operators().addAll(namesToOperators(allOperators));
+    task.tailOperators().addAll(namesToOperators(tailOperators));
+  }
+
+  private List<Operator> namesToOperators(List<String> operatorNames) {
     return operatorNames.stream()
         .map(name -> name.trim().replace(" ", "-"))
         .map(name -> new Operator(name))

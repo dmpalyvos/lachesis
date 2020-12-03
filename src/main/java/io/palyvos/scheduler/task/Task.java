@@ -20,6 +20,8 @@ public class Task {
   private Set<Task> downstream = new HashSet<>();
   private final List<Operator> operators = new ArrayList<>();
   private final Set<HelperTask> helpers = new HashSet<>();
+  private final Set<Operator> headOperators = new HashSet<>();
+  private final Set<Operator> tailOperators = new HashSet<>();
 
   public static Task ofSingleSubtask(String id) {
     return ofSingleSubtask(id, id, DEFAULT_JOB_ID);
@@ -55,6 +57,14 @@ public class Task {
 
   public List<Operator> operators() {
     return operators;
+  }
+
+  public Set<Operator> headOperators() {
+    return headOperators;
+  }
+
+  public Set<Operator> tailOperators() {
+    return tailOperators;
   }
 
   public Collection<Task> upstream() {
