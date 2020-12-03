@@ -29,8 +29,8 @@ public class SingleValueScheduleFileReporter {
     }
   }
 
-  public void add(long timestamp, String thread, long externalPriority, double internalPriority) {
-    internalOut.format("%s,%d,%f\n", thread, timestamp, internalPriority);
-    externalOut.format("%s,%d,%d\n", thread, timestamp, externalPriority);
+  public void add(long timestamp, String thread, Long externalPriority, Double internalPriority) {
+    internalOut.format("%s,%d,%f\n", thread, timestamp, internalPriority != null ? internalPriority : 0);
+    externalOut.format("%s,%d,%d\n", thread, timestamp, externalPriority != null ? externalPriority : 0);
   }
 }

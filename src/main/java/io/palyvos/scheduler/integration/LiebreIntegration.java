@@ -68,7 +68,7 @@ public class LiebreIntegration {
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
-      config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
+      config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }

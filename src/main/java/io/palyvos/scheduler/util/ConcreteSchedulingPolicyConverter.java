@@ -4,28 +4,35 @@ import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.policy.ConstantConcreteSchedulingPolicy;
 import io.palyvos.scheduler.policy.MetricConcreteSchedulingPolicy;
-import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import io.palyvos.scheduler.policy.RandomConcreteSchedulingPolicy;
+import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConcreteSchedulingPolicyConverter implements IStringConverter<ConcreteSchedulingPolicy> {
 
-  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("metric:(\\w+)");
-  private final Pattern CONSTANT_POLICY_MATCHER = Pattern.compile("constant:(-?\\d+)");
+  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("metric:(\\w+):?(true|false)?");
+  private final Pattern CONSTANT_POLICY_MATCHER = Pattern.compile("constant:(-?\\d+):?(true|false)?");
+  private final Pattern RANDOM_POLICY_MATCHER = Pattern.compile("random:?(true|false)?");
 
   @Override
   public ConcreteSchedulingPolicy convert(String argument) {
     final Matcher metricMatcher = METRIC_POLICY_PATTERN.matcher(argument);
     if (metricMatcher.matches()) {
-      return new MetricConcreteSchedulingPolicy(BasicSchedulerMetric.valueOf(metricMatcher.group(1)));
+      final boolean scheduleHelpers = Boolean.valueOf(metricMatcher.group(2));
+      return new MetricConcreteSchedulingPolicy(BasicSchedulerMetric.valueOf(metricMatcher.group(1)),
+          scheduleHelpers);
     }
     final Matcher constantMatcher = CONSTANT_POLICY_MATCHER.matcher(argument);
     if (constantMatcher.matches()) {
-      return new ConstantConcreteSchedulingPolicy(Long.valueOf(constantMatcher.group(1)));
+      final boolean scheduleHelpers = Boolean.valueOf(metricMatcher.group(2));
+      return new ConstantConcreteSchedulingPolicy(Long.valueOf(constantMatcher.group(1)),
+          scheduleHelpers);
     }
-    if ("random".equals(argument)) {
-      return new RandomConcreteSchedulingPolicy();
+    final Matcher randomMatcher = RANDOM_POLICY_MATCHER.matcher(argument);
+    if (randomMatcher.matches()) {
+      final boolean scheduleHelpers = Boolean.valueOf(metricMatcher.group(1));
+      return new RandomConcreteSchedulingPolicy(scheduleHelpers);
     }
     throw new IllegalArgumentException(String.format("Unknown policy requested: %s", argument));
   }

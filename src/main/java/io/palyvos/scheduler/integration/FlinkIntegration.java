@@ -62,16 +62,19 @@ public class FlinkIntegration {
     metricProvider.setTaskIndex(adapter.taskIndex());
     Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
         .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,
-            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
+            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
+            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST);
     config.policy.init(translator, metricProvider);
     metricProvider.register(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
+    metricProvider.register(BasicSchedulerMetric.SUBTASK_SELECTIVITY);
+    metricProvider.register(BasicSchedulerMetric.SUBTASK_COST);
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
       for (MetricGraphiteReporter<?> reporter : reporters) {
         reporter.report();
       }
-      config.policy.apply(adapter.taskIndex().subtasks(), translator, metricProvider);
+      config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }

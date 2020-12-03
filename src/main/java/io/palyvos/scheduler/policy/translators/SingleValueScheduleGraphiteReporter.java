@@ -21,12 +21,11 @@ public class SingleValueScheduleGraphiteReporter {
     reporter.close();
   }
 
-  public void add(long timestamp, String thread, long externalPriority, double internalPriority) {
-    //FIXME: Dirty patch to produce a graphite-compatible key. This needs to be SPE-specific!
+  public void add(long timestamp, String thread, Long externalPriority, Double internalPriority) {
     String convertedThread = graphiteCompatibleThreadName(thread);
     try {
-      reporter.report(timestamp, graphiteKey(convertedThread, "external"), externalPriority);
-      reporter.report(timestamp, graphiteKey(convertedThread, "internal"), internalPriority);
+      reporter.report(timestamp, graphiteKey(convertedThread, "external"), externalPriority != null ? externalPriority : 0);
+      reporter.report(timestamp, graphiteKey(convertedThread, "internal"), internalPriority != null ? internalPriority : 0);
     } catch (IOException e) {
       e.printStackTrace();
     }

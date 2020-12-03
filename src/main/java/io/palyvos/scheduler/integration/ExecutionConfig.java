@@ -2,12 +2,12 @@ package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.adapters.storm.StormConstants;
 import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
 import io.palyvos.scheduler.util.JcmdCommand;
 import io.palyvos.scheduler.util.Log4jLevelConverter;
 import java.util.List;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,6 +76,7 @@ class ExecutionConfig {
       try {
         LOG.info("Trying to fetch tasks...");
         adapter.updateTasks();
+        Validate.validState(!adapter.tasks().isEmpty(), "No tasks found!");
         LOG.info("Success!");
         return;
       } catch (Exception exception) {

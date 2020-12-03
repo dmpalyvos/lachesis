@@ -1,6 +1,5 @@
 package io.palyvos.scheduler.util;
 
-import io.palyvos.scheduler.policy.MetricConcreteSchedulingPolicy;
 import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
 import java.util.Arrays;
 import java.util.List;
