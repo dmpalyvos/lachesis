@@ -28,21 +28,8 @@ public class LiebreIntegration {
   private static final Logger LOG = LogManager.getLogger(LiebreIntegration.class);
   public static final long DEFAULT_NICE_VALUE = 0;
 
-  public static void main(String[] args) throws InterruptedException, IOException {
-    ExecutionConfig config = new ExecutionConfig();
-    JCommander jCommander = JCommander.newBuilder().addObject(config).build();
-    jCommander.parse(args);
-    if (config.help) {
-      jCommander.usage();
-      return;
-    }
-    Configurator.setRootLevel(config.log);
-    config.retrievePids(LiebreIntegration.class);
-
-    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
-    SchedulerContext.switchToSpeProcessContext();
-    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
-    SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+  public static void main(String[] args) throws InterruptedException {
+    ExecutionConfig config = ExecutionConfig.init(args, LiebreIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
@@ -52,7 +39,8 @@ public class LiebreIntegration {
         new LinuxMetricProvider(config.pids.get(0)),
         new LiebreMetricProvider("129.16.20.158", 80, adapter.tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
-    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority, config.maxPriority);
+    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
+        config.maxPriority);
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
     }

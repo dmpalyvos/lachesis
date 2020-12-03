@@ -29,6 +29,7 @@ public class MetricGraphiteReporter<T extends Metric> {
     Validate.notBlank(graphiteHost, "no graphite graphiteHost provided");
     for (T metric : metrics) {
       reporters.add(new MetricGraphiteReporter<>(graphiteHost, graphitePort, metric, provider));
+      provider.register(metric);
     }
     return reporters;
   }

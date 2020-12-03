@@ -1,16 +1,21 @@
 package io.palyvos.scheduler.integration;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import io.palyvos.scheduler.adapters.SpeAdapter;
+import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
 import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
 import io.palyvos.scheduler.util.JcmdCommand;
 import io.palyvos.scheduler.util.Log4jLevelConverter;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 class ExecutionConfig {
 
@@ -33,7 +38,9 @@ class ExecutionConfig {
   @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
   double smoothingFactor = 1;
 
-  @Parameter(names = "--policy", description = "Scheduling policy to apply, either random, constant:{PRIORITY_VALUE}, or metric:{METRIC_NAME}", converter = ConcreteSchedulingPolicyConverter.class)
+  @Parameter(names = "--policy", description =
+      "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true]. "
+          + "The optional true argument controls scheduling of helper threads", converter = ConcreteSchedulingPolicyConverter.class)
   ConcreteSchedulingPolicy policy;
 
   @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
@@ -53,6 +60,25 @@ class ExecutionConfig {
 
   @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)", required = true)
   String workerPattern;
+
+  public static ExecutionConfig init(String[] args, Class<?> mainClass)
+      throws InterruptedException {
+    ExecutionConfig config = new ExecutionConfig();
+    JCommander jCommander = JCommander.newBuilder().addObject(config).build();
+    jCommander.parse(args);
+    if (config.help) {
+      jCommander.usage();
+      System.exit(0);
+    }
+    Configurator.setRootLevel(config.log);
+    config.retrievePids(mainClass);
+
+    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
+    SchedulerContext.switchToSpeProcessContext();
+    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
+    SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    return config;
+  }
 
   void retrievePids(Class<?> mainClass) throws InterruptedException {
     final int tries = 20;

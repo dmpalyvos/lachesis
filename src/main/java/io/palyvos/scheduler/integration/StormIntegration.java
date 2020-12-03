@@ -30,20 +30,7 @@ public class StormIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionConfig config = new ExecutionConfig();
-    JCommander jCommander = JCommander.newBuilder().addObject(config).build();
-    jCommander.parse(args);
-    if (config.help) {
-      jCommander.usage();
-      return;
-    }
-    Configurator.setRootLevel(config.log);
-    config.retrievePids(StormIntegration.class);
-
-    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
-    SchedulerContext.switchToSpeProcessContext();
-    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
-    SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    ExecutionConfig config = ExecutionConfig.init(args, StormIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);

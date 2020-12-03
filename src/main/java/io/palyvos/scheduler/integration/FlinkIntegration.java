@@ -31,20 +31,7 @@ public class FlinkIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionConfig config = new ExecutionConfig();
-    JCommander jCommander = JCommander.newBuilder().addObject(config).build();
-    jCommander.parse(args);
-    if (config.help) {
-      jCommander.usage();
-      return;
-    }
-    Configurator.setRootLevel(config.log);
-    config.retrievePids(FlinkIntegration.class);
-
-    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
-    SchedulerContext.switchToSpeProcessContext();
-    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
-    SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    ExecutionConfig config = ExecutionConfig.init(args, FlinkIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
     FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost", 8081, new LinuxAdapter());
@@ -63,11 +50,9 @@ public class FlinkIntegration {
     Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
         .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,
             BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
-            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST);
+            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST,
+            BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
     config.policy.init(translator, metricProvider);
-    metricProvider.register(BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA);
-    metricProvider.register(BasicSchedulerMetric.SUBTASK_SELECTIVITY);
-    metricProvider.register(BasicSchedulerMetric.SUBTASK_COST);
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
