@@ -4,8 +4,8 @@ import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNorm
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.SchedulerContext;
-import io.palyvos.scheduler.util.cgroup.CgclassifyCommand;
-import io.palyvos.scheduler.util.cgroup.CgroupController;
+import io.palyvos.scheduler.util.cgroup.CGClassifyCommand;
+import io.palyvos.scheduler.util.cgroup.CGController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,9 +52,8 @@ public class CgroupSplitTranslator implements ConcretePolicyTranslator {
           String.join(",",
               cgroupEntry.getValue()
                   .stream().map(thread -> thread.name()).collect(Collectors.toList())));
-      new CgclassifyCommand(Arrays.asList(CgroupController.CPU), cgroupEntry.getKey(),
-          cgroupEntry.getValue().stream().map(thread -> thread.pid())
-              .collect(Collectors.toList())).run();
+      new CGClassifyCommand(cgroupEntry.getValue().stream().map(thread -> thread.pid())
+          .collect(Collectors.toList()), cgroupEntry.getKey(), CGController.CPU).run();
     }
     SchedulerContext.switchToSpeProcessContext();
     return 0; //FIXME
