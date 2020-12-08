@@ -7,6 +7,7 @@ import io.palyvos.scheduler.util.cgroup.CGController;
 import io.palyvos.scheduler.util.cgroup.CGCreateCommand;
 import io.palyvos.scheduler.util.cgroup.CGDeleteCommand;
 import io.palyvos.scheduler.util.cgroup.CGSetCommand;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +24,15 @@ public class CGroup {
   private final String path;
   private final CGController[] controllers;
   private final Map<String, String> parameters = new HashMap<>();
+  private final String asShortString;
 
   public CGroup(String path, CGController... controllers) {
     this.path = path;
     this.controllers = controllers;
+    this.asShortString = String.format("%s:%s",
+        Arrays.stream(controllers).map(c -> c.name().toLowerCase())
+            .collect(Collectors.joining(",")),
+        path);
   }
 
   public CGroup newChild(String path) {
@@ -59,6 +65,10 @@ public class CGroup {
     return controllers;
   }
 
+  public String path() {
+    return path;
+  }
+
   public boolean classify(Collection<ExternalThread> threads) {
     Validate.notEmpty(threads, "no thread provided for classify");
     Collection<Integer> pids = threads.stream().map(thread -> thread.pid())
@@ -80,10 +90,6 @@ public class CGroup {
 
   @Override
   public String toString() {
-    return new ToStringBuilder(this)
-        .append("path", path)
-        .append("controllers", controllers)
-        .append("parameters", parameters)
-        .toString();
+    return asShortString;
   }
 }

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -77,6 +78,10 @@ public class Task {
 
   public Set<HelperTask> helpers() {
     return helpers;
+  }
+
+  public Collection<ExternalThread> threads() {
+    return subtasks().stream().map(subtask -> subtask.thread()).collect(Collectors.toList());
   }
 
   public int parallelism() {
