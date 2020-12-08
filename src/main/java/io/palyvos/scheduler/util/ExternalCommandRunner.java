@@ -112,6 +112,10 @@ public class ExternalCommandRunner {
       return String.join("\n", stderr);
     }
 
+    public boolean success() {
+      return exitCode == 0;
+    }
+
     @Override
     public String toString() {
       return new ToStringBuilder(this)
