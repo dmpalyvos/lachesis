@@ -1,8 +1,8 @@
-package io.palyvos.scheduler.task;
+package io.palyvos.scheduler.policy.cgroup;
 
 import org.apache.commons.lang3.Validate;
 
-public class CGroupParameterContainer {
+class CGroupParameterContainer {
 
   private final String key;
   private final Object value;

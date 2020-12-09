@@ -1,8 +1,6 @@
-package io.palyvos.scheduler.policy.translators.cgroup;
+package io.palyvos.scheduler.policy.cgroup;
 
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
-import io.palyvos.scheduler.task.CGroup;
-import io.palyvos.scheduler.task.CGroupParameterContainer;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Collection;
 import java.util.Map;

@@ -1,5 +1,6 @@
-package io.palyvos.scheduler.task;
+package io.palyvos.scheduler.policy.cgroup;
 
+import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
 import io.palyvos.scheduler.util.cgroup.CGClassifyCommand;

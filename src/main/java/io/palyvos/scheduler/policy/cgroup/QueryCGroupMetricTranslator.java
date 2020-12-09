@@ -1,9 +1,7 @@
-package io.palyvos.scheduler.policy.translators.cgroup;
+package io.palyvos.scheduler.policy.cgroup;
 
 import static io.palyvos.scheduler.util.cgroup.CGController.CPU;
 
-import io.palyvos.scheduler.task.CGroup;
-import io.palyvos.scheduler.task.CGroupParameterContainer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Query;
 import io.palyvos.scheduler.task.QueryResolver;
@@ -18,29 +16,29 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class InterQueryCGroupTranslator implements CGroupAgnosticTranslator {
+public class QueryCGroupMetricTranslator implements CGroupMetricTranslator {
 
   public static final String NAME = "QUERY";
   private static final Logger LOG = LogManager.getLogger();
 
   private static final CGroup PARENT_CGROUP =
       new CGroup("/" + SchedulerContext.SCHEDULER_NAME, CPU);
-  private final CGroupPolicyTranslator policyTranslator;
-  private final BiFunction<Query, Map<String, Double>, Double> queryFunction;
+  private final CGroupActionExecutor cgroupActionExecutor;
+  private final BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction;
   private Map<Query, CGroup> cgroupMapping = new HashMap<>();
   private final CGroupScheduleGraphiteReporter graphiteReporter = new CGroupScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public InterQueryCGroupTranslator(BiFunction<Query, Map<String, Double>, Double> queryFunction,
-      CGroupPolicyTranslator policyTranslator) {
-    Validate.notNull(queryFunction, "queryFunction");
-    Validate.notNull(policyTranslator, "policyTranslator");
-    this.policyTranslator = policyTranslator;
-    this.queryFunction = queryFunction;
+  public QueryCGroupMetricTranslator(BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction,
+      CGroupActionExecutor cgroupActionExecutor) {
+    Validate.notNull(queryPriorityFunction, "queryPriorityFunction");
+    Validate.notNull(cgroupActionExecutor, "cgroupActionExecutor");
+    this.cgroupActionExecutor = cgroupActionExecutor;
+    this.queryPriorityFunction = queryPriorityFunction;
   }
 
-  public InterQueryCGroupTranslator(BiFunction<Query, Map<String, Double>, Double> queryFunction) {
-    this(queryFunction, new BasicCGroupPolicyTranslator());
+  public QueryCGroupMetricTranslator(BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction) {
+    this(queryPriorityFunction, new BasicCGroupActionExecutor());
   }
 
   @Override
@@ -57,20 +55,20 @@ public class InterQueryCGroupTranslator implements CGroupAgnosticTranslator {
       assignment.put(cgroup, queryThreads);
       cgroupMapping.put(query, cgroup);
     }
-    policyTranslator.create(assignment.keySet());
-    policyTranslator.updateAssignment(assignment);
+    cgroupActionExecutor.create(assignment.keySet());
+    cgroupActionExecutor.updateAssignment(assignment);
   }
 
   @Override
-  public void schedule(Map<String, Double> metricValues, CGroupSchedulingFunction scheduleFunction) {
+  public void apply(Map<String, Double> metricValues, CGroupPriorityToParametersFunction priorityToParametersFunction) {
     Map<CGroup, Double> queryMetrics = new HashMap<>();
     for (Query query : cgroupMapping.keySet()) {
-      queryMetrics.put(cgroupMapping.get(query), queryFunction.apply(query, metricValues));
+      queryMetrics.put(cgroupMapping.get(query), queryPriorityFunction.apply(query, metricValues));
     }
-    Map<CGroup, Collection<CGroupParameterContainer>> schedule = scheduleFunction
+    Map<CGroup, Collection<CGroupParameterContainer>> schedule = priorityToParametersFunction
         .apply(queryMetrics);
     graphiteReporter.report(queryMetrics, schedule);
-    policyTranslator.updateParameters(schedule);
+    cgroupActionExecutor.updateParameters(schedule);
   }
 
 

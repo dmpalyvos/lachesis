@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.cgroup;
 
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;

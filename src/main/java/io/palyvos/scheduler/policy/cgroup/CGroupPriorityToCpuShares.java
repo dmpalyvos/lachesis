@@ -1,8 +1,5 @@
-package io.palyvos.scheduler.policy.translators.cgroup;
+package io.palyvos.scheduler.policy.cgroup;
 
-import io.palyvos.scheduler.task.CGroupParameter;
-import io.palyvos.scheduler.task.CGroup;
-import io.palyvos.scheduler.task.CGroupParameterContainer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,18 +8,18 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CpuSharesScheduleFunction implements
-    CGroupSchedulingFunction {
+public class CGroupPriorityToCpuShares implements
+    CGroupPriorityToParametersFunction {
 
   public static final String NAME = "CPU_SHARES";
   private static final Logger LOG = LogManager.getLogger();
   private final Function<Double, Double> preprocessFunction;
 
-  public CpuSharesScheduleFunction() {
+  public CGroupPriorityToCpuShares() {
     this.preprocessFunction = value -> value;
   }
 
-  public CpuSharesScheduleFunction(Function<Double, Double> preprocessFunction) {
+  public CGroupPriorityToCpuShares(Function<Double, Double> preprocessFunction) {
     this.preprocessFunction = preprocessFunction;
   }
 

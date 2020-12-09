@@ -1,9 +1,5 @@
-package io.palyvos.scheduler.policy.translators.cgroup;
+package io.palyvos.scheduler.policy.cgroup;
 
-import static io.palyvos.scheduler.policy.translators.concrete.SingleValueConcretePolicyTranslator.TRANSLATOR_THREADS;
-
-import io.palyvos.scheduler.task.CGroup;
-import io.palyvos.scheduler.task.CGroupParameterContainer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
@@ -18,10 +14,10 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BasicCGroupPolicyTranslator implements
-    CGroupPolicyTranslator {
+public class BasicCGroupActionExecutor implements CGroupActionExecutor {
 
   private static final Logger LOG = LogManager.getLogger();
+  private static final int ENFORCER_THREADS = 4;
 
   @Override
   public void create(Collection<CGroup> cgroups) {
@@ -66,20 +62,6 @@ public class BasicCGroupPolicyTranslator implements
   }
 
   @Override
-  public void updateParameter(Map<CGroup, CGroupParameterContainer> schedule) {
-    SchedulerContext.switchToRootContext();
-    final ExecutorService executor = newExecutor();
-    final List<Future<Boolean>> futures = new ArrayList<>();
-    for (CGroup cgroup : schedule.keySet()) {
-      CGroupParameterContainer parameter = schedule.get(cgroup);
-      futures.add(executor.submit(() -> cgroup.set(parameter.key(), parameter.value())));
-    }
-    wait(futures,true);
-    executor.shutdown();
-    SchedulerContext.switchToSpeProcessContext();
-  }
-
-  @Override
   public void updateAssignment(Map<CGroup, Collection<ExternalThread>> assignment) {
     SchedulerContext.switchToRootContext();
     final ExecutorService executor = newExecutor();
@@ -93,10 +75,10 @@ public class BasicCGroupPolicyTranslator implements
   }
 
   private ExecutorService newExecutor() {
-    return Executors.newFixedThreadPool(TRANSLATOR_THREADS);
+    return Executors.newFixedThreadPool(ENFORCER_THREADS);
   }
 
-  void wait(List<Future<Boolean>> futures, boolean checkSuccess) {
+  private void wait(List<Future<Boolean>> futures, boolean checkSuccess) {
     for (Future<Boolean> future : futures) {
       try {
         final boolean success = future.get();

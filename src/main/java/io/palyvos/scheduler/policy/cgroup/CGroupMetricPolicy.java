@@ -1,21 +1,19 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.cgroup;
 
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.cgroup.CGroupAgnosticTranslator;
-import io.palyvos.scheduler.policy.translators.cgroup.CGroupSchedulingFunction;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
 public class CGroupMetricPolicy implements CGroupSchedulingPolicy {
 
   private final SchedulerMetric metric;
-  private final CGroupAgnosticTranslator translator;
-  private final CGroupSchedulingFunction scheduleFunction;
+  private final CGroupMetricTranslator translator;
+  private final CGroupPriorityToParametersFunction scheduleFunction;
 
   public CGroupMetricPolicy(SchedulerMetric metric,
-      CGroupAgnosticTranslator translator,
-      CGroupSchedulingFunction schedulingFunction) {
+      CGroupMetricTranslator translator,
+      CGroupPriorityToParametersFunction schedulingFunction) {
     this.metric = metric;
     this.translator = translator;
     this.scheduleFunction = schedulingFunction;
@@ -31,6 +29,6 @@ public class CGroupMetricPolicy implements CGroupSchedulingPolicy {
 
   @Override
   public void apply(Collection<Task> tasks, SchedulerMetricProvider metricProvider) {
-    translator.schedule(metricProvider.get(metric), scheduleFunction);
+    translator.apply(metricProvider.get(metric), scheduleFunction);
   }
 }

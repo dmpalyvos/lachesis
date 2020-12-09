@@ -2,15 +2,15 @@ package io.palyvos.scheduler.integration.converter;
 
 import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
-import io.palyvos.scheduler.policy.CGroupMetricPolicy;
-import io.palyvos.scheduler.policy.CGroupNoopPolicy;
-import io.palyvos.scheduler.policy.CGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.translators.cgroup.CGroupAgnosticTranslator;
-import io.palyvos.scheduler.policy.translators.cgroup.CGroupSchedulingFunction;
-import io.palyvos.scheduler.policy.translators.cgroup.ClusteringCGroupTranslator;
-import io.palyvos.scheduler.policy.translators.cgroup.CpuQuotaFunction;
-import io.palyvos.scheduler.policy.translators.cgroup.CpuSharesScheduleFunction;
-import io.palyvos.scheduler.policy.translators.cgroup.InterQueryCGroupTranslator;
+import io.palyvos.scheduler.policy.cgroup.CGroupMetricPolicy;
+import io.palyvos.scheduler.policy.cgroup.CGroupNoopPolicy;
+import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.CGroupMetricTranslator;
+import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToParametersFunction;
+import io.palyvos.scheduler.policy.cgroup.ClusteringCGroupMetricTranslator;
+import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToCpuQuota;
+import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToCpuShares;
+import io.palyvos.scheduler.policy.cgroup.QueryCGroupMetricTranslator;
 import io.palyvos.scheduler.task.Query;
 import java.util.Map;
 import java.util.Objects;
@@ -37,8 +37,8 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupSchedulingP
       return new CGroupNoopPolicy();
     }
     if (metricMatcher.matches()) {
-      final CGroupAgnosticTranslator translator = translator(metricMatcher.group(1));
-      final CGroupSchedulingFunction schedulingFunction = schedulingFunction(
+      final CGroupMetricTranslator translator = translator(metricMatcher.group(1));
+      final CGroupPriorityToParametersFunction schedulingFunction = schedulingFunction(
           metricMatcher.group(2));
       final BasicSchedulerMetric metric = BasicSchedulerMetric.valueOf(metricMatcher.group(3));
       return new CGroupMetricPolicy(metric, translator, schedulingFunction);
@@ -46,22 +46,22 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupSchedulingP
     throw new IllegalArgumentException(String.format("Unknown policy requested: %s", argument));
   }
 
-  private CGroupAgnosticTranslator translator(String name) {
-    if (ClusteringCGroupTranslator.NAME.equals(name)) {
-      return new ClusteringCGroupTranslator(DEFAULT_NGROUPS);
+  private CGroupMetricTranslator translator(String name) {
+    if (ClusteringCGroupMetricTranslator.NAME.equals(name)) {
+      return new ClusteringCGroupMetricTranslator(DEFAULT_NGROUPS);
     }
-    if (InterQueryCGroupTranslator.NAME.equals(name)) {
-      return new InterQueryCGroupTranslator(DEFAULT_QUERY_FUNCTION);
+    if (QueryCGroupMetricTranslator.NAME.equals(name)) {
+      return new QueryCGroupMetricTranslator(DEFAULT_QUERY_FUNCTION);
     }
     throw new IllegalArgumentException(String.format("Unknown cgroup translator %s", name));
   }
 
-  private CGroupSchedulingFunction schedulingFunction(String name) {
-    if (CpuSharesScheduleFunction.NAME.equals(name)) {
-      return new CpuSharesScheduleFunction();
+  private CGroupPriorityToParametersFunction schedulingFunction(String name) {
+    if (CGroupPriorityToCpuShares.NAME.equals(name)) {
+      return new CGroupPriorityToCpuShares();
     }
-    if (CpuQuotaFunction.NAME.equals(name)) {
-      return new CpuQuotaFunction(DEFAULT_CPU_PERIOD, DEFAULT_NCORES);
+    if (CGroupPriorityToCpuQuota.NAME.equals(name)) {
+      return new CGroupPriorityToCpuQuota(DEFAULT_CPU_PERIOD, DEFAULT_NCORES);
     }
     throw new IllegalArgumentException(String.format("Unknown cgroup function %s", name));
   }
