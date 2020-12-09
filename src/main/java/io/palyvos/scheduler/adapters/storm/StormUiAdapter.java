@@ -6,7 +6,7 @@ import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
-import io.palyvos.scheduler.util.QueryGraphParser;
+import io.palyvos.scheduler.util.QueryGraphFileParser;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,7 +20,7 @@ public class StormUiAdapter implements SpeAdapter {
   private static final Logger LOG = LogManager.getLogger();
 
 
-  private final QueryGraphParser queryGraphParser = new QueryGraphParser();
+  private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final URI stormURI;
   private final Gson gson = new Gson();
   private final List<Task> tasks = new ArrayList<>();
@@ -51,7 +51,7 @@ public class StormUiAdapter implements SpeAdapter {
           tasks.add(boltInfo.toTask(topologyInfo.id)));
     }
     StormUiThreadAssigner.assign(tasks, threads());
-    queryGraphParser.initTaskGraph(tasks, queryGraphPath);
+    queryGraphFileParser.initTaskGraph(tasks, queryGraphPath);
     this.taskIndex = new TaskIndex(tasks);
   }
 

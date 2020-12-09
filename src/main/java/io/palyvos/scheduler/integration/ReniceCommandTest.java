@@ -1,7 +1,7 @@
 package io.palyvos.scheduler.integration;
 
-import io.palyvos.scheduler.util.ExternalCommandRunner;
-import io.palyvos.scheduler.util.ReniceCommand;
+import io.palyvos.scheduler.util.command.ExternalCommandRunner;
+import io.palyvos.scheduler.util.command.ReniceCommand;
 import org.apache.commons.lang3.Validate;
 
 public class ReniceCommandTest {

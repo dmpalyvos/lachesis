@@ -1,6 +1,6 @@
 package io.palyvos.scheduler.util.cgroup;
 
-import io.palyvos.scheduler.util.ExternalCommand;
+import io.palyvos.scheduler.util.command.ExternalCommand;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;

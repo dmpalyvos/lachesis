@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.util;
 
-import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
+import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
+import io.palyvos.scheduler.util.command.TopCpuUtilizationCommand;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;

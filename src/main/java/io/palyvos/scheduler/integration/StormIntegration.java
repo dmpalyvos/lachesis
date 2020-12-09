@@ -1,28 +1,19 @@
 package io.palyvos.scheduler.integration;
 
-import com.beust.jcommander.JCommander;
-import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
-import io.palyvos.scheduler.metric.BasicSchedulerMetric;
-import io.palyvos.scheduler.metric.SchedulerMetric;
-import io.palyvos.scheduler.metric.MetricFileReporter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
-import io.palyvos.scheduler.util.JcmdCommand;
 import io.palyvos.scheduler.util.SchedulerContext;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 public class StormIntegration {
 

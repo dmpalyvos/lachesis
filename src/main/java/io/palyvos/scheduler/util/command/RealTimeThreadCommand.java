@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.util;
+package io.palyvos.scheduler.util.command;
 
 import java.util.ArrayList;
 import java.util.List;

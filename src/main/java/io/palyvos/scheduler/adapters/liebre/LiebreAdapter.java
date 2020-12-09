@@ -6,7 +6,7 @@ import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
-import io.palyvos.scheduler.util.QueryGraphParser;
+import io.palyvos.scheduler.util.QueryGraphFileParser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +19,7 @@ public class LiebreAdapter implements SpeAdapter {
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
       s -> s.replace(".", "-");
 
-  private final QueryGraphParser queryGraphParser = new QueryGraphParser();
+  private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final OsAdapter osAdapter;
   private final String queryGraphPath;
   private final List<Task> tasks = new ArrayList<>();
@@ -42,7 +42,7 @@ public class LiebreAdapter implements SpeAdapter {
   @Override
   public void updateTasks() {
     this.tasks.clear();
-    tasks.addAll(queryGraphParser.loadTasks(queryGraphPath));
+    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath));
     LiebreThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
     this.taskIndex = new TaskIndex(tasks);
   }

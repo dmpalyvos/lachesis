@@ -3,7 +3,7 @@ package io.palyvos.scheduler.policy.translators.concrete;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
-import io.palyvos.scheduler.util.ReniceCommand;
+import io.palyvos.scheduler.util.command.ReniceCommand;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import org.apache.commons.lang3.Validate;

@@ -5,9 +5,8 @@ import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
-import io.palyvos.scheduler.util.QueryGraphParser;
+import io.palyvos.scheduler.util.QueryGraphFileParser;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +21,7 @@ public class StormAdapter implements SpeAdapter {
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
       s -> s.replace("-", ".");
 
-  private final QueryGraphParser queryGraphParser = new QueryGraphParser();
+  private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final List<Task> tasks = new ArrayList<>();
   private final OsAdapter osAdapter;
   private final List<Integer> pids;
@@ -42,7 +41,7 @@ public class StormAdapter implements SpeAdapter {
   public void updateTasks() {
     tasks.clear();
     StormThreadAssigner.assign(tasks, threads());
-    queryGraphParser.initTaskGraph(tasks, queryGraphPath);
+    queryGraphFileParser.initTaskGraph(tasks, queryGraphPath);
     this.taskIndex = new TaskIndex(tasks);
   }
 

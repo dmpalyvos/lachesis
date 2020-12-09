@@ -1,7 +1,7 @@
 package io.palyvos.scheduler.adapters.linux;
 
 import io.palyvos.scheduler.metric.Metric;
-import io.palyvos.scheduler.util.TopCpuUtilizationCommand;
+import io.palyvos.scheduler.util.command.TopCpuUtilizationCommand;
 import java.util.HashMap;
 import java.util.Map;
 

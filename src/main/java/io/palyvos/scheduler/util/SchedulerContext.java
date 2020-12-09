@@ -1,6 +1,7 @@
 package io.palyvos.scheduler.util;
 
-import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
+import io.palyvos.scheduler.util.command.ExternalCommand;
+import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;

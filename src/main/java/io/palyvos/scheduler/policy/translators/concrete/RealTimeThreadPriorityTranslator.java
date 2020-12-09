@@ -2,8 +2,8 @@ package io.palyvos.scheduler.policy.translators.concrete;
 
 import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
-import io.palyvos.scheduler.util.RealTimeThreadCommand;
-import io.palyvos.scheduler.util.RealTimeThreadCommand.RealTimeSchedulingAlgorithm;
+import io.palyvos.scheduler.util.command.RealTimeThreadCommand;
+import io.palyvos.scheduler.util.command.RealTimeThreadCommand.RealTimeSchedulingAlgorithm;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;

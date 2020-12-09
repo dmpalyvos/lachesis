@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.util;
 
+import io.palyvos.scheduler.util.command.ExternalCommandRunner;
 import org.testng.annotations.Test;
 
 @Test

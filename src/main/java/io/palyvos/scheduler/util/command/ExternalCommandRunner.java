@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.util;
+package io.palyvos.scheduler.util.command;
 
 import java.io.BufferedReader;
 import java.io.IOException;

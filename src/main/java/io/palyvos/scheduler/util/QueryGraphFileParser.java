@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.yaml.snakeyaml.Yaml;
 
-public class QueryGraphParser {
+public class QueryGraphFileParser {
 
   private final Yaml yaml = new Yaml();
 

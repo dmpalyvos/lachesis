@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.util;
+package io.palyvos.scheduler.integration.converter;
 
 import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;

@@ -1,6 +1,5 @@
 package io.palyvos.scheduler.integration;
 
-import com.beust.jcommander.JCommander;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
@@ -20,7 +19,6 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 public class FlinkIntegration {
 
@@ -47,18 +45,18 @@ public class FlinkIntegration {
     normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, config.smoothingFactor);
     ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
     metricProvider.setTaskIndex(adapter.taskIndex());
-    Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
-        .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,
-            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
-            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST,
-            BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
+//    Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
+//        .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,
+//            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
+//            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST,
+//            BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
     config.policy.init(translator, metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
       metricProvider.run();
-      for (MetricGraphiteReporter<?> reporter : reporters) {
-        reporter.report();
-      }
+//      for (MetricGraphiteReporter<?> reporter : reporters) {
+//        reporter.report();
+//      }
       config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));

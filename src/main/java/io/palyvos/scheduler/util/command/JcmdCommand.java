@@ -1,9 +1,8 @@
-package io.palyvos.scheduler.util;
+package io.palyvos.scheduler.util.command;
 
-import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
+import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

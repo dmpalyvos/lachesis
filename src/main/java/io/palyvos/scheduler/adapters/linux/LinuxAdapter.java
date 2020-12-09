@@ -2,8 +2,8 @@ package io.palyvos.scheduler.adapters.linux;
 
 import io.palyvos.scheduler.adapters.OsAdapter;
 import io.palyvos.scheduler.task.ExternalThread;
-import io.palyvos.scheduler.util.ExternalCommandRunner.CommandResult;
-import io.palyvos.scheduler.util.JstackCommand;
+import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
+import io.palyvos.scheduler.util.command.JstackCommand;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
