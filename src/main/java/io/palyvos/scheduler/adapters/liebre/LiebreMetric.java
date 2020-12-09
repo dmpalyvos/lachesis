@@ -82,23 +82,14 @@ enum LiebreMetric implements Metric<LiebreMetric> {
               groupByNode(movingAverage(graphiteQuery("ARRIVAL_TIME"),
                   SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
               SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
-              GraphiteMetricReport::last);
-      final Map<String, Double> operatorArrivalTimes = new HashMap<>();
+              report -> report.average(-1));
+      final Map<String, Double> latencies = new HashMap<>();
       final long now = System.currentTimeMillis();
-      for (String stream : arrivalTimes.keySet()) {
-        String[] operators = stream.split("_");
-        Validate.validState(operators.length == 2, "Invalid stream name: %s", stream);
-        String reader = operators[1];
-        final Double arrivalTime = arrivalTimes.get(stream);
-        final double latency = arrivalTime < 0 ? 0 : now - arrivalTime;
-        operatorArrivalTimes.put(reader, latency);
+      for (String operator : arrivalTimes.keySet()) {
+        final Double arrivalTime = arrivalTimes.get(operator);
+        latencies.put(operator, arrivalTime > 0 ? now - arrivalTime : 0);
       }
-      //FIXME: Does this make sense?
-      double average = operatorArrivalTimes.values().stream().filter(Objects::nonNull)
-          .mapToDouble(Double::doubleValue).average().orElse(0);
-      provider.traverser.sourceTasks()
-          .forEach(task -> operatorArrivalTimes.put(task.id(), average));
-      provider.replaceMetricValues(this, operatorArrivalTimes);
+      provider.replaceMetricValues(this, latencies);
     }
   };;
 
