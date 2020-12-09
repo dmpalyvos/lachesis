@@ -12,38 +12,47 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ClusteringCGroupTranslator {
+public class ClusteringCGroupTranslator implements CGroupAgnosticTranslator {
 
+  public static final String NAME = "CLUSTERING";
   private static final Logger LOG = LogManager.getLogger();
 
   private static final CGroup PARENT_CGROUP = new CGroup("/lachesis", CPU);
+  private static final int K_MEANS_MAX_ITERATIONS = 100;
   private final int ngroups;
-  private final Collection<Task> tasks;
   private final CGroupPolicyTranslator policyTranslator;
   private final CGroupScheduleGraphiteReporter graphiteReporter = new CGroupScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public ClusteringCGroupTranslator(int ngroups, Collection<Task> tasks,
-      CGroupPolicyTranslator policyTranslator) {
+  private Collection<Task> tasks;
+
+  public ClusteringCGroupTranslator(int ngroups, CGroupPolicyTranslator policyTranslator) {
+    Validate.isTrue(ngroups > 0, "At least 1 group required");
+    Validate.notNull(policyTranslator, "policyTranslator");
     this.ngroups = ngroups;
-    this.tasks = tasks;
     this.policyTranslator = policyTranslator;
   }
 
-  public ClusteringCGroupTranslator(int ngroups, Collection<Task> tasks) {
-    this(ngroups, tasks, new BasicCGroupPolicyTranslator());
+  public ClusteringCGroupTranslator(int ngroups) {
+    this(ngroups, new BasicCGroupPolicyTranslator());
+  }
+
+  @Override
+  public void init(Collection<Task> tasks) {
+    this.tasks = tasks;
   }
 
 
+  @Override
   public void schedule(Map<String, Double> metricValues,
-      Function<Map<CGroup, Double>, Map<CGroup, Collection<CGroupParameterContainer>>> scheduleFunction) {
+      CGroupSchedulingFunction scheduleFunction) {
     List<ClusterableMetricValue> values = new ArrayList<>();
     metricValues.forEach((k, v) -> {
       if (Double.isFinite(v)) {
@@ -51,7 +60,7 @@ public class ClusteringCGroupTranslator {
       }
     });
     KMeansPlusPlusClusterer<ClusterableMetricValue> clusterer = new KMeansPlusPlusClusterer<>(
-        ngroups, 100);
+        ngroups, K_MEANS_MAX_ITERATIONS);
     List<CentroidCluster<ClusterableMetricValue>> clusters = clusterer.cluster(values);
 
     LOG.info("Found {} clusters", clusters.size());

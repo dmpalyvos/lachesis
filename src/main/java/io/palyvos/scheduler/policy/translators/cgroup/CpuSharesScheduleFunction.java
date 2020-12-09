@@ -12,8 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CpuSharesScheduleFunction implements
-    Function<Map<CGroup, Double>, Map<CGroup, Collection<CGroupParameterContainer>>> {
+    CGroupSchedulingFunction {
 
+  public static final String NAME = "CPU_SHARES";
   private static final Logger LOG = LogManager.getLogger();
   private final Function<Double, Double> preprocessFunction;
 

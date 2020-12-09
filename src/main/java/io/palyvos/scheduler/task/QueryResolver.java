@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/** Split a set of tasks into disjoint {@link io.palyvos.scheduler.task.Query} DAGs */
 public class QueryResolver {
 
   private static final Logger LOG = LogManager.getLogger();

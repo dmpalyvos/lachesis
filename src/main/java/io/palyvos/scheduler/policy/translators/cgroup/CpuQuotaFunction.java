@@ -13,8 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CpuQuotaFunction implements
-    Function<Map<CGroup, Double>, Map<CGroup, Collection<CGroupParameterContainer>>> {
+    CGroupSchedulingFunction {
 
+  public static final String NAME = "CPU_QUOTA";
   private static final Logger LOG = LogManager.getLogger();
   private final CGroupParameterContainer periodParameter;
   private final int ncores;

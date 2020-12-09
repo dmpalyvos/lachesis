@@ -2,15 +2,20 @@ package io.palyvos.scheduler.integration;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
 import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
+import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
+import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.CGroupNoopPolicy;
+import io.palyvos.scheduler.policy.CGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
+import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
+import io.palyvos.scheduler.util.CGroupPolicyConverter;
 import io.palyvos.scheduler.util.ConcreteSchedulingPolicyConverter;
 import io.palyvos.scheduler.util.JcmdCommand;
 import io.palyvos.scheduler.util.Log4jLevelConverter;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +37,9 @@ class ExecutionConfig {
   @Parameter(names = "--period", description = "(Minimum) scheduling period, in seconds")
   long period = 1;
 
+  @Parameter(names = "--cgroupPeriod", description = "(Minimum) cgroup period, in seconds")
+  long cgroupPeriod = 1;
+
   @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
   int window = 10;
 
@@ -40,8 +48,11 @@ class ExecutionConfig {
 
   @Parameter(names = "--policy", description =
       "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true]. "
-          + "The optional true argument controls scheduling of helper threads", converter = ConcreteSchedulingPolicyConverter.class)
+          + "The optional true argument controls scheduling of helper threads", converter = ConcreteSchedulingPolicyConverter.class, required = true)
   ConcreteSchedulingPolicy policy;
+
+  @Parameter(names = "--cgroupPolicy", converter = CGroupPolicyConverter.class)
+  CGroupSchedulingPolicy cgroupPolicy = new CGroupNoopPolicy();
 
   @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
   int maxPriority = -20;
@@ -60,6 +71,10 @@ class ExecutionConfig {
 
   @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)", required = true)
   String workerPattern;
+
+
+  private long lastCgroupPolicyRun;
+  private long lastPolicyRun;
 
   public static ExecutionConfig init(String[] args, Class<?> mainClass)
       throws InterruptedException {
@@ -111,6 +126,24 @@ class ExecutionConfig {
       }
     }
     throw new IllegalStateException("Failed to retrieve storm tasks!");
+  }
+
+  void sleep() throws InterruptedException {
+    Thread.sleep(TimeUnit.SECONDS.toMillis(Math.min(period, cgroupPeriod)));
+  }
+
+
+  void schedule(ExecutionConfig config, LiebreAdapter adapter,
+      SchedulerMetricProvider metricProvider, ConcretePolicyTranslator translator) {
+    final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+    if (lastPolicyRun + period < now) {
+      policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
+      lastPolicyRun = now;
+    }
+    if (lastCgroupPolicyRun + cgroupPeriod < now) {
+      cgroupPolicy.apply(adapter.tasks(), metricProvider);
+      lastCgroupPolicyRun = now;
+    }
   }
 
 }
