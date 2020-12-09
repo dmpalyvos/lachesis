@@ -26,6 +26,8 @@ public class SchedulerContext {
   public static int METRIC_TOTAL_PERIOD_SECONDS = 600;
   public static String STATISTICS_FOLDER = ".";
   public static boolean STATISTICS_AUTO_FLUSH = true;
+  public static String GRAPHITE_STATS_HOST = "129.16.20.158";
+  public static int GRAPHITE_STATS_PORT = 2003;
 
   static {
     ToStringBuilder.setDefaultStyle(ToStringStyle.NO_CLASS_NAME_STYLE);

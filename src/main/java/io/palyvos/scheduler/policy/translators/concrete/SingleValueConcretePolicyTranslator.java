@@ -26,7 +26,7 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
   private final Map<ExternalThread, Long> lastSchedule = new HashMap<>();
   private final SingleValueScheduleFileReporter reporter = new SingleValueScheduleFileReporter();
   private final SingleValueScheduleGraphiteReporter graphiteReporter = new SingleValueScheduleGraphiteReporter(
-      "129.16.20.158", 2003);
+      SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
   public SingleValueConcretePolicyTranslator(DecisionNormalizer normalizer) {
     Validate.notNull(normalizer, "normalizer");

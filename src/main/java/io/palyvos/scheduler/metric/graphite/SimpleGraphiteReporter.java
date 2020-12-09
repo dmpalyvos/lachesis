@@ -1,14 +1,9 @@
 package io.palyvos.scheduler.metric.graphite;
 
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class SimpleGraphiteReporter {
@@ -45,6 +40,10 @@ public class SimpleGraphiteReporter {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  public static String schedulerGraphiteKey(String prefix, String type, String entity) {
+      return String.format("%s.%s.%s.%s", SchedulerContext.SCHEDULER_NAME, prefix, type, entity);
   }
 
   public static String cleanGraphiteId(String thread) {

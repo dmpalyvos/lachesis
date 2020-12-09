@@ -1,30 +1,38 @@
 package io.palyvos.scheduler.task;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class CGroupParameter {
+public enum CGroupParameter {
+  CPU_SHARES("cpu.shares") {
+    @Override
+    public CGroupParameterContainer of(Object value) {
+      long valueAsLong = (long) value;
+      Validate.isTrue(valueAsLong >= 2, "%s must be >= 2: %d", id, value);
+      return new CGroupParameterContainer(id, value);
+    }
+  },
+  CPU_CFS_PERIOD_US("cpu.cfs_period_us") {
+    @Override
+    public CGroupParameterContainer of(Object value) {
+      long valueAsLong = (long) value;
+      Validate.isTrue(valueAsLong >= 1000 && valueAsLong <= 1000000,
+          "%s must be between 1E3 and 1E6: %d", id, value);
+      return new CGroupParameterContainer(id, value);
+    }
+  },
+  CPU_CFS_QUOTA_US("cpu.cfs_quota_us") {
+    @Override
+    public CGroupParameterContainer of(Object value) {
+      return new CGroupParameterContainer(id, value);
+    }
+  };
 
-  private final String key;
-  private final Object value;
 
-  public CGroupParameter(String key, Object value) {
-    Validate.notBlank(key, "blank key");
-    Validate.notNull(value, "value");
-    this.key = key;
-    this.value = value;
+  protected final String id;
+
+  CGroupParameter(String id) {
+    this.id = id;
   }
 
-  public String key() {
-    return key;
-  }
-
-  public Object value() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.format("%s=%s", key, value);
-  }
+  public abstract CGroupParameterContainer of(Object value);
 }
