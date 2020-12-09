@@ -4,18 +4,14 @@ import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
-import io.palyvos.scheduler.metric.BasicSchedulerMetric;
-import io.palyvos.scheduler.metric.MetricGraphiteReporter;
-import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
-import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.ExponentialSmoothingDecisionNormalizer;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.ExponentialSmoothingDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.util.SchedulerContext;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +39,7 @@ public class FlinkIntegration {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
     normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, config.smoothingFactor);
-    ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
+    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
     metricProvider.setTaskIndex(adapter.taskIndex());
 //    Collection<MetricGraphiteReporter<SchedulerMetric>> reporters = MetricGraphiteReporter
 //        .reportersFor(GRAPHITE_HOST, GRAPHITE_WRITE_PORT, metricProvider,

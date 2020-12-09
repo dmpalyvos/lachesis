@@ -1,7 +1,6 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
 import io.palyvos.scheduler.task.Subtask;
@@ -10,16 +9,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractConcreteSchedulingPolicy implements ConcreteSchedulingPolicy {
+public abstract class AbstractSinglePrioritySchedulingPolicy implements
+    SinglePrioritySchedulingPolicy {
 
   protected final boolean scheduleHelpers;
 
-  public AbstractConcreteSchedulingPolicy(boolean scheduleHelpers) {
+  public AbstractSinglePrioritySchedulingPolicy(boolean scheduleHelpers) {
     this.scheduleHelpers = scheduleHelpers;
   }
 
   @Override
-  public void apply(Collection<Task> tasks, ConcretePolicyTranslator policyTranslator,
+  public void apply(Collection<Task> tasks, SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> schedule = new HashMap<>();
     for (Task task : tasks) {
@@ -33,7 +33,7 @@ public abstract class AbstractConcreteSchedulingPolicy implements ConcreteSchedu
         }
       }
     }
-    policyTranslator.applyPolicy(schedule);
+    translator.applyPolicy(schedule);
   }
 
   protected abstract Double getPriority(SchedulerMetricProvider metricProvider, Task task);

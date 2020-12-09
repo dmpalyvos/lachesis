@@ -6,7 +6,7 @@
       <package name="io.palyvos.scheduler.metric"/>
       <package name="io.palyvos.scheduler.task"/>
       <package name="io.palyvos.scheduler.util"/>
-      <package name="io.palyvos.scheduler.policy.translators.concrete.normalizers"/>
+      <package name="io.palyvos.scheduler.policy.normalizers"/>
     </packages>
   </test>
 </suite>

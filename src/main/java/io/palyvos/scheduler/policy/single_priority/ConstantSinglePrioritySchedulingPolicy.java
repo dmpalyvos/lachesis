@@ -1,7 +1,6 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
 import io.palyvos.scheduler.task.Subtask;
@@ -10,23 +9,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConstantConcreteSchedulingPolicy implements ConcreteSchedulingPolicy {
+public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySchedulingPolicy {
 
   private final long normalizedPriority;
   private final boolean scheduleHelpers;
 
-  public ConstantConcreteSchedulingPolicy(long normalizedPriority, boolean scheduleHelpers) {
+  public ConstantSinglePrioritySchedulingPolicy(long normalizedPriority, boolean scheduleHelpers) {
     this.normalizedPriority = normalizedPriority;
     this.scheduleHelpers = scheduleHelpers;
   }
 
   @Override
-  public void init(ConcretePolicyTranslator policyTranslator,
+  public void init(SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
   }
 
   @Override
-  public void apply(Collection<Task> tasks, ConcretePolicyTranslator policyTranslator,
+  public void apply(Collection<Task> tasks, SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Long> normalizedSchedule = new HashMap<>();
     for (Task task : tasks) {
@@ -39,6 +38,6 @@ public class ConstantConcreteSchedulingPolicy implements ConcreteSchedulingPolic
         }
       }
     }
-    policyTranslator.applyDirect(normalizedSchedule);
+    translator.applyDirect(normalizedSchedule);
   }
 }

@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy.translators.concrete.normalizers;
+package io.palyvos.scheduler.policy.normalizers;
 
 import io.palyvos.scheduler.task.Subtask;
 import java.util.Arrays;

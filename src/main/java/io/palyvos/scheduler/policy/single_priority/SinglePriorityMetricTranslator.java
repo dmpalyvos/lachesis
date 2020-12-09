@@ -1,9 +1,9 @@
-package io.palyvos.scheduler.policy.translators.concrete;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.task.ExternalThread;
 import java.util.Map;
 
-public interface ConcretePolicyTranslator {
+public interface SinglePriorityMetricTranslator {
 
   void applyPolicy(Map<ExternalThread, Double> schedule);
 

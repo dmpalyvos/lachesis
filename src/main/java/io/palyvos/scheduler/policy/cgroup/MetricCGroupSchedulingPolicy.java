@@ -5,13 +5,13 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
-public class CGroupMetricPolicy implements CGroupSchedulingPolicy {
+public class MetricCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
 
   private final SchedulerMetric metric;
   private final CGroupMetricTranslator translator;
   private final CGroupPriorityToParametersFunction scheduleFunction;
 
-  public CGroupMetricPolicy(SchedulerMetric metric,
+  public MetricCGroupSchedulingPolicy(SchedulerMetric metric,
       CGroupMetricTranslator translator,
       CGroupPriorityToParametersFunction schedulingFunction) {
     this.metric = metric;

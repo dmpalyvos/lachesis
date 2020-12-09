@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy.translators.concrete.normalizers;
+package io.palyvos.scheduler.policy.normalizers;
 
 /** Non-generic range class to prevent autoboxing */
 class Range {

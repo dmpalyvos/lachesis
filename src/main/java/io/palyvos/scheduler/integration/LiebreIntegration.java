@@ -4,11 +4,11 @@ import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.liebre.LiebreMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
-import io.palyvos.scheduler.policy.translators.concrete.NicePolicyTranslator;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.LogDecisionNormalizer;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.MinMaxDecisionNormalizer;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.util.SchedulerContext;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +34,7 @@ public class LiebreIntegration {
     if (config.logarithmic) {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
-    ConcretePolicyTranslator translator = new NicePolicyTranslator(normalizer);
+    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
 
     config.policy.init(translator, metricProvider);
     config.cgroupPolicy.init(adapter.tasks(), metricProvider);

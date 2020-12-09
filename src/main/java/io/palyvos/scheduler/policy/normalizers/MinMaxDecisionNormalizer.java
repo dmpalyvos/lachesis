@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy.translators.concrete.normalizers;
+package io.palyvos.scheduler.policy.normalizers;
 
 import java.util.Collection;
 import java.util.HashMap;

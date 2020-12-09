@@ -1,6 +1,6 @@
-package io.palyvos.scheduler.policy.translators.concrete;
+package io.palyvos.scheduler.policy.single_priority;
 
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.command.RealTimeThreadCommand;
 import io.palyvos.scheduler.util.command.RealTimeThreadCommand.RealTimeSchedulingAlgorithm;
@@ -9,12 +9,12 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RealTimeThreadPriorityTranslator extends SingleValueConcretePolicyTranslator {
+public class RealTimeSinglePriorityMetricTranslator extends AbstractSinglePriorityMetricTranslator {
 
-  private static final Logger LOG = LogManager.getLogger(RealTimeThreadPriorityTranslator.class);
+  private static final Logger LOG = LogManager.getLogger(RealTimeSinglePriorityMetricTranslator.class);
   private final RealTimeSchedulingAlgorithm algorithm;
 
-  public RealTimeThreadPriorityTranslator(
+  public RealTimeSinglePriorityMetricTranslator(
       DecisionNormalizer normalizer, RealTimeSchedulingAlgorithm algorithm) {
     super(normalizer);
     this.algorithm = algorithm;

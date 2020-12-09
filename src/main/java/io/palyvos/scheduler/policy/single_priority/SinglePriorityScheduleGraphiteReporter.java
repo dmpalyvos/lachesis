@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy.translators;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -6,13 +6,13 @@ import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SingleValueScheduleGraphiteReporter {
+public class SinglePriorityScheduleGraphiteReporter {
   private static final Logger LOG = LogManager.getLogger();
 
   public static final String GRAPHITE_PREFIX = "schedule.thread";
   private final SimpleGraphiteReporter reporter;
 
-  public SingleValueScheduleGraphiteReporter(String host, int port) {
+  public SinglePriorityScheduleGraphiteReporter(String host, int port) {
     this.reporter = new SimpleGraphiteReporter(host, port);
   }
 

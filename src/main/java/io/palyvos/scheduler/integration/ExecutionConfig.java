@@ -5,12 +5,12 @@ import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.cgroup.CGroupNoopPolicy;
+import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.ConcreteSchedulingPolicy;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
-import io.palyvos.scheduler.integration.converter.CGroupPolicyConverter;
-import io.palyvos.scheduler.integration.converter.ConcreteSchedulingPolicyConverter;
+import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.integration.converter.CGroupSchedulingPolicyConverter;
+import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
 import io.palyvos.scheduler.util.command.JcmdCommand;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -48,11 +48,11 @@ class ExecutionConfig {
 
   @Parameter(names = "--policy", description =
       "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true]. "
-          + "The optional true argument controls scheduling of helper threads", converter = ConcreteSchedulingPolicyConverter.class, required = true)
-  ConcreteSchedulingPolicy policy;
+          + "The optional true argument controls scheduling of helper threads", converter = SinglePrioritySchedulingPolicyConverter.class, required = true)
+  SinglePrioritySchedulingPolicy policy;
 
-  @Parameter(names = "--cgroupPolicy", converter = CGroupPolicyConverter.class)
-  CGroupSchedulingPolicy cgroupPolicy = new CGroupNoopPolicy();
+  @Parameter(names = "--cgroupPolicy", converter = CGroupSchedulingPolicyConverter.class)
+  CGroupSchedulingPolicy cgroupPolicy = new NoopCGroupSchedulingPolicy();
 
   @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
   int maxPriority = -20;
@@ -134,7 +134,7 @@ class ExecutionConfig {
 
 
   void schedule(ExecutionConfig config, LiebreAdapter adapter,
-      SchedulerMetricProvider metricProvider, ConcretePolicyTranslator translator) {
+      SchedulerMetricProvider metricProvider, SinglePriorityMetricTranslator translator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     if (lastPolicyRun + period < now) {
       policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);

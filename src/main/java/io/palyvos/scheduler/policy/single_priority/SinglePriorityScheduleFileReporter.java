@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.policy.translators;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.File;
@@ -6,14 +6,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class SingleValueScheduleFileReporter {
+public class SinglePriorityScheduleFileReporter {
 
   private static final String INTERNAL_PRIORITIES_FILENAME = "schedule-internal.csv";
   private static final String EXTERNAL_PRIORITIES_FILENAME = "schedule-external.csv";
   private final PrintWriter internalOut;
   private final PrintWriter externalOut;
 
-  public SingleValueScheduleFileReporter() {
+  public SinglePriorityScheduleFileReporter() {
     final String internalPrioritiesFile =
         SchedulerContext.STATISTICS_FOLDER + File.separator + INTERNAL_PRIORITIES_FILENAME;
     final String externalPrioritiesFile =

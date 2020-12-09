@@ -1,18 +1,17 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.task.Task;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class RandomConcreteSchedulingPolicy extends AbstractConcreteSchedulingPolicy {
+public class RandomSinglePrioritySchedulingPolicy extends AbstractSinglePrioritySchedulingPolicy {
 
-  public RandomConcreteSchedulingPolicy(boolean scheduleHelpers) {
+  public RandomSinglePrioritySchedulingPolicy(boolean scheduleHelpers) {
     super(scheduleHelpers);
   }
 
   @Override
-  public void init(ConcretePolicyTranslator policyTranslator,
+  public void init(SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
 
   }

@@ -1,8 +1,6 @@
-package io.palyvos.scheduler.policy.translators.concrete;
+package io.palyvos.scheduler.policy.single_priority;
 
-import io.palyvos.scheduler.policy.translators.SingleValueScheduleFileReporter;
-import io.palyvos.scheduler.policy.translators.SingleValueScheduleGraphiteReporter;
-import io.palyvos.scheduler.policy.translators.concrete.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
@@ -18,17 +16,18 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class SingleValueConcretePolicyTranslator implements ConcretePolicyTranslator {
+public abstract class AbstractSinglePriorityMetricTranslator implements
+    SinglePriorityMetricTranslator {
 
   private static final Logger LOG = LogManager.getLogger();
   public static final int TRANSLATOR_THREADS = 4;
   protected final DecisionNormalizer normalizer;
   private final Map<ExternalThread, Long> lastSchedule = new HashMap<>();
-  private final SingleValueScheduleFileReporter reporter = new SingleValueScheduleFileReporter();
-  private final SingleValueScheduleGraphiteReporter graphiteReporter = new SingleValueScheduleGraphiteReporter(
+  private final SinglePriorityScheduleFileReporter reporter = new SinglePriorityScheduleFileReporter();
+  private final SinglePriorityScheduleGraphiteReporter graphiteReporter = new SinglePriorityScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public SingleValueConcretePolicyTranslator(DecisionNormalizer normalizer) {
+  public AbstractSinglePriorityMetricTranslator(DecisionNormalizer normalizer) {
     Validate.notNull(normalizer, "normalizer");
     this.normalizer = normalizer;
   }
@@ -44,7 +43,8 @@ public abstract class SingleValueConcretePolicyTranslator implements ConcretePol
     final Map<ExternalThread, Long> normalizedSchedule = normalizer.normalize(schedule);
     reportStatistics(schedule, normalizedSchedule);
     final int updates = applyDirect(normalizedSchedule);
-    LOG.debug("{} finished applying policy: {} priority updates ({} ms)", getClass().getSimpleName(),
+    LOG.debug("{} finished applying policy: {} priority updates ({} ms)",
+        getClass().getSimpleName(),
         updates, System.currentTimeMillis() - start);
 
   }

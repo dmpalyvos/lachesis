@@ -1,24 +1,23 @@
-package io.palyvos.scheduler.policy;
+package io.palyvos.scheduler.policy.single_priority;
 
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.translators.concrete.ConcretePolicyTranslator;
 import io.palyvos.scheduler.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MetricConcreteSchedulingPolicy extends AbstractConcreteSchedulingPolicy {
+public class MetricSinglePrioritySchedulingPolicy extends AbstractSinglePrioritySchedulingPolicy {
 
   private static final Logger LOG = LogManager.getLogger();
   private final SchedulerMetric metric;
 
-  public MetricConcreteSchedulingPolicy(SchedulerMetric metric, boolean scheduleHelpers) {
+  public MetricSinglePrioritySchedulingPolicy(SchedulerMetric metric, boolean scheduleHelpers) {
     super(scheduleHelpers);
     this.metric = metric;
   }
 
   @Override
-  public void init(ConcretePolicyTranslator policyTranslator,
+  public void init(SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
     metricProvider.register(metric);
   }
