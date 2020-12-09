@@ -42,9 +42,6 @@ public class SimpleGraphiteReporter {
     }
   }
 
-  public static String schedulerGraphiteKey(String prefix, String type, String entity) {
-      return String.format("%s.%s.%s.%s", SchedulerContext.SCHEDULER_NAME, prefix, type, entity);
-  }
 
   public static String cleanGraphiteId(String thread) {
     return GRAPHITE_REJECT_PATTERN.matcher(thread).replaceAll("");

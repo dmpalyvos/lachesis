@@ -6,6 +6,7 @@ import io.palyvos.scheduler.task.CGroup;
 import io.palyvos.scheduler.task.CGroupParameterContainer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,16 +20,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ClusteringCGroupTranslator {
+
   private static final Logger LOG = LogManager.getLogger();
 
   private static final CGroup PARENT_CGROUP = new CGroup("/lachesis", CPU);
   private final int ngroups;
   private final Collection<Task> tasks;
-  private final CGroupPolicyTranslator translator = new BasicCGroupPolicyTranslator();
+  private final CGroupPolicyTranslator policyTranslator;
+  private final CGroupScheduleGraphiteReporter graphiteReporter = new CGroupScheduleGraphiteReporter(
+      SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public ClusteringCGroupTranslator(int ngroups, Collection<Task> tasks) {
+  public ClusteringCGroupTranslator(int ngroups, Collection<Task> tasks,
+      CGroupPolicyTranslator policyTranslator) {
     this.ngroups = ngroups;
     this.tasks = tasks;
+    this.policyTranslator = policyTranslator;
+  }
+
+  public ClusteringCGroupTranslator(int ngroups, Collection<Task> tasks) {
+    this(ngroups, tasks, new BasicCGroupPolicyTranslator());
   }
 
 
@@ -43,11 +53,14 @@ public class ClusteringCGroupTranslator {
     KMeansPlusPlusClusterer<ClusterableMetricValue> clusterer = new KMeansPlusPlusClusterer<>(
         ngroups, 100);
     List<CentroidCluster<ClusterableMetricValue>> clusters = clusterer.cluster(values);
-    LOG.info("Retrieved {} clusters", clusters.size());
-    int index = 0;
+
+    LOG.info("Found {} clusters", clusters.size());
+
     Map<String, CGroup> rawAssignment = new HashMap<>();
     Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
     Map<CGroup, Double> cgroupValues = new HashMap<>();
+
+    int index = 0;
     for (CentroidCluster<ClusterableMetricValue> cluster : clusters) {
       Clusterable center = cluster.getCenter();
       List<ClusterableMetricValue> points = cluster.getPoints();
@@ -62,9 +75,12 @@ public class ClusteringCGroupTranslator {
       }
       assignment.computeIfAbsent(cgroup, c -> new ArrayList<>()).addAll(task.threads());
     }
-    translator.create(cgroupValues.keySet());
-    translator.updateAssignment(assignment);
-    translator.updateParameters(scheduleFunction.apply(cgroupValues));
+    policyTranslator.create(cgroupValues.keySet());
+    policyTranslator.updateAssignment(assignment);
+    Map<CGroup, Collection<CGroupParameterContainer>> schedule = scheduleFunction
+        .apply(cgroupValues);
+    policyTranslator.updateParameters(schedule);
+    graphiteReporter.report(cgroupValues, schedule);
   }
 
 

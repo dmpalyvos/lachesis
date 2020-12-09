@@ -2,8 +2,6 @@ package io.palyvos.scheduler.policy.translators.cgroup;
 
 import static io.palyvos.scheduler.util.cgroup.CGController.CPU;
 
-import io.palyvos.scheduler.metric.Metric;
-import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import io.palyvos.scheduler.task.CGroup;
 import io.palyvos.scheduler.task.CGroupParameterContainer;
 import io.palyvos.scheduler.task.ExternalThread;
@@ -14,27 +12,29 @@ import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class InterQueryCGroupTranslator<T extends Metric<T>> {
+public class InterQueryCGroupTranslator {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final CGroup PARENT_CGROUP = new CGroup(
-      "/" + SchedulerContext.SCHEDULER_NAME, CPU);
-  private final CGroupPolicyTranslator concreteTranslator;
+  private static final CGroup PARENT_CGROUP =
+      new CGroup("/" + SchedulerContext.SCHEDULER_NAME, CPU);
+  private final CGroupPolicyTranslator policyTranslator;
   private Map<Query, CGroup> cgroupMapping = new HashMap<>();
-  private static final String GRAPHITE_PREFIX = "schedule.cgroup";
-  private final SimpleGraphiteReporter graphiteReporter = new SimpleGraphiteReporter(
+  private final CGroupScheduleGraphiteReporter graphiteReporter = new CGroupScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public InterQueryCGroupTranslator(CGroupPolicyTranslator concreteTranslator) {
-    this.concreteTranslator = concreteTranslator;
+  public InterQueryCGroupTranslator(CGroupPolicyTranslator policyTranslator) {
+    this.policyTranslator = policyTranslator;
+  }
+
+  public InterQueryCGroupTranslator() {
+    this(new BasicCGroupPolicyTranslator());
   }
 
   public void init(Collection<Task> tasks) {
@@ -55,8 +55,8 @@ public class InterQueryCGroupTranslator<T extends Metric<T>> {
         .forEach((cgroup, threads) -> LOG.info("{} -> {} threads", cgroup.path(),
             threads.stream().map(t -> t.name()).collect(Collectors.joining(" "))));
     //
-    concreteTranslator.create(assignment.keySet());
-    concreteTranslator.updateAssignment(assignment);
+    policyTranslator.create(assignment.keySet());
+    policyTranslator.updateAssignment(assignment);
   }
 
   public void schedule(Map<String, Double> metricValues,
@@ -67,43 +67,10 @@ public class InterQueryCGroupTranslator<T extends Metric<T>> {
       queryMetrics.put(cgroupMapping.get(query), queryFunction.apply(query, metricValues));
     }
     Map<CGroup, Collection<CGroupParameterContainer>> schedule = scheduleFunction.apply(queryMetrics);
-    reportToGraphite(queryMetrics, schedule);
-    concreteTranslator.updateParameters(schedule);
+    graphiteReporter.report(queryMetrics, schedule);
+    policyTranslator.updateParameters(schedule);
   }
 
-  private void reportToGraphite(Map<CGroup, Double> queryMetrics,
-      Map<CGroup, Collection<CGroupParameterContainer>> schedule) {
-    final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    graphiteReporter.open();
-    for (CGroup cgroup : queryMetrics.keySet()) {
-      Double queryMetric = queryMetrics.get(cgroup);
-      if (queryMetric != null) {
-        try {
-          graphiteReporter.report(now,
-              SimpleGraphiteReporter
-                  .schedulerGraphiteKey(GRAPHITE_PREFIX, "internal", cgroup.path()),
-              queryMetric);
-        } catch (Exception e) {
-          LOG.warn("Failed to report to graphite: {}", e.getMessage());
-        }
-      }
-      Collection<CGroupParameterContainer> parameters = schedule.get(cgroup);
-      if (parameters != null) {
-        for (CGroupParameterContainer parameter : parameters) {
-          try {
-            graphiteReporter.report(now,
-                SimpleGraphiteReporter
-                    .schedulerGraphiteKey(GRAPHITE_PREFIX, "external",
-                        parameter.key().replace(".", "_") + "." +
-                            cgroup.path()),
-                parameter.value());
-          } catch (Exception e) {
-            LOG.warn("Failed to report to graphite: {}", e.getMessage());
-          }
-        }
-      }
-    }
-    graphiteReporter.close();
-  }
+
 
 }

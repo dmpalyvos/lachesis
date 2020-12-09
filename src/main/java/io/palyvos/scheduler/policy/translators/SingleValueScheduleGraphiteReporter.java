@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 public class SingleValueScheduleGraphiteReporter {
   private static final Logger LOG = LogManager.getLogger();
 
-  public static final String SCHEDULE_GRAPHITE_PREFIX = "schedule.thread";
+  public static final String GRAPHITE_PREFIX = "schedule.thread";
   private final SimpleGraphiteReporter reporter;
 
   public SingleValueScheduleGraphiteReporter(String host, int port) {
@@ -28,11 +28,11 @@ public class SingleValueScheduleGraphiteReporter {
     String convertedThread = graphiteCompatibleThreadName(thread);
     try {
       if (externalPriority != null) {
-        reporter.report(timestamp, graphiteKey(convertedThread, "external"),
+        reporter.report(timestamp, graphiteKey("external", convertedThread),
             externalPriority);
       }
       if (internalPriority != null) {
-        reporter.report(timestamp, graphiteKey(convertedThread, "internal"),
+        reporter.report(timestamp, graphiteKey("internal", convertedThread),
             internalPriority);
       }
     } catch (IOException e) {
@@ -40,9 +40,12 @@ public class SingleValueScheduleGraphiteReporter {
     }
   }
 
-  private String graphiteKey(String thread, String priorityType) {
-    return String.format("%s.%s.%s.%s",
-        SchedulerContext.SCHEDULER_NAME, SCHEDULE_GRAPHITE_PREFIX, thread, priorityType);
+
+  private String graphiteKey(String type, String entity) {
+    return new StringBuffer(SchedulerContext.SCHEDULER_NAME).append(".")
+        .append(GRAPHITE_PREFIX).append(".")
+        .append(type).append(".")
+        .append(entity).toString();
   }
 
   private String graphiteCompatibleThreadName(String thread) {
