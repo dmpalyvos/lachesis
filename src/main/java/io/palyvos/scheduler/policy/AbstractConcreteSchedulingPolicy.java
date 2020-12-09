@@ -32,8 +32,8 @@ public abstract class AbstractConcreteSchedulingPolicy implements ConcreteSchedu
           schedule.put(helper.thread(), priority);
         }
       }
-      policyTranslator.applyPolicy(schedule);
     }
+    policyTranslator.applyPolicy(schedule);
   }
 
   protected abstract Double getPriority(SchedulerMetricProvider metricProvider, Task task);
