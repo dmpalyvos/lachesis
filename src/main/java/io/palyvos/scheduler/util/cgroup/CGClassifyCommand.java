@@ -29,7 +29,7 @@ public class CGClassifyCommand implements ExternalCommand {
 
   @Override
   public List<String> rawCommand() {
-    String controllersGroups = String.format("%s:%s", controllers, cgroupPath);
+    String controllersGroups = controllers + ":" + cgroupPath;
     List<String> rawCommand = new ArrayList<>();
     rawCommand.add(executable());
     rawCommand.add(GROUPS_FLAG);

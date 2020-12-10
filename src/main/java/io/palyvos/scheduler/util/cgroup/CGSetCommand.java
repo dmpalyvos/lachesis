@@ -21,8 +21,12 @@ public class CGSetCommand implements ExternalCommand {
 
   @Override
   public List<String> rawCommand() {
-    return Arrays
-        .asList(executable(), PARAMETER_FLAG, String.format("%s=%s", parameter, value), cgroupPath);
+    String keyValue = parameter + "=" + value;
+    return Arrays.asList(
+        executable(),
+        PARAMETER_FLAG,
+        keyValue,
+        cgroupPath);
   }
 
   @Override

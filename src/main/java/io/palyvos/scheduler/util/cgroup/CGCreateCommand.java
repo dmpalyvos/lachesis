@@ -24,7 +24,7 @@ public class CGCreateCommand implements ExternalCommand {
 
   @Override
   public List<String> rawCommand() {
-    String controllersGroups = String.format("%s:%s", controllers, cgroupPath);
+    String controllersGroups = controllers + ":" + cgroupPath;
     return Arrays.asList(executable(), GROUPS_FLAG, controllersGroups);
   }
 
