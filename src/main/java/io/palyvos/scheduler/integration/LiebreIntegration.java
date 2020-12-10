@@ -40,9 +40,8 @@ public class LiebreIntegration {
     config.cgroupPolicy.init(adapter.tasks(), metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
-      metricProvider.run();
       try {
-        config.schedule(config, adapter, metricProvider, translator);
+        config.schedule(adapter, metricProvider, translator);
       }
       catch (Exception e) {
         LOG.error("Failed to schedule", e);

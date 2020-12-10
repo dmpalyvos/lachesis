@@ -33,7 +33,7 @@ public class CGroupSchedulingPolicyConverter implements IStringConverter<CGroupS
   @Override
   public CGroupSchedulingPolicy convert(String argument) {
     final Matcher metricMatcher = METRIC_POLICY_PATTERN.matcher(argument);
-    if (argument.trim() == NO_POLICY) {
+    if (NO_POLICY.equals(argument.trim())) {
       return new NoopCGroupSchedulingPolicy();
     }
     if (metricMatcher.matches()) {

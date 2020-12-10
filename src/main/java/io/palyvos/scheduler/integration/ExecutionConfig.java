@@ -17,6 +17,7 @@ import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -75,6 +76,7 @@ class ExecutionConfig {
 
   private long lastCgroupPolicyRun;
   private long lastPolicyRun;
+  private long sleepTime = -1;
 
   public static ExecutionConfig init(String[] args, Class<?> mainClass)
       throws InterruptedException {
@@ -129,18 +131,26 @@ class ExecutionConfig {
   }
 
   void sleep() throws InterruptedException {
-    Thread.sleep(TimeUnit.SECONDS.toMillis(Math.min(period, cgroupPeriod)));
+    if (sleepTime < 0) {
+      sleepTime = ArithmeticUtils.gcd(period, cgroupPeriod);
+    }
+    Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTime));
   }
 
 
-  void schedule(ExecutionConfig config, LiebreAdapter adapter,
+  void schedule(LiebreAdapter adapter,
       SchedulerMetricProvider metricProvider, SinglePriorityMetricTranslator translator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    if (lastPolicyRun + period < now) {
+    boolean timeToRunPolicy = lastPolicyRun + period < now;
+    boolean timeToRunCGroupPolicy = lastCgroupPolicyRun + cgroupPeriod < now;
+    if (timeToRunPolicy || timeToRunCGroupPolicy) {
+      metricProvider.run();
+    }
+    if (timeToRunPolicy) {
       policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
       lastPolicyRun = now;
     }
-    if (lastCgroupPolicyRun + cgroupPeriod < now) {
+    if (timeToRunCGroupPolicy) {
       cgroupPolicy.apply(adapter.tasks(), metricProvider);
       lastCgroupPolicyRun = now;
     }

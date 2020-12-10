@@ -19,7 +19,7 @@ public class SinglePrioritySchedulingPolicyConverter implements IStringConverter
 
   @Override
   public SinglePrioritySchedulingPolicy convert(String argument) {
-    if (argument.trim() == NO_POLICY) {
+    if (NO_POLICY.equals(argument.trim())) {
       return new NoopSinglePrioritySchedulingPolicy();
     }
     final Matcher metricMatcher = METRIC_POLICY_PATTERN.matcher(argument);
