@@ -1,4 +1,4 @@
-package io.palyvos.scheduler.util.cgroup;
+package io.palyvos.scheduler.util.command.cgroup;
 
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import java.util.Arrays;

@@ -3,11 +3,10 @@ package io.palyvos.scheduler.policy.cgroup;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
-import io.palyvos.scheduler.util.cgroup.CGClassifyCommand;
-import io.palyvos.scheduler.util.cgroup.CGController;
-import io.palyvos.scheduler.util.cgroup.CGCreateCommand;
-import io.palyvos.scheduler.util.cgroup.CGDeleteCommand;
-import io.palyvos.scheduler.util.cgroup.CGSetCommand;
+import io.palyvos.scheduler.util.command.cgroup.CGClassifyCommand;
+import io.palyvos.scheduler.util.command.cgroup.CGCreateCommand;
+import io.palyvos.scheduler.util.command.cgroup.CGDeleteCommand;
+import io.palyvos.scheduler.util.command.cgroup.CGSetCommand;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -22,11 +21,11 @@ public class CGroup {
   private static final Logger LOG = LogManager.getLogger();
 
   private final String path;
-  private final CGController[] controllers;
+  private final CGroupController[] controllers;
   private final Map<String, String> parameters = new HashMap<>();
   private final String asShortString;
 
-  public CGroup(String path, CGController... controllers) {
+  public CGroup(String path, CGroupController... controllers) {
     this.path = path;
     this.controllers = controllers;
     this.asShortString = String.format("%s:%s",
@@ -61,7 +60,7 @@ public class CGroup {
     return false;
   }
 
-  public CGController[] controllers() {
+  public CGroupController[] controllers() {
     return controllers;
   }
 

@@ -1,20 +1,21 @@
-package io.palyvos.scheduler.util.cgroup;
+package io.palyvos.scheduler.util.command.cgroup;
 
+import io.palyvos.scheduler.policy.cgroup.CGroupController;
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 
-public class CGDeleteCommand implements ExternalCommand {
+public class CGCreateCommand implements ExternalCommand {
 
-  private static final String EXECUTABLE = "cgdelete";
-  private static final String RECURSIVE_FLAG = "-r";
+  private static final String EXECUTABLE = "cgcreate";
+  private static final String GROUPS_FLAG = "-g";
 
   private final String cgroupPath;
   private final String controllers;
 
-  public CGDeleteCommand(String cgroupPath, CGController... controllers) {
+  public CGCreateCommand(String cgroupPath, CGroupController... controllers) {
     Validate.notBlank(cgroupPath, "blank cgroup path");
     Validate.notEmpty(controllers, "no cgroup controller specified");
     this.cgroupPath = cgroupPath;
@@ -25,7 +26,7 @@ public class CGDeleteCommand implements ExternalCommand {
   @Override
   public List<String> rawCommand() {
     String controllersGroups = controllers + ":" + cgroupPath;
-    return Arrays.asList(executable(), RECURSIVE_FLAG, controllersGroups);
+    return Arrays.asList(executable(), GROUPS_FLAG, controllersGroups);
   }
 
   @Override

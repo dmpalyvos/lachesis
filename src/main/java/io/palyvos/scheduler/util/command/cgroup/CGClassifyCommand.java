@@ -1,5 +1,6 @@
-package io.palyvos.scheduler.util.cgroup;
+package io.palyvos.scheduler.util.command.cgroup;
 
+import io.palyvos.scheduler.policy.cgroup.CGroupController;
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +18,7 @@ public class CGClassifyCommand implements ExternalCommand {
   private final String cgroupPath;
   private final Collection<String> pids;
 
-  public CGClassifyCommand(Collection<Integer> pids, String cgroupPath, CGController... controllers) {
+  public CGClassifyCommand(Collection<Integer> pids, String cgroupPath, CGroupController... controllers) {
     Validate.notEmpty(controllers, "At least one controller required!");
     Validate.notBlank(cgroupPath, "Blank cgroup path!");
     Validate.notEmpty(pids, "At least one pid required");

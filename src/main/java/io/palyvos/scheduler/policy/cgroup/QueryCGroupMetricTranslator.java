@@ -1,6 +1,6 @@
 package io.palyvos.scheduler.policy.cgroup;
 
-import static io.palyvos.scheduler.util.cgroup.CGController.CPU;
+import static io.palyvos.scheduler.policy.cgroup.CGroupController.CPU;
 
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Query;
