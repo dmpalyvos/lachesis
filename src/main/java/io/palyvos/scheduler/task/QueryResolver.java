@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,11 +41,8 @@ public class QueryResolver {
   private int nQueries;
 
   public QueryResolver(Collection<Task> tasks) {
+    Validate.notEmpty(tasks, "no tasks provided");
     resolveQueries(tasks);
-  }
-
-  public Collection<Query> queries() {
-    return Collections.unmodifiableCollection(queryByIndex.values());
   }
 
   private void resolveQueries(Collection<Task> tasks) {
@@ -86,6 +84,10 @@ public class QueryResolver {
         current.upstream().forEach(t -> q.addLast(t));
       }
     }
+  }
+
+  public Collection<Query> queries() {
+    return Collections.unmodifiableCollection(queryByIndex.values());
   }
 
 }
