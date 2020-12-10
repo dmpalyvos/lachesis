@@ -2,7 +2,6 @@ package io.palyvos.scheduler.metric;
 
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import io.palyvos.scheduler.util.SchedulerContext;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,9 +54,9 @@ public class MetricGraphiteReporter<T extends Metric> {
   }
 
   private String graphiteKey(T metric, String key) {
-    return String.format("%s.%s.%s.%s",
-        SchedulerContext.SCHEDULER_NAME, METRICS_GRAPHITE_PREFIX,
-        SimpleGraphiteReporter.cleanGraphiteId(metric.toString()),
-        SimpleGraphiteReporter.cleanGraphiteId(key));
+    return SchedulerContext.SCHEDULER_NAME + "."
+        + METRICS_GRAPHITE_PREFIX + "."
+        + SimpleGraphiteReporter.cleanGraphiteId(metric.toString()) + "."
+        + SimpleGraphiteReporter.cleanGraphiteId(key);
   }
 }

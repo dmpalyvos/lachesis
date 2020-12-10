@@ -42,10 +42,10 @@ public class SinglePriorityScheduleGraphiteReporter {
 
 
   private String graphiteKey(String type, String entity) {
-    return new StringBuilder(SchedulerContext.SCHEDULER_NAME).append(".")
-        .append(GRAPHITE_PREFIX).append(".")
-        .append(type).append(".")
-        .append(entity).toString();
+    return SchedulerContext.SCHEDULER_NAME + "."
+        + GRAPHITE_PREFIX + "."
+        + type + "."
+        + entity;
   }
 
   private String graphiteCompatibleThreadName(String thread) {

@@ -59,10 +59,10 @@ public class CGroupScheduleGraphiteReporter {
 
 
   private String graphiteKey(String type, String entity) {
-    return new StringBuilder(SchedulerContext.SCHEDULER_NAME).append(".")
-                .append(GRAPHITE_PREFIX).append(".")
-                .append(type).append(".")
-                .append(entity).toString();
+    return String.valueOf(SchedulerContext.SCHEDULER_NAME) + "."
+        + GRAPHITE_PREFIX + "."
+        + type + "."
+        + entity;
   }
 
 }

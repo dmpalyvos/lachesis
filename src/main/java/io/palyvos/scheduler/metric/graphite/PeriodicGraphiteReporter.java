@@ -39,7 +39,7 @@ public class PeriodicGraphiteReporter {
       for (Entry<String, AverageValueReport> entry : reports.entrySet()) {
         String k = entry.getKey();
         AverageValueReport r = entry.getValue();
-        String fullKey = String.format("%s.%s", prefix, k);
+        String fullKey = prefix + "." + k;
         delegate.report(timestampSeconds, fullKey, r.getAndReset());
       }
       delegate.close();

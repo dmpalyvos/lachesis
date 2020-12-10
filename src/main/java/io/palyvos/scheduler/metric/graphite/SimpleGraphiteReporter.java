@@ -1,6 +1,5 @@
 package io.palyvos.scheduler.metric.graphite;
 
-import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -29,7 +28,8 @@ public class SimpleGraphiteReporter {
   }
 
   public void report(long timestampSeconds, String key, Object value) throws IOException {
-    output.writeBytes(String.format("%s %s %d\n", key, value, timestampSeconds));
+    String message = key + " " + value + " " + timestampSeconds + "\n";
+    output.writeBytes(message);
   }
 
   public void close() {
