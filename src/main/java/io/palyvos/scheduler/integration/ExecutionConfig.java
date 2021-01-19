@@ -26,6 +26,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 class ExecutionConfig {
 
   private static final Logger LOG = LogManager.getLogger();
+  private static final int RETRY_INTERVAL_MILLIS = 5000;
+  private static final int MAX_RETRIES = 20;
 
   List<Integer> pids;
 
@@ -98,8 +100,7 @@ class ExecutionConfig {
   }
 
   void retrievePids(Class<?> mainClass) throws InterruptedException {
-    final int tries = 20;
-    for (int i = 0; i < tries; i++) {
+    for (int i = 0; i < MAX_RETRIES; i++) {
       try {
         LOG.info("Trying to retrieve worker PID...");
         // Ignore PID of current command because it also contains workerPattern as an argument
@@ -107,15 +108,15 @@ class ExecutionConfig {
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
-        Thread.sleep(5000);
+        Thread.sleep(RETRY_INTERVAL_MILLIS);
       }
     }
     throw new IllegalStateException("Failed to retrieve worker PID(s)!");
   }
 
   static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
-    final int tries = 20;
-    for (int i = 0; i < tries; i++) {
+    int tries = 0;
+    while (true) {
       try {
         LOG.info("Trying to fetch tasks...");
         adapter.updateTasks();
@@ -123,11 +124,13 @@ class ExecutionConfig {
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
-        exception.printStackTrace();
-        Thread.sleep(5000);
+        if (tries++ >= MAX_RETRIES) {
+          LOG.error("Failed to retrieve storm tasks!");
+          throw exception;
+        }
+        Thread.sleep(RETRY_INTERVAL_MILLIS);
       }
     }
-    throw new IllegalStateException("Failed to retrieve storm tasks!");
   }
 
   void sleep() throws InterruptedException {
