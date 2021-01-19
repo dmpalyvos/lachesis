@@ -19,7 +19,7 @@ public class StormAdapter implements SpeAdapter {
 
   private static final Logger LOG = LogManager.getLogger();
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
-      s -> s.replace("-", ".");
+      s -> s.replace(".", "-");
 
   private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final List<Task> tasks = new ArrayList<>();

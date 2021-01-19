@@ -29,7 +29,8 @@ public class FlinkAdapter implements SpeAdapter {
 
   private static final Logger LOG = LogManager.getLogger(FlinkAdapter.class);
 
-  public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s;
+  public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s
+      .replace(".", "-");
 
   private static final String JOBS_PATH = "jobs";
   private static final String JOBS_KEY = "jobs";
