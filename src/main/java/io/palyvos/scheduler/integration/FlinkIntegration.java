@@ -19,19 +19,18 @@ import org.apache.logging.log4j.Logger;
 public class FlinkIntegration {
 
   private static final Logger LOG = LogManager.getLogger();
-  public static final String GRAPHITE_HOST = "129.16.20.158";
-  public static final int GRAPHITE_READ_PORT = 80;
-  public static final int GRAPHITE_WRITE_PORT = 2003;
 
   public static void main(String[] args) throws InterruptedException {
 
     ExecutionConfig config = ExecutionConfig.init(args, FlinkIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
+    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
+
 
     FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost", 8081, new LinuxAdapter());
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new FlinkGraphiteMetricProvider(GRAPHITE_HOST, GRAPHITE_READ_PORT, adapter.tasks()),
+        new FlinkGraphiteMetricProvider(config.statisticsHost, 80, adapter.tasks()),
         new LinuxMetricProvider(config.pids));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
         config.maxPriority);
@@ -46,15 +45,25 @@ public class FlinkIntegration {
 //            BasicSchedulerMetric.TASK_QUEUE_SIZE_FROM_SUBTASK_DATA,
 //            BasicSchedulerMetric.SUBTASK_SELECTIVITY, BasicSchedulerMetric.SUBTASK_COST,
 //            BasicSchedulerMetric.SUBTASK_GLOBAL_SELECTIVITY, BasicSchedulerMetric.SUBTASK_GLOBAL_AVERAGE_COST);
+    int retries = 0;
     config.policy.init(translator, metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
-      metricProvider.run();
+      try {
+        metricProvider.run();
 //      for (MetricGraphiteReporter<?> reporter : reporters) {
 //        reporter.report();
 //      }
-      config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
-      LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
+        config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
+        LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
+      }
+      catch (Exception e) {
+        LOG.error("Failed to schedule: {}", e.getMessage());
+        Thread.sleep(5000);
+        if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
+          throw e;
+        }
+      }
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }
   }

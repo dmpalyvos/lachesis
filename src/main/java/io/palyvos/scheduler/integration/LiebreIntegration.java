@@ -21,13 +21,14 @@ public class LiebreIntegration {
   public static void main(String[] args) throws InterruptedException {
     ExecutionConfig config = ExecutionConfig.init(args, LiebreIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
+    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath);
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider("129.16.20.158", 80, adapter.tasks()));
+        new LiebreMetricProvider(config.statisticsHost, 80, adapter.tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
         config.maxPriority);
@@ -36,6 +37,7 @@ public class LiebreIntegration {
     }
     SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
 
+    int retries = 0;
     config.policy.init(translator, metricProvider);
     config.cgroupPolicy.init(adapter.tasks(), metricProvider);
     while (true) {
@@ -44,7 +46,11 @@ public class LiebreIntegration {
         config.schedule(adapter, metricProvider, translator);
       }
       catch (Exception e) {
-        LOG.error("Failed to schedule", e);
+        LOG.error("Failed to schedule: {}", e.getMessage());
+        Thread.sleep(5000);
+        if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
+          throw e;
+        }
       }
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       config.sleep();

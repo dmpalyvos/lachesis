@@ -4,16 +4,16 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
-import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
 import io.palyvos.scheduler.integration.converter.CGroupSchedulingPolicyConverter;
-import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
-import io.palyvos.scheduler.util.command.JcmdCommand;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
+import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
+import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.util.SchedulerContext;
+import io.palyvos.scheduler.util.command.JcmdCommand;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.Validate;
@@ -28,6 +28,7 @@ class ExecutionConfig {
   private static final Logger LOG = LogManager.getLogger();
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
+  static final int MAX_SCHEDULE_RETRIES = 3;
 
   List<Integer> pids;
 
@@ -69,6 +70,9 @@ class ExecutionConfig {
   @Parameter(names = "--statisticsFolder", description = "Path to store the scheduler statistics")
   String statisticsFolder = ".";
 
+  @Parameter(names = "--statisticsHost", description = "Path to store the scheduler statistics", required = true)
+  String statisticsHost;
+
   @Parameter(names = "--help", help = true)
   boolean help = false;
 
@@ -100,9 +104,9 @@ class ExecutionConfig {
   }
 
   void retrievePids(Class<?> mainClass) throws InterruptedException {
+    LOG.info("Trying to retrieve worker PID...");
     for (int i = 0; i < MAX_RETRIES; i++) {
       try {
-        LOG.info("Trying to retrieve worker PID...");
         // Ignore PID of current command because it also contains workerPattern as an argument
         pids = new JcmdCommand().pidsFor(workerPattern, mainClass.getName());
         LOG.info("Success!");
@@ -116,9 +120,9 @@ class ExecutionConfig {
 
   static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
     int tries = 0;
+    LOG.info("Trying to fetch tasks...");
     while (true) {
       try {
-        LOG.info("Trying to fetch tasks...");
         adapter.updateTasks();
         Validate.validState(!adapter.tasks().isEmpty(), "No tasks found!");
         LOG.info("Success!");
@@ -158,5 +162,6 @@ class ExecutionConfig {
       lastCgroupPolicyRun = now;
     }
   }
+
 
 }

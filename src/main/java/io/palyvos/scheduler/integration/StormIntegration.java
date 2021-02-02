@@ -23,11 +23,12 @@ public class StormIntegration {
 
     ExecutionConfig config = ExecutionConfig.init(args, StormIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
+    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(), config.queryGraphPath);
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new StormGraphiteMetricProvider("129.16.20.158", 80),
+        new StormGraphiteMetricProvider(config.statisticsHost, 80),
         new LinuxMetricProvider(config.pids));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority, config.maxPriority);
     if (config.logarithmic) {
@@ -37,11 +38,21 @@ public class StormIntegration {
     metricProvider.setTaskIndex(adapter.taskIndex());
 
     config.policy.init(translator, metricProvider);
+    int retries = 0;
     while (true) {
-      long start = System.currentTimeMillis();
-      metricProvider.run();
-      config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
-      LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
+      try {
+        long start = System.currentTimeMillis();
+        metricProvider.run();
+        config.policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
+        LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
+      }
+      catch (Exception e) {
+        LOG.error("Failed to schedule: {}", e.getMessage());
+        Thread.sleep(5000);
+        if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
+          throw e;
+        }
+      }
       Thread.sleep(TimeUnit.SECONDS.toMillis(config.period));
     }
   }
