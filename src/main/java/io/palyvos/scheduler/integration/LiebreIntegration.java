@@ -47,7 +47,7 @@ public class LiebreIntegration {
       }
       catch (Exception e) {
         LOG.error("Failed to schedule: {}", e.getMessage());
-        Thread.sleep(5000);
+        Thread.sleep(15000);
         if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
           throw e;
         }

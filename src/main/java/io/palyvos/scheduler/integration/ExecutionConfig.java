@@ -28,7 +28,7 @@ class ExecutionConfig {
   private static final Logger LOG = LogManager.getLogger();
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
-  static final int MAX_SCHEDULE_RETRIES = 3;
+  static final int MAX_SCHEDULE_RETRIES = 5;
 
   List<Integer> pids;
 
@@ -129,7 +129,7 @@ class ExecutionConfig {
         return;
       } catch (Exception exception) {
         if (tries++ >= MAX_RETRIES) {
-          LOG.error("Failed to retrieve storm tasks!");
+          LOG.error("Failed to retrieve SPE tasks!");
           throw exception;
         }
         Thread.sleep(RETRY_INTERVAL_MILLIS);
