@@ -28,7 +28,7 @@ class ExecutionConfig {
   private static final Logger LOG = LogManager.getLogger();
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
-  static final int MAX_SCHEDULE_RETRIES = 5;
+  private static final long MAX_RETRY_TIME_SECONDS = 75;
 
   List<Integer> pids;
 
@@ -161,6 +161,10 @@ class ExecutionConfig {
       cgroupPolicy.apply(adapter.tasks(), metricProvider);
       lastCgroupPolicyRun = now;
     }
+  }
+
+  long maxRetries() {
+    return MAX_RETRY_TIME_SECONDS / period;
   }
 
 

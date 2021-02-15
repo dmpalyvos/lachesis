@@ -46,9 +46,7 @@ public class LiebreIntegration {
         config.schedule(adapter, metricProvider, translator);
       }
       catch (Exception e) {
-        LOG.error("Failed to schedule: {}", e.getMessage());
-        Thread.sleep(15000);
-        if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
+        if (retries++ > config.maxRetries()) {
           throw e;
         }
       }

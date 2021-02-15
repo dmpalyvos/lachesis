@@ -47,9 +47,7 @@ public class StormIntegration {
         LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       }
       catch (Exception e) {
-        LOG.error("Failed to schedule: {}", e.getMessage());
-        Thread.sleep(15000);
-        if (retries++ > ExecutionConfig.MAX_SCHEDULE_RETRIES) {
+        if (retries++ > config.maxRetries()) {
           throw e;
         }
       }
