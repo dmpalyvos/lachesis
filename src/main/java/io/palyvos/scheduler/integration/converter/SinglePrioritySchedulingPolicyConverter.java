@@ -30,13 +30,13 @@ public class SinglePrioritySchedulingPolicyConverter implements IStringConverter
     }
     final Matcher constantMatcher = CONSTANT_POLICY_MATCHER.matcher(argument);
     if (constantMatcher.matches()) {
-      final boolean scheduleHelpers = Boolean.valueOf(metricMatcher.group(2));
+      final boolean scheduleHelpers = Boolean.valueOf(constantMatcher.group(2));
       return new ConstantSinglePrioritySchedulingPolicy(Long.valueOf(constantMatcher.group(1)),
           scheduleHelpers);
     }
     final Matcher randomMatcher = RANDOM_POLICY_MATCHER.matcher(argument);
     if (randomMatcher.matches()) {
-      final boolean scheduleHelpers = Boolean.valueOf(metricMatcher.group(1));
+      final boolean scheduleHelpers = Boolean.valueOf(randomMatcher.group(1));
       return new RandomSinglePrioritySchedulingPolicy(scheduleHelpers);
     }
     throw new IllegalArgumentException(String.format("Unknown policy requested: %s", argument));

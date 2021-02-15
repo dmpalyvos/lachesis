@@ -3,7 +3,6 @@ package io.palyvos.scheduler.integration;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.integration.converter.CGroupSchedulingPolicyConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
@@ -83,6 +82,7 @@ class ExecutionConfig {
   private long lastCgroupPolicyRun;
   private long lastPolicyRun;
   private long sleepTime = -1;
+  private boolean policyFirstApply;
 
   public static ExecutionConfig init(String[] args, Class<?> mainClass)
       throws InterruptedException {
@@ -145,7 +145,7 @@ class ExecutionConfig {
   }
 
 
-  void schedule(LiebreAdapter adapter,
+  void schedule(SpeAdapter adapter,
       SchedulerMetricProvider metricProvider, SinglePriorityMetricTranslator translator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     boolean timeToRunPolicy = lastPolicyRun + period < now;
@@ -155,10 +155,16 @@ class ExecutionConfig {
     }
     if (timeToRunPolicy) {
       policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
+      if (lastPolicyRun <= 0) {
+        LOG.info("Started scheduling");
+      }
       lastPolicyRun = now;
     }
     if (timeToRunCGroupPolicy) {
       cgroupPolicy.apply(adapter.tasks(), metricProvider);
+      if (lastCgroupPolicyRun <= 0) {
+        LOG.info("Started cgroup scheduling");
+      }
       lastCgroupPolicyRun = now;
     }
   }
