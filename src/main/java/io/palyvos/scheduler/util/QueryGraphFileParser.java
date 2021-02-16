@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.yaml.snakeyaml.Yaml;
@@ -33,8 +32,8 @@ public class QueryGraphFileParser {
 
   private void initTaskGraph(Collection<Task> tasks, Map<String, List<String>> downstreamEdges) {
     Map<String, Task> taskIndex = tasks.stream().collect(Collectors.toMap(t -> t.id(), t -> t));
-    Validate.validState(Objects.equals(taskIndex.keySet(), downstreamEdges.keySet()),
-        "Tasks in query graph do not match SPE tasks\nSPE tasks: %s\nQuery graph tasks: %s",
+    Validate.validState(downstreamEdges.keySet().containsAll(taskIndex.keySet()),
+        "Specified query graph do not contain all SPE tasks\nSPE tasks: %s\nQuery graph tasks: %s",
         taskIndex.keySet().stream().sorted().collect(Collectors.toList()),
         downstreamEdges.keySet().stream().sorted().collect(Collectors.toList()));
     for (Task task : tasks) {
