@@ -25,11 +25,12 @@ public class FlinkIntegration {
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
-
-    FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost", 8081, new LinuxAdapter());
+    FlinkAdapter adapter = new FlinkAdapter(config.pids, "localhost",
+        FlinkAdapter.DEFAULT_FLINK_PORT, new LinuxAdapter());
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new FlinkGraphiteMetricProvider(config.statisticsHost, 80, adapter.tasks()),
+        new FlinkGraphiteMetricProvider(config.statisticsHost,
+            ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.tasks()),
         new LinuxMetricProvider(config.pids));
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
         config.maxPriority);
@@ -47,8 +48,7 @@ public class FlinkIntegration {
       long start = System.currentTimeMillis();
       try {
         config.schedule(adapter, metricProvider, translator);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
         }

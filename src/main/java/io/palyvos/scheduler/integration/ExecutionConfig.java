@@ -13,6 +13,7 @@ import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslato
 import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.Validate;
@@ -25,17 +26,18 @@ import org.apache.logging.log4j.core.config.Configurator;
 class ExecutionConfig {
 
   private static final Logger LOG = LogManager.getLogger();
+  final static int GRAPHITE_RECEIVE_PORT = 80;
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
   private static final long MAX_RETRY_TIME_SECONDS = 75;
 
-  List<Integer> pids;
+  final List<Integer> pids = new ArrayList<>();
 
   @Parameter(names = "--log", converter = Log4jLevelConverter.class, description = "Logging level (e.g., DEBUG, INFO, etc)")
   Level log = Level.INFO;
 
   @Parameter(names = "--queryGraph", description = "Path to the query graph yaml file")
-  String queryGraphPath;
+  List<String> queryGraphPath = new ArrayList<>();
 
   @Parameter(names = "--period", description = "(Minimum) scheduling period, in seconds")
   long period = 1;
@@ -75,14 +77,12 @@ class ExecutionConfig {
   @Parameter(names = "--help", help = true)
   boolean help = false;
 
-  @Parameter(names = "--worker", description = "Pattern of the worker thread (e.g., class name)", required = true)
-  String workerPattern;
-
+  @Parameter(names = "--worker", description = "Part of the command of the worker thread (e.g., class name). Argument can be repeated for multiple worker patterns.", required = true)
+  List<String> workerPatterns = new ArrayList<>();
 
   private long lastCgroupPolicyRun;
   private long lastPolicyRun;
   private long sleepTime = -1;
-  private boolean policyFirstApply;
 
   public static ExecutionConfig init(String[] args, Class<?> mainClass)
       throws InterruptedException {
@@ -94,7 +94,10 @@ class ExecutionConfig {
       System.exit(0);
     }
     Configurator.setRootLevel(config.log);
-    config.retrievePids(mainClass);
+
+    for (String workerPattern : config.workerPatterns) {
+      config.retrievePids(workerPattern, mainClass);
+    }
 
     SchedulerContext.initSpeProcessInfo(config.pids.get(0));
     SchedulerContext.switchToSpeProcessContext();
@@ -103,19 +106,20 @@ class ExecutionConfig {
     return config;
   }
 
-  void retrievePids(Class<?> mainClass) throws InterruptedException {
+  void retrievePids(String workerPattern, Class<?> mainClass) throws InterruptedException {
     LOG.info("Trying to retrieve worker PID...");
     for (int i = 0; i < MAX_RETRIES; i++) {
       try {
         // Ignore PID of current command because it also contains workerPattern as an argument
-        pids = new JcmdCommand().pidsFor(workerPattern, mainClass.getName());
-        LOG.info("Success!");
+        pids.addAll(new JcmdCommand().pidsFor(workerPattern, mainClass.getName()));
+        LOG.info("Success retrieving PID for {}!", workerPattern);
         return;
       } catch (Exception exception) {
         Thread.sleep(RETRY_INTERVAL_MILLIS);
       }
     }
-    throw new IllegalStateException("Failed to retrieve worker PID(s)!");
+    throw new IllegalStateException(
+        String.format("Failed to retrieve worker PID(s): %s", workerPattern));
   }
 
   static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {

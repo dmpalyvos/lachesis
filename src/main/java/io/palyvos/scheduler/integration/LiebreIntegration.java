@@ -23,12 +23,13 @@ public class LiebreIntegration {
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
+    Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
-    LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath);
+    LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath.get(0));
     config.tryUpdateTasks(adapter);
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, 80, adapter.tasks()));
+        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
         config.maxPriority);

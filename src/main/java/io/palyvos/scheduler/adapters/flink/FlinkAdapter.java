@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 public class FlinkAdapter implements SpeAdapter {
 
   private static final Logger LOG = LogManager.getLogger(FlinkAdapter.class);
-
+  public static final int DEFAULT_FLINK_PORT = 8081;
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s
       .replace(".", "-");
 
