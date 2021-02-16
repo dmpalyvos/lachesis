@@ -33,7 +33,7 @@ public abstract class AbstractSinglePriorityMetricTranslator implements
   }
 
   @Override
-  public void applyPolicy(Map<ExternalThread, Double> schedule) {
+  public void apply(Map<ExternalThread, Double> schedule) {
     Validate.notEmpty(schedule, "No scheduling decisions found!");
     final long start = System.currentTimeMillis();
     if (!normalizer.isValid(schedule)) {
@@ -49,8 +49,7 @@ public abstract class AbstractSinglePriorityMetricTranslator implements
 
   }
 
-  @Override
-  public int applyDirect(Map<ExternalThread, Long> normalizedSchedule) {
+  protected final int applyDirect(Map<ExternalThread, Long> normalizedSchedule) {
     final List<Future<?>> futures = new ArrayList<>();
     SchedulerContext.switchToRootContext();
     final ExecutorService executor = Executors.newFixedThreadPool(TRANSLATOR_THREADS);

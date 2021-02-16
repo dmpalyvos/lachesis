@@ -5,12 +5,9 @@ import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
-import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
-import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
-import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
+import java.util.List;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,20 +23,9 @@ public class StormIntegration {
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
-    StormAdapter adapter = new StormAdapter(config.pids, new LinuxAdapter(),
-        config.queryGraphPath.get(0));
-    config.tryUpdateTasks(adapter);
-    SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new StormGraphiteMetricProvider(config.statisticsHost,
-            ExecutionConfig.GRAPHITE_RECEIVE_PORT),
-        new LinuxMetricProvider(config.pids));
-    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
-        config.maxPriority);
-    if (config.logarithmic) {
-      normalizer = new LogDecisionNormalizer(normalizer);
-    }
-    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
-    metricProvider.setTaskIndex(adapter.taskIndex());
+    StormAdapter adapter = initAdapter(config, config.pids);
+    SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
+    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
 
     config.policy.init(translator, metricProvider);
     config.cgroupPolicy.init(adapter.tasks(), metricProvider);
@@ -56,6 +42,23 @@ public class StormIntegration {
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       config.sleep();
     }
+  }
+
+  static StormAdapter initAdapter(ExecutionConfig config, List<Integer> pids) throws InterruptedException {
+    StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(),
+        config.queryGraphPath.get(0));
+    config.tryUpdateTasks(adapter);
+    return adapter;
+  }
+
+  static SchedulerMetricProvider initMetricProvider(ExecutionConfig config,
+      StormAdapter adapter, List<Integer> pids) {
+    SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
+        new StormGraphiteMetricProvider(config.statisticsHost,
+            ExecutionConfig.GRAPHITE_RECEIVE_PORT),
+        new LinuxMetricProvider(pids));
+    metricProvider.setTaskIndex(adapter.taskIndex());
+    return metricProvider;
   }
 
 

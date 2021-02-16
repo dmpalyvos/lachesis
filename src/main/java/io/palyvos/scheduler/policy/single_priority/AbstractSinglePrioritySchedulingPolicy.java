@@ -33,7 +33,7 @@ public abstract class AbstractSinglePrioritySchedulingPolicy implements
         }
       }
     }
-    translator.applyPolicy(schedule);
+    translator.apply(schedule);
   }
 
   protected abstract Double getPriority(SchedulerMetricProvider metricProvider, Task task);

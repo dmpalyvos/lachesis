@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySchedulingPolicy {
 
-  private final long normalizedPriority;
+  private final double normalizedPriority;
   private final boolean scheduleHelpers;
 
   public ConstantSinglePrioritySchedulingPolicy(long normalizedPriority, boolean scheduleHelpers) {
@@ -27,7 +27,7 @@ public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySch
   @Override
   public void apply(Collection<Task> tasks, SinglePriorityMetricTranslator translator,
       SchedulerMetricProvider metricProvider) {
-    final Map<ExternalThread, Long> normalizedSchedule = new HashMap<>();
+    final Map<ExternalThread, Double> normalizedSchedule = new HashMap<>();
     for (Task task : tasks) {
       for (Subtask subtask : task.subtasks()) {
         normalizedSchedule.put(subtask.thread(), normalizedPriority);
@@ -38,6 +38,6 @@ public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySch
         }
       }
     }
-    translator.applyDirect(normalizedSchedule);
+    translator.apply(normalizedSchedule);
   }
 }

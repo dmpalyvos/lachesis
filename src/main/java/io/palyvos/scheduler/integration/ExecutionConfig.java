@@ -9,6 +9,13 @@ import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicy
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.ExponentialSmoothingDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
+import io.palyvos.scheduler.policy.single_priority.ConstantSinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -177,5 +184,19 @@ class ExecutionConfig {
     return MAX_RETRY_TIME_SECONDS / period;
   }
 
+
+  SinglePriorityMetricTranslator newSinglePriorityTranslator() {
+    if (policy instanceof ConstantSinglePrioritySchedulingPolicy) {
+      return new NiceSinglePriorityMetricTranslator(new IdentityDecisionNormalizer());
+    }
+    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(minPriority,
+        maxPriority);
+    if (logarithmic) {
+      normalizer = new LogDecisionNormalizer(normalizer);
+    }
+    normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, smoothingFactor);
+    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
+    return translator;
+  }
 
 }

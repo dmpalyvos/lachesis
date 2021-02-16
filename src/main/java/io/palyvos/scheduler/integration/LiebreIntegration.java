@@ -5,10 +5,6 @@ import io.palyvos.scheduler.adapters.liebre.LiebreMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
-import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
-import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
-import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
-import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.util.SchedulerContext;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -25,18 +21,9 @@ public class LiebreIntegration {
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
-    LiebreAdapter adapter = new LiebreAdapter(config.pids.get(0), config.queryGraphPath.get(0));
-    config.tryUpdateTasks(adapter);
-    SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.tasks()));
-    metricProvider.setTaskIndex(adapter.taskIndex());
-    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(config.minPriority,
-        config.maxPriority);
-    if (config.logarithmic) {
-      normalizer = new LogDecisionNormalizer(normalizer);
-    }
-    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
+    LiebreAdapter adapter = initAdapter(config, config.pids.get(0), config.queryGraphPath.get(0));
+    SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter);
+    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
 
     int retries = 0;
     config.policy.init(translator, metricProvider);
@@ -56,5 +43,21 @@ public class LiebreIntegration {
     }
   }
 
+  static LiebreAdapter initAdapter(ExecutionConfig config, int pid, String queryGraphPath)
+      throws InterruptedException {
+    LiebreAdapter adapter = new LiebreAdapter(pid, queryGraphPath);
+    config.tryUpdateTasks(adapter);
+    return adapter;
+  }
+
+  static SchedulerMetricProvider initMetricProvider(ExecutionConfig config,
+      LiebreAdapter adapter) {
+    SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
+        new LinuxMetricProvider(config.pids.get(0)),
+        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter
+            .tasks()));
+    metricProvider.setTaskIndex(adapter.taskIndex());
+    return metricProvider;
+  }
 
 }
