@@ -23,7 +23,7 @@ public class StormIntegration {
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
-    StormAdapter adapter = initAdapter(config, config.pids);
+    StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
     SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
 
@@ -44,9 +44,10 @@ public class StormIntegration {
     }
   }
 
-  static StormAdapter initAdapter(ExecutionConfig config, List<Integer> pids) throws InterruptedException {
+  static StormAdapter initAdapter(ExecutionConfig config, List<Integer> pids, String queryGraphPath)
+      throws InterruptedException {
     StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(),
-        config.queryGraphPath.get(0));
+        queryGraphPath);
     config.tryUpdateTasks(adapter);
     return adapter;
   }

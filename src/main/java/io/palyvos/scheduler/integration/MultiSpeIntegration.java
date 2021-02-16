@@ -31,7 +31,8 @@ public class MultiSpeIntegration {
     final List<Integer> stormPids = config.pids.subList(0, 1);
     final List<Integer> flinkPids = config.pids.subList(1, 2);
 
-    StormAdapter stormAdapter = StormIntegration.initAdapter(config, stormPids);
+    StormAdapter stormAdapter = StormIntegration
+        .initAdapter(config, stormPids, config.queryGraphPath.get(0));
     SchedulerMetricProvider stormMetricProvider = StormIntegration
         .initMetricProvider(config, stormAdapter, stormPids);
 
