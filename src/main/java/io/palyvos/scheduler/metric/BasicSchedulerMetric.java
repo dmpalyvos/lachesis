@@ -29,6 +29,6 @@ public enum BasicSchedulerMetric implements SchedulerMetric {
    * output_tuples/cost
    */
   SUBTASK_GLOBAL_RATE,
-  TASK_ARRIVAL_TIME;
+  TASK_LATENCY;
 
 }

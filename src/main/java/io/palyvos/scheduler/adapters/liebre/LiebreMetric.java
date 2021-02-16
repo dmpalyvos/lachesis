@@ -74,21 +74,15 @@ enum LiebreMetric implements Metric<LiebreMetric> {
       provider.replaceMetricValues(this, operatorQueueSizes);
     }
   },
-  TASK_ARRIVAL_TIME {
+  TASK_LATENCY {
     @Override
     protected void compute(LiebreMetricProvider provider) {
-      final Map<String, Double> arrivalTimes = provider
+      final Map<String, Double> latencies = provider
           .fetchFromGraphite(
               groupByNode(movingAverage(graphiteQuery("ARRIVAL_TIME"),
                   SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
               SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
               report -> report.average(-1));
-      final Map<String, Double> latencies = new HashMap<>();
-      final long now = System.currentTimeMillis();
-      for (String operator : arrivalTimes.keySet()) {
-        final Double arrivalTime = arrivalTimes.get(operator);
-        latencies.put(operator, arrivalTime > 0 ? now - arrivalTime : 0);
-      }
       provider.replaceMetricValues(this, latencies);
     }
   };;
