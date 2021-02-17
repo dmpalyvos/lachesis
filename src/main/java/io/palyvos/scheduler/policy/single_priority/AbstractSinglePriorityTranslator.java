@@ -16,8 +16,8 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class AbstractSinglePriorityMetricTranslator implements
-    SinglePriorityMetricTranslator {
+public abstract class AbstractSinglePriorityTranslator implements
+    SinglePriorityTranslator {
 
   private static final Logger LOG = LogManager.getLogger();
   public static final int TRANSLATOR_THREADS = 4;
@@ -27,7 +27,7 @@ public abstract class AbstractSinglePriorityMetricTranslator implements
   private final SinglePriorityScheduleGraphiteReporter graphiteReporter = new SinglePriorityScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
-  public AbstractSinglePriorityMetricTranslator(DecisionNormalizer normalizer) {
+  public AbstractSinglePriorityTranslator(DecisionNormalizer normalizer) {
     Validate.notNull(normalizer, "normalizer");
     this.normalizer = normalizer;
   }

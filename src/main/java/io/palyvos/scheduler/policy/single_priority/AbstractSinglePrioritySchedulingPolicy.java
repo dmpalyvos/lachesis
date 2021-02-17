@@ -19,7 +19,7 @@ public abstract class AbstractSinglePrioritySchedulingPolicy implements
   }
 
   @Override
-  public void apply(Collection<Task> tasks, SinglePriorityMetricTranslator translator,
+  public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> schedule = new HashMap<>();
     for (Task task : tasks) {

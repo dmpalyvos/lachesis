@@ -4,7 +4,7 @@ import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.liebre.LiebreMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +23,7 @@ public class LiebreIntegration {
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = initAdapter(config, config.pids.get(0), config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter);
-    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
 
     int retries = 0;
     config.policy.init(translator, metricProvider);

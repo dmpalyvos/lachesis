@@ -9,12 +9,12 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RealTimeSinglePriorityMetricTranslator extends AbstractSinglePriorityMetricTranslator {
+public class RealTimeSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
-  private static final Logger LOG = LogManager.getLogger(RealTimeSinglePriorityMetricTranslator.class);
+  private static final Logger LOG = LogManager.getLogger(RealTimeSinglePriorityTranslator.class);
   private final RealTimeSchedulingAlgorithm algorithm;
 
-  public RealTimeSinglePriorityMetricTranslator(
+  public RealTimeSinglePriorityTranslator(
       DecisionNormalizer normalizer, RealTimeSchedulingAlgorithm algorithm) {
     super(normalizer);
     this.algorithm = algorithm;

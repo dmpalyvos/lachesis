@@ -17,7 +17,7 @@ public class MetricSinglePrioritySchedulingPolicy extends AbstractSinglePriority
   }
 
   @Override
-  public void init(SinglePriorityMetricTranslator translator,
+  public void init(SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
     metricProvider.register(metric);
   }

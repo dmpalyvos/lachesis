@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * {@link SinglePriorityMetricTranslator} that does not do any actual translation but instead merges
+ * {@link SinglePriorityTranslator} that does not do any actual translation but instead merges
  * mutliple schedules into one. The {@code run()} function is then called manually to run a delegate
  * translator using the complete schedule.
  */
-public class MultiSpePolicyTranslator implements SinglePriorityMetricTranslator {
+public class MultiSpePolicyTranslator implements SinglePriorityTranslator {
 
   private final Map<ExternalThread, Double> mergedSchedule = new HashMap<>();
-  private final SinglePriorityMetricTranslator delegate;
+  private final SinglePriorityTranslator delegate;
 
   public MultiSpePolicyTranslator(
-      SinglePriorityMetricTranslator delegate) {
+      SinglePriorityTranslator delegate) {
     this.delegate = delegate;
   }
 

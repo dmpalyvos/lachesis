@@ -5,7 +5,7 @@ import io.palyvos.scheduler.adapters.flink.FlinkGraphiteMetricProvider;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +23,7 @@ public class FlinkIntegration {
 
     FlinkAdapter adapter = initAdapter(config, config.pids);
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
 
     int retries = 0;
     config.policy.init(translator, metricProvider);

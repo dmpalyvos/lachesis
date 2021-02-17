@@ -6,10 +6,10 @@ import java.util.Collection;
 
 public interface SinglePrioritySchedulingPolicy {
 
-  void init(SinglePriorityMetricTranslator translator,
+  void init(SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider);
 
-  void apply(Collection<Task> tasks, SinglePriorityMetricTranslator translator,
+  void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider);
 
 }

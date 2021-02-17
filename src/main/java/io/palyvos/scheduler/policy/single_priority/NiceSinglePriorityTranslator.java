@@ -10,20 +10,20 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NiceSinglePriorityMetricTranslator extends AbstractSinglePriorityMetricTranslator {
+public class NiceSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
-  private static final Logger LOG = LogManager.getLogger(NiceSinglePriorityMetricTranslator.class);
+  private static final Logger LOG = LogManager.getLogger(NiceSinglePriorityTranslator.class);
 
-  public static NiceSinglePriorityMetricTranslator withLinearNormalizer(int minPriorityNiceValue,
+  public static NiceSinglePriorityTranslator withLinearNormalizer(int minPriorityNiceValue,
       int maxPriorityNiceValue) {
     Validate.isTrue(maxPriorityNiceValue < minPriorityNiceValue,
         "nice priorities go from high to low but maxPriorityNiceValue >= minPriorityNiceValue: %d, %d",
         maxPriorityNiceValue, minPriorityNiceValue);
-    return new NiceSinglePriorityMetricTranslator(new MinMaxDecisionNormalizer(minPriorityNiceValue,
+    return new NiceSinglePriorityTranslator(new MinMaxDecisionNormalizer(minPriorityNiceValue,
         maxPriorityNiceValue));
   }
 
-  public NiceSinglePriorityMetricTranslator(DecisionNormalizer normalizer) {
+  public NiceSinglePriorityTranslator(DecisionNormalizer normalizer) {
     super(normalizer);
   }
 

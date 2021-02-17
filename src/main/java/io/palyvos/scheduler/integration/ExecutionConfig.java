@@ -18,8 +18,8 @@ import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePrioritySchedulingPolicy;
-import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityMetricTranslator;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
@@ -163,7 +163,7 @@ class ExecutionConfig {
 
 
   void schedule(SpeAdapter adapter,
-      SchedulerMetricProvider metricProvider, SinglePriorityMetricTranslator translator) {
+      SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     boolean timeToRunPolicy = lastPolicyRun + period < now;
     boolean timeToRunCGroupPolicy = lastCgroupPolicyRun + cgroupPeriod < now;
@@ -191,9 +191,9 @@ class ExecutionConfig {
   }
 
 
-  SinglePriorityMetricTranslator newSinglePriorityTranslator() {
+  SinglePriorityTranslator newSinglePriorityTranslator() {
     if (policy instanceof ConstantSinglePrioritySchedulingPolicy) {
-      return new NiceSinglePriorityMetricTranslator(new IdentityDecisionNormalizer());
+      return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     }
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(minPriority,
         maxPriority);
@@ -201,7 +201,7 @@ class ExecutionConfig {
       normalizer = new LogDecisionNormalizer(normalizer);
     }
     normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, smoothingFactor);
-    SinglePriorityMetricTranslator translator = new NiceSinglePriorityMetricTranslator(normalizer);
+    SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(normalizer);
     return translator;
   }
 

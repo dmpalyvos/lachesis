@@ -5,7 +5,7 @@ import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
@@ -25,7 +25,7 @@ public class StormIntegration {
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
 
     config.policy.init(translator, metricProvider);
     config.cgroupPolicy.init(adapter.tasks(), config.cGroupTranslator, metricProvider);

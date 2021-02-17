@@ -4,7 +4,7 @@ import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.single_priority.MultiSpePolicyTranslator;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityMetricTranslator;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
@@ -40,7 +40,7 @@ public class MultiSpeIntegration {
     SchedulerMetricProvider flinkMetricProvider = FlinkIntegration
         .initMetricProvider(config, flinkAdapter, flinkPids);
 
-    SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     MultiSpePolicyTranslator multiSpePolicyTranslator = new MultiSpePolicyTranslator(translator);
 
     initPolicies(config, stormAdapter, stormMetricProvider, flinkAdapter, flinkMetricProvider,
@@ -64,7 +64,7 @@ public class MultiSpeIntegration {
 
   private static void initPolicies(ExecutionConfig config, StormAdapter stormAdapter,
       SchedulerMetricProvider stormMetricProvider, FlinkAdapter flinkAdapter,
-      SchedulerMetricProvider flinkMetricProvider, SinglePriorityMetricTranslator translator) {
+      SchedulerMetricProvider flinkMetricProvider, SinglePriorityTranslator translator) {
     config.policy.init(translator, flinkMetricProvider);
     config.policy.init(translator, stormMetricProvider);
     config.cgroupPolicy.init(flinkAdapter.tasks(), config.cGroupTranslator, flinkMetricProvider);
