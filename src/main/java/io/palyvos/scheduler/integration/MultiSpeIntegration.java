@@ -67,8 +67,8 @@ public class MultiSpeIntegration {
       SchedulerMetricProvider flinkMetricProvider, SinglePriorityMetricTranslator translator) {
     config.policy.init(translator, flinkMetricProvider);
     config.policy.init(translator, stormMetricProvider);
-    config.cgroupPolicy.init(flinkAdapter.tasks(), flinkMetricProvider);
-    config.cgroupPolicy.init(stormAdapter.tasks(), stormMetricProvider);
+    config.cgroupPolicy.init(flinkAdapter.tasks(), config.cGroupTranslator, flinkMetricProvider);
+    config.cgroupPolicy.init(stormAdapter.tasks(), config.cGroupTranslator, stormMetricProvider);
   }
 
 }

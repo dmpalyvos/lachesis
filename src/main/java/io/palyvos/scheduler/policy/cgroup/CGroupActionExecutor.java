@@ -10,7 +10,7 @@ public interface CGroupActionExecutor {
 
   void delete(Collection<CGroup> cgroups);
 
-  void updateParameters(Map<CGroup, Collection<CGroupParameterContainer>> schedule);
+  void updateParameters(Map<CGroup, Collection<CGroupParameterContainer>> rawSchedule);
 
   void updateAssignment(Map<CGroup, Collection<ExternalThread>> assignment);
 

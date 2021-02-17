@@ -9,12 +9,13 @@ public class NoopCGroupSchedulingPolicy implements
 
   @Override
   public void init(Collection<Task> tasks,
-      SchedulerMetricProvider metricProvider) {
+      CGroupTranslator translator, SchedulerMetricProvider metricProvider) {
 
   }
 
   @Override
-  public void apply(Collection<Task> tasks, SchedulerMetricProvider metricProvider) {
+  public void apply(Collection<Task> tasks, CGroupTranslator translator,
+      SchedulerMetricProvider metricProvider) {
 
   }
 }

@@ -28,7 +28,7 @@ public class StormIntegration {
     SinglePriorityMetricTranslator translator = config.newSinglePriorityTranslator();
 
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), metricProvider);
+    config.cgroupPolicy.init(adapter.tasks(), config.cGroupTranslator, metricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();

@@ -2,15 +2,10 @@ package io.palyvos.scheduler.integration.converter;
 
 import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
-import io.palyvos.scheduler.policy.cgroup.MetricCGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
+import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
-import io.palyvos.scheduler.policy.cgroup.CGroupMetricTranslator;
-import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToParametersFunction;
-import io.palyvos.scheduler.policy.cgroup.ClusteringCGroupMetricTranslator;
-import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToCpuQuota;
-import io.palyvos.scheduler.policy.cgroup.CGroupPriorityToCpuShares;
-import io.palyvos.scheduler.policy.cgroup.QueryCGroupMetricTranslator;
+import io.palyvos.scheduler.policy.cgroup.ClusterinCGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.QueryCGroupPolicy;
 import io.palyvos.scheduler.task.Query;
 import java.util.Map;
 import java.util.Objects;
@@ -20,49 +15,31 @@ import java.util.regex.Pattern;
 
 public class CGroupSchedulingPolicyConverter implements IStringConverter<CGroupSchedulingPolicy> {
 
-  private static final String NO_POLICY = "none";
   public static final BiFunction<Query, Map<String, Double>, Double> DEFAULT_QUERY_FUNCTION =
       (query, values) -> query.sources().stream().map(source -> values.get(source.id()))
           .filter(Objects::nonNull).mapToDouble(Double::doubleValue).average().orElse(0);
-  public static final int DEFAULT_CPU_PERIOD = 100000;
-  public static final int DEFAULT_NCORES = 4;
   public static final int DEFAULT_NGROUPS = 5;
-  //metric:translator:parameter:metric
-  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("metric:(\\w+):(\\w+):(\\w+)");
+  //policy:metric
+  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("(\\w+):(\\w+)");
 
   @Override
   public CGroupSchedulingPolicy convert(String argument) {
     final Matcher metricMatcher = METRIC_POLICY_PATTERN.matcher(argument);
-    if (NO_POLICY.equals(argument.trim())) {
-      return new NoopCGroupSchedulingPolicy();
-    }
     if (metricMatcher.matches()) {
-      final CGroupMetricTranslator translator = translator(metricMatcher.group(1));
-      final CGroupPriorityToParametersFunction priorityFunction = priorityFunction(
-          metricMatcher.group(2));
-      final BasicSchedulerMetric metric = BasicSchedulerMetric.valueOf(metricMatcher.group(3));
-      return new MetricCGroupSchedulingPolicy(metric, translator, priorityFunction);
+      final BasicSchedulerMetric metric = BasicSchedulerMetric.valueOf(metricMatcher.group(2));
+      return policy(metricMatcher.group(1).toUpperCase(), metric);
     }
     throw new IllegalArgumentException(String.format("Unknown policy requested: %s", argument));
   }
 
-  private CGroupMetricTranslator translator(String name) {
-    if (ClusteringCGroupMetricTranslator.NAME.equals(name)) {
-      return new ClusteringCGroupMetricTranslator(DEFAULT_NGROUPS);
-    }
-    if (QueryCGroupMetricTranslator.NAME.equals(name)) {
-      return new QueryCGroupMetricTranslator(DEFAULT_QUERY_FUNCTION);
-    }
-    throw new IllegalArgumentException(String.format("Unknown cgroup translator %s", name));
-  }
 
-  private CGroupPriorityToParametersFunction priorityFunction(String name) {
-    if (CGroupPriorityToCpuShares.NAME.equals(name)) {
-      return new CGroupPriorityToCpuShares();
+  private CGroupSchedulingPolicy policy(String policyName, SchedulerMetric metric) {
+    if (QueryCGroupPolicy.NAME.equals(policyName)) {
+      return new QueryCGroupPolicy(metric, DEFAULT_QUERY_FUNCTION);
     }
-    if (CGroupPriorityToCpuQuota.NAME.equals(name)) {
-      return new CGroupPriorityToCpuQuota(DEFAULT_CPU_PERIOD, DEFAULT_NCORES);
+    if (ClusterinCGroupSchedulingPolicy.NAME.equals(policyName)) {
+      return new ClusterinCGroupSchedulingPolicy(metric, DEFAULT_NGROUPS);
     }
-    throw new IllegalArgumentException(String.format("Unknown cgroup function %s", name));
+    throw new IllegalArgumentException(String.format("Unknown cgroup policy %s", policyName));
   }
 }

@@ -6,9 +6,10 @@ import java.util.Collection;
 
 public interface CGroupSchedulingPolicy {
 
-  void init(Collection<Task> tasks,
+  void init(Collection<Task> tasks, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider);
 
-  void apply(Collection<Task> tasks, SchedulerMetricProvider metricProvider);
+  void apply(Collection<Task> tasks, CGroupTranslator translator,
+      SchedulerMetricProvider metricProvider);
 
 }

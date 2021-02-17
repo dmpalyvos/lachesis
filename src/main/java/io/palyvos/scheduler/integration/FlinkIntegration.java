@@ -27,7 +27,7 @@ public class FlinkIntegration {
 
     int retries = 0;
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), metricProvider);
+    config.cgroupPolicy.init(adapter.tasks(), config.cGroupTranslator, metricProvider);
     while (true) {
       long start = System.currentTimeMillis();
       try {

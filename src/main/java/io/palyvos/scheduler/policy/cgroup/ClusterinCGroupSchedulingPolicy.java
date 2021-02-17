@@ -2,9 +2,10 @@ package io.palyvos.scheduler.policy.cgroup;
 
 import static io.palyvos.scheduler.policy.cgroup.CGroupController.CPU;
 
+import io.palyvos.scheduler.metric.SchedulerMetric;
+import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
-import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ClusteringCGroupMetricTranslator implements CGroupMetricTranslator {
+public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
 
   public static final String NAME = "CLUSTERING";
   private static final Logger LOG = LogManager.getLogger();
@@ -25,33 +26,28 @@ public class ClusteringCGroupMetricTranslator implements CGroupMetricTranslator 
   private static final CGroup PARENT_CGROUP = new CGroup("/lachesis", CPU);
   private static final int K_MEANS_MAX_ITERATIONS = 100;
   private final int ngroups;
-  private final CGroupActionExecutor cgroupActionExecutor;
-  private final CGroupScheduleGraphiteReporter graphiteReporter = new CGroupScheduleGraphiteReporter(
-      SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
+  private final SchedulerMetric metric;
 
-  private Collection<Task> tasks;
-
-  public ClusteringCGroupMetricTranslator(int ngroups, CGroupActionExecutor cgroupActionExecutor) {
+  public ClusterinCGroupSchedulingPolicy(SchedulerMetric metric, int ngroups) {
     Validate.isTrue(ngroups > 0, "ngroups <= 0");
-    Validate.notNull(cgroupActionExecutor, "cgroupActionExecutor");
+    Validate.notNull(metric, "metric");
+    this.metric = metric;
     this.ngroups = ngroups;
-    this.cgroupActionExecutor = cgroupActionExecutor;
-  }
-
-  public ClusteringCGroupMetricTranslator(int ngroups) {
-    this(ngroups, new BasicCGroupActionExecutor());
   }
 
   @Override
-  public void init(Collection<Task> tasks) {
-    this.tasks = tasks;
+  public void init(Collection<Task> tasks, CGroupTranslator translator,
+      SchedulerMetricProvider metricProvider) {
+    translator.init(tasks);
+    metricProvider.register(metric);
   }
 
-
   @Override
-  public void apply(Map<String, Double> metricValues,
-      CGroupPriorityToParametersFunction priorityToParametersFunction) {
-    List<ClusterableMetricValue> values = new ArrayList<>();
+  public void apply(Collection<Task> tasks, CGroupTranslator translator,
+      SchedulerMetricProvider metricProvider) {
+
+    final List<ClusterableMetricValue> values = new ArrayList<>();
+    final Map<String, Double> metricValues = metricProvider.get(metric);
     metricValues.forEach((k, v) -> {
       if (Double.isFinite(v)) {
         values.add(new ClusterableMetricValue(k, v));
@@ -82,12 +78,7 @@ public class ClusteringCGroupMetricTranslator implements CGroupMetricTranslator 
       }
       assignment.computeIfAbsent(cgroup, c -> new ArrayList<>()).addAll(task.threads());
     }
-    cgroupActionExecutor.create(cgroupValues.keySet());
-    cgroupActionExecutor.updateAssignment(assignment);
-    Map<CGroup, Collection<CGroupParameterContainer>> schedule = priorityToParametersFunction
-        .apply(cgroupValues);
-    cgroupActionExecutor.updateParameters(schedule);
-    graphiteReporter.report(cgroupValues, schedule);
+    translator.apply(cgroupValues, assignment);
   }
 
 

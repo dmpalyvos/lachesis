@@ -14,7 +14,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BasicCGroupActionExecutor implements CGroupActionExecutor {
+class BasicCGroupActionExecutor implements CGroupActionExecutor {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final int ENFORCER_THREADS = 4;
@@ -46,12 +46,12 @@ public class BasicCGroupActionExecutor implements CGroupActionExecutor {
   }
 
   @Override
-  public void updateParameters(Map<CGroup, Collection<CGroupParameterContainer>> schedule) {
+  public void updateParameters(Map<CGroup, Collection<CGroupParameterContainer>> rawSchedule) {
     SchedulerContext.switchToRootContext();
     final ExecutorService executor = newExecutor();
     final List<Future<Boolean>> futures = new ArrayList<>();
-    for (CGroup cgroup : schedule.keySet()) {
-      Collection<CGroupParameterContainer> parameters = schedule.get(cgroup);
+    for (CGroup cgroup : rawSchedule.keySet()) {
+      Collection<CGroupParameterContainer> parameters = rawSchedule.get(cgroup);
       parameters.forEach(parameter ->
           futures.add(executor.submit(() -> cgroup.set(parameter.key(), parameter.value())))
       );

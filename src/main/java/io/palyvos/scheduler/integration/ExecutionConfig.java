@@ -4,10 +4,13 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.integration.converter.CGroupSchedulingPolicyConverter;
+import io.palyvos.scheduler.integration.converter.CGroupTranslatorConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.CpuSharesCGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.ExponentialSmoothingDecisionNormalizer;
@@ -65,6 +68,9 @@ class ExecutionConfig {
 
   @Parameter(names = "--cgroupPolicy", converter = CGroupSchedulingPolicyConverter.class)
   CGroupSchedulingPolicy cgroupPolicy = new NoopCGroupSchedulingPolicy();
+
+  @Parameter(names = "--cgroupTranslator", converter = CGroupTranslatorConverter.class)
+  CGroupTranslator cGroupTranslator = new CpuSharesCGroupTranslator();
 
   @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
   int maxPriority = -20;
@@ -172,7 +178,7 @@ class ExecutionConfig {
       lastPolicyRun = now;
     }
     if (timeToRunCGroupPolicy) {
-      cgroupPolicy.apply(adapter.tasks(), metricProvider);
+      cgroupPolicy.apply(adapter.tasks(), cGroupTranslator, metricProvider);
       if (lastCgroupPolicyRun <= 0) {
         LOG.info("Started cgroup scheduling");
       }
