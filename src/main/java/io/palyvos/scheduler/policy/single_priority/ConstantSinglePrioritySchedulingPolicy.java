@@ -27,6 +27,12 @@ public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySch
   @Override
   public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
+    translator.apply(computeSchedule(tasks, metricProvider));
+  }
+
+  @Override
+  public Map<ExternalThread, Double> computeSchedule(Collection<Task> tasks,
+      SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> normalizedSchedule = new HashMap<>();
     for (Task task : tasks) {
       for (Subtask subtask : task.subtasks()) {
@@ -38,6 +44,7 @@ public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySch
         }
       }
     }
-    translator.apply(normalizedSchedule);
+    return normalizedSchedule;
   }
+
 }

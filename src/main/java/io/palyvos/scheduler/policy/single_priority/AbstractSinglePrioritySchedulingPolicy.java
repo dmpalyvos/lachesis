@@ -21,6 +21,12 @@ public abstract class AbstractSinglePrioritySchedulingPolicy implements
   @Override
   public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
+    translator.apply(computeSchedule(tasks, metricProvider));
+  }
+
+  @Override
+  public Map<ExternalThread, Double> computeSchedule(Collection<Task> tasks,
+      SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> schedule = new HashMap<>();
     for (Task task : tasks) {
       final double priority = getPriority(metricProvider, task);
@@ -33,7 +39,7 @@ public abstract class AbstractSinglePrioritySchedulingPolicy implements
         }
       }
     }
-    translator.apply(schedule);
+    return schedule;
   }
 
   protected abstract Double getPriority(SchedulerMetricProvider metricProvider, Task task);

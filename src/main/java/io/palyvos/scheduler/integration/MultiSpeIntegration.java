@@ -3,9 +3,10 @@ package io.palyvos.scheduler.integration;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.single_priority.MultiSpePolicyTranslator;
+import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -41,17 +42,17 @@ public class MultiSpeIntegration {
         .initMetricProvider(config, flinkAdapter, flinkPids);
 
     SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    MultiSpePolicyTranslator multiSpePolicyTranslator = new MultiSpePolicyTranslator(translator);
+    DelegatingMultiSpeSinglePrioritySchedulingPolicy multiPolicy = new DelegatingMultiSpeSinglePrioritySchedulingPolicy(
+        config.policy);
 
-    initPolicies(config, stormAdapter, stormMetricProvider, flinkAdapter, flinkMetricProvider,
-        translator);
+    multiPolicy.init(translator, Arrays.asList(stormMetricProvider, flinkMetricProvider));
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.schedule(flinkAdapter, flinkMetricProvider, multiSpePolicyTranslator);
-        config.schedule(stormAdapter, stormMetricProvider, multiSpePolicyTranslator);
-        multiSpePolicyTranslator.run();
+        config.scheduleMulti(multiPolicy, Arrays.asList(flinkAdapter, stormAdapter),
+            Arrays.asList(flinkMetricProvider, stormMetricProvider), translator,
+            Arrays.asList(1.0, 10.0));
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
@@ -62,13 +63,5 @@ public class MultiSpeIntegration {
     }
   }
 
-  private static void initPolicies(ExecutionConfig config, StormAdapter stormAdapter,
-      SchedulerMetricProvider stormMetricProvider, FlinkAdapter flinkAdapter,
-      SchedulerMetricProvider flinkMetricProvider, SinglePriorityTranslator translator) {
-    config.policy.init(translator, flinkMetricProvider);
-    config.policy.init(translator, stormMetricProvider);
-    config.cgroupPolicy.init(flinkAdapter.tasks(), config.cGroupTranslator, flinkMetricProvider);
-    config.cgroupPolicy.init(stormAdapter.tasks(), config.cGroupTranslator, stormMetricProvider);
-  }
 
 }

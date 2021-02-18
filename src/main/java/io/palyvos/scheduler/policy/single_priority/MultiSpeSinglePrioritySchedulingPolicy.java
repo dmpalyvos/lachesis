@@ -4,17 +4,15 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
-public class MultiSpeSinglePrioritySchedulingPolicy implements SinglePrioritySchedulingPolicy {
+public interface MultiSpeSinglePrioritySchedulingPolicy {
 
-  @Override
-  public void init(SinglePriorityTranslator translator,
-      SchedulerMetricProvider metricProvider) {
+  void init(SinglePriorityTranslator translator,
+      Collection<SchedulerMetricProvider> metricProviders);
 
-  }
+  void update(Collection<Task> tasks, SchedulerMetricProvider metricProvider, double scalingFactor);
 
-  @Override
-  public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
-      SchedulerMetricProvider metricProvider) {
+  void apply(SinglePriorityTranslator translator);
 
-  }
+  void reset();
+
 }

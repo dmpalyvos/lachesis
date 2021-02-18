@@ -8,8 +8,8 @@ import io.palyvos.scheduler.integration.converter.CGroupTranslatorConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.CpuSharesCGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
@@ -18,9 +18,10 @@ import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
-import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ class ExecutionConfig {
   final static int GRAPHITE_RECEIVE_PORT = 80;
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
-  private static final long MAX_RETRY_TIME_SECONDS = 75;
+  private static final long MAX_RETRY_TIME_SECONDS = 10;
 
   final List<Integer> pids = new ArrayList<>();
 
@@ -162,28 +163,64 @@ class ExecutionConfig {
   }
 
 
+  void scheduleMulti(DelegatingMultiSpeSinglePrioritySchedulingPolicy policy,
+      List<SpeAdapter> adapters,
+      List<SchedulerMetricProvider> metricProviders, SinglePriorityTranslator translator,
+      List<Double> scalingFactors) {
+    final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+    boolean timeToRunPolicy = isTimeToRunPolicy(now);
+    if (!timeToRunPolicy) {
+      return;
+    }
+    policy.reset();
+    metricProviders.forEach(metricProvider -> metricProvider.run());
+    for (int i = 0; i < adapters.size(); i++) {
+      SpeAdapter adapter = adapters.get(i);
+      SchedulerMetricProvider metricProvider = metricProviders.get(i);
+      policy.update(adapter.taskIndex().tasks(), metricProvider, scalingFactors.get(i));
+    }
+    policy.apply(translator);
+    onPolicyExecuted(now);
+  }
+
   void schedule(SpeAdapter adapter,
       SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    boolean timeToRunPolicy = lastPolicyRun + period < now;
-    boolean timeToRunCGroupPolicy = lastCgroupPolicyRun + cgroupPeriod < now;
+    boolean timeToRunPolicy = isTimeToRunPolicy(now);
+    boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
     if (timeToRunPolicy || timeToRunCGroupPolicy) {
       metricProvider.run();
     }
     if (timeToRunPolicy) {
       policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
-      if (lastPolicyRun <= 0) {
-        LOG.info("Started scheduling");
-      }
-      lastPolicyRun = now;
+      onPolicyExecuted(now);
     }
     if (timeToRunCGroupPolicy) {
       cgroupPolicy.apply(adapter.tasks(), cGroupTranslator, metricProvider);
-      if (lastCgroupPolicyRun <= 0) {
-        LOG.info("Started cgroup scheduling");
-      }
-      lastCgroupPolicyRun = now;
+      onCGroupPolicyExecuted(now);
     }
+  }
+
+  private void onCGroupPolicyExecuted(long now) {
+    if (lastCgroupPolicyRun <= 0) {
+      LOG.info("Started cgroup scheduling");
+    }
+    lastCgroupPolicyRun = now;
+  }
+
+  private void onPolicyExecuted(long now) {
+    if (lastPolicyRun <= 0) {
+      LOG.info("Started scheduling");
+    }
+    lastPolicyRun = now;
+  }
+
+  boolean isTimeToRunCGroupPolicy(long now) {
+    return lastCgroupPolicyRun + cgroupPeriod < now;
+  }
+
+  boolean isTimeToRunPolicy(long now) {
+    return lastPolicyRun + period < now;
   }
 
   long maxRetries() {
