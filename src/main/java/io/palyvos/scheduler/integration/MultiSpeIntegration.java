@@ -52,7 +52,7 @@ public class MultiSpeIntegration {
       try {
         config.scheduleMulti(multiPolicy, Arrays.asList(flinkAdapter, stormAdapter),
             Arrays.asList(flinkMetricProvider, stormMetricProvider), translator,
-            Arrays.asList(1.0, 10.0));
+            Arrays.asList(1.0, 5.0));
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;

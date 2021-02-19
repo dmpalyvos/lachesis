@@ -40,7 +40,7 @@ class ExecutionConfig {
   final static int GRAPHITE_RECEIVE_PORT = 80;
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
-  private static final long MAX_RETRY_TIME_SECONDS = 10;
+  private static final long MAX_RETRY_TIME_SECONDS = 75;
 
   final List<Integer> pids = new ArrayList<>();
 
