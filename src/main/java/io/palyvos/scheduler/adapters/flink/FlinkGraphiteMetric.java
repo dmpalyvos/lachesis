@@ -27,6 +27,7 @@ public enum FlinkGraphiteMetric implements Metric<FlinkGraphiteMetric> {
   protected final String graphiteQuery;
   protected final int window;
   protected final Function<Task, Collection<Operator>> operatorFunction;
+  // NOTE: Flink reports tasks metrics directly, so reduceFunction is ignored for now!
   protected final Function<GraphiteMetricReport, Double> reportReduceFunction;
 
   FlinkGraphiteMetric(String graphiteQuery, int window,
@@ -43,10 +44,7 @@ public enum FlinkGraphiteMetric implements Metric<FlinkGraphiteMetric> {
         .fetchFromGraphite(graphiteQuery, window, reportReduceFunction);
     Map<String, Double> taskMetricValues = new HashMap<>();
     provider.traverser.forEachTaskFromSourceBFS(task -> {
-      final double operatorAverage = operatorFunction.apply(task).stream()
-          .map(operator -> operatorMetricValues.get(operator.id()))
-          .mapToDouble(Double::doubleValue).average().orElse(0);
-      taskMetricValues.put(task.id(), operatorAverage);
+      taskMetricValues.put(task.id(), operatorMetricValues.get(task.id().replace(" ", "-")));
     });
     provider.replaceMetricValues(this, taskMetricValues);
   }
