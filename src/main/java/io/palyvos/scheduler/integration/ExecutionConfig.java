@@ -20,6 +20,7 @@ import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
+import io.palyvos.scheduler.policy.single_priority.NoopSinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -63,9 +64,9 @@ class ExecutionConfig {
   double smoothingFactor = 1;
 
   @Parameter(names = "--policy", description =
-      "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true]. "
+      "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true] or none. "
           + "The optional true argument controls scheduling of helper threads", converter = SinglePrioritySchedulingPolicyConverter.class, required = true)
-  SinglePrioritySchedulingPolicy policy;
+  SinglePrioritySchedulingPolicy policy = new NoopSinglePrioritySchedulingPolicy();
 
   @Parameter(names = "--cgroupPolicy", converter = CGroupSchedulingPolicyConverter.class)
   CGroupSchedulingPolicy cgroupPolicy = new NoopCGroupSchedulingPolicy();

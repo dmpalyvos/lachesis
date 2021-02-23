@@ -57,8 +57,6 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
         ngroups, K_MEANS_MAX_ITERATIONS);
     List<CentroidCluster<ClusterableMetricValue>> clusters = clusterer.cluster(values);
 
-    LOG.info("Found {} clusters", clusters.size());
-
     Map<String, CGroup> rawAssignment = new HashMap<>();
     Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
     Map<CGroup, Double> cgroupValues = new HashMap<>();
