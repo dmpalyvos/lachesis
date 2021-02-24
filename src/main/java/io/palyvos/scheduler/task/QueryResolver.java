@@ -49,7 +49,7 @@ public class QueryResolver {
     for (Task task : tasks) {
       traverseTaskGraph(task);
     }
-    LOG.info("{} queries found", nQueries);
+    LOG.debug("{} queries found", nQueries);
     for (int queryNumber : queryByIndex.keySet()) {
       LOG.trace("Query #{} -> {}", queryNumber, queryByIndex.get(queryNumber));
     }
