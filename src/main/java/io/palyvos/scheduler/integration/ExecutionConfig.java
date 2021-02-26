@@ -122,12 +122,13 @@ class ExecutionConfig {
   }
 
   void retrievePids(String workerPattern, Class<?> mainClass) throws InterruptedException {
-    LOG.info("Trying to retrieve worker PID...");
+    LOG.info("Trying to retrieve worker PID for '{}'...", workerPattern);
     for (int i = 0; i < MAX_RETRIES; i++) {
       try {
         // Ignore PID of current command because it also contains workerPattern as an argument
-        pids.addAll(new JcmdCommand().pidsFor(workerPattern, mainClass.getName()));
-        LOG.info("Success retrieving PID for {}!", workerPattern);
+        List<Integer> workerPids = new JcmdCommand().pidsFor(workerPattern, mainClass.getName());
+        pids.addAll(workerPids);
+        LOG.info("Success retrieving PID(s) for '{}': {}", workerPattern, workerPids);
         return;
       } catch (Exception exception) {
         Thread.sleep(RETRY_INTERVAL_MILLIS);
