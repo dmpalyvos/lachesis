@@ -7,6 +7,7 @@ import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.cgroup.ClusterinCGroupSchedulingPolicy;
 import io.palyvos.scheduler.policy.cgroup.FairQueryCGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.MetricQueryCGroupPolicy;
+import io.palyvos.scheduler.policy.cgroup.OperatorMetricCGroupSchedulingPolicy;
 import io.palyvos.scheduler.task.Query;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +50,10 @@ public class CGroupSchedulingPolicyConverter implements IStringConverter<CGroupS
     if (ClusterinCGroupSchedulingPolicy.NAME.equals(policyName)) {
       Validate.notNull(metric, "No metric specified");
       return new ClusterinCGroupSchedulingPolicy(metric, DEFAULT_NGROUPS);
+    }
+    if (OperatorMetricCGroupSchedulingPolicy.NAME.equals(policyName)) {
+      Validate.notNull(metric, "No metric specified");
+      return new OperatorMetricCGroupSchedulingPolicy(metric);
     }
     throw new IllegalArgumentException(String.format("Unknown cgroup policy %s", policyName));
   }
