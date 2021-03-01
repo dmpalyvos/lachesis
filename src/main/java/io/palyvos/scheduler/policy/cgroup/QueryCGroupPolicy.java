@@ -34,7 +34,7 @@ public abstract class QueryCGroupPolicy implements CGroupSchedulingPolicy {
     }
 
     Map<CGroup, Double> schedule = computeSchedule(metricProvider, queryCgroup);
-    translator.apply(schedule, assignment);
+    translator.apply(schedule);
   }
 
   protected abstract Map<CGroup, Double> computeSchedule(SchedulerMetricProvider metricProvider,

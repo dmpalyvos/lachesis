@@ -76,7 +76,7 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
       }
       assignment.computeIfAbsent(cgroup, c -> new ArrayList<>()).addAll(task.threads());
     }
-    translator.apply(cgroupValues, assignment);
+    translator.apply(cgroupValues);
   }
 
 

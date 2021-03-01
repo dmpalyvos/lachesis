@@ -9,5 +9,7 @@ public interface CGroupTranslator {
 
   void init(Collection<Task> tasks);
 
-  void apply(Map<CGroup, Double> schedule, Map<CGroup, Collection<ExternalThread>> assignment);
+  void assign(Map<CGroup, Collection<ExternalThread>> assignment);
+
+  void apply(Map<CGroup, Double> schedule);
 }

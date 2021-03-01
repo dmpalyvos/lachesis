@@ -59,12 +59,15 @@ public class CpuQuotaCGroupTranslator implements CGroupTranslator {
         SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
   }
 
+  @Override
+  public void assign(Map<CGroup, Collection<ExternalThread>> assignment) {
+    cgroupActionExecutor.create(assignment.keySet());
+    cgroupActionExecutor.updateAssignment(assignment);
+  }
+
 
   @Override
-  public void apply(Map<CGroup, Double> schedule,
-      Map<CGroup, Collection<ExternalThread>> assignment) {
-    cgroupActionExecutor.create(schedule.keySet());
-    cgroupActionExecutor.updateAssignment(assignment);
+  public void apply(Map<CGroup, Double> schedule) {
 
     final long totalPeriod = period * ncores;
     Map<CGroup, Collection<CGroupParameterContainer>> rawSchedule = new HashMap<>();
