@@ -1,6 +1,9 @@
 package io.palyvos.scheduler.policy.cgroup;
 
+import static io.palyvos.scheduler.policy.cgroup.CGroupController.CPU;
+
 import io.palyvos.scheduler.task.ExternalThread;
+import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.ExternalCommand;
 import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
 import io.palyvos.scheduler.util.command.cgroup.CGClassifyCommand;
@@ -18,8 +21,10 @@ import org.apache.logging.log4j.Logger;
 
 public class CGroup {
 
-  private static final Logger LOG = LogManager.getLogger();
+  static final CGroup PARENT_CPU_CGROUP =
+      new CGroup("/" + SchedulerContext.SCHEDULER_NAME, CPU);
 
+  private static final Logger LOG = LogManager.getLogger();
   private final String path;
   private final CGroupController[] controllers;
   private final Map<String, String> parameters = new HashMap<>();

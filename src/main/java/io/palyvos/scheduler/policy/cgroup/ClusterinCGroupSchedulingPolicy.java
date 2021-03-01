@@ -1,7 +1,5 @@
 package io.palyvos.scheduler.policy.cgroup;
 
-import static io.palyvos.scheduler.policy.cgroup.CGroupController.CPU;
-
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
@@ -23,7 +21,6 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
   public static final String NAME = "CLUSTERING";
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final CGroup PARENT_CGROUP = new CGroup("/lachesis", CPU);
   private static final int K_MEANS_MAX_ITERATIONS = 100;
   private final int ngroups;
   private final SchedulerMetric metric;
@@ -65,7 +62,7 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
     for (CentroidCluster<ClusterableMetricValue> cluster : clusters) {
       Clusterable center = cluster.getCenter();
       List<ClusterableMetricValue> points = cluster.getPoints();
-      CGroup cgroup = PARENT_CGROUP.newChild(String.valueOf(index++));
+      CGroup cgroup = CGroup.PARENT_CPU_CGROUP.newChild(String.valueOf(index++));
       points.stream().map(v -> v.id).forEach(id -> rawAssignment.put(id, cgroup));
       cgroupValues.put(cgroup, center.getPoint()[0]);
     }
@@ -76,6 +73,7 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
       }
       assignment.computeIfAbsent(cgroup, c -> new ArrayList<>()).addAll(task.threads());
     }
+    translator.assign(assignment);
     translator.apply(cgroupValues);
   }
 
