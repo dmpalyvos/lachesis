@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.lang3.Validate;
 
@@ -67,10 +66,9 @@ enum LiebreMetric implements Metric<LiebreMetric> {
         String reader = operators[1];
         operatorQueueSizes.put(reader, streamSizes.get(stream));
       }
-      //FIXME: Does this make sense?
-      double average = operatorQueueSizes.values().stream().filter(Objects::nonNull)
-          .mapToDouble(Double::doubleValue).average().orElse(0);
-      provider.traverser.sourceTasks().forEach(task -> operatorQueueSizes.put(task.id(), average));
+      double sourceQueueSize = 0;
+      provider.traverser.sourceTasks()
+          .forEach(task -> operatorQueueSizes.put(task.id(), sourceQueueSize));
       provider.replaceMetricValues(this, operatorQueueSizes);
     }
   },
@@ -82,7 +80,10 @@ enum LiebreMetric implements Metric<LiebreMetric> {
               groupByNode(movingAverage(graphiteQuery("ARRIVAL_TIME"),
                   SchedulerContext.METRIC_RECENT_PERIOD_SECONDS), "avg"),
               SchedulerContext.METRIC_RECENT_PERIOD_SECONDS + 1,
-              report -> report.average(-1));
+              report -> report.average(0));
+      final double sourceLatency = 0;
+      provider.traverser.sourceTasks()
+          .forEach(task -> latencies.put(task.id(), sourceLatency));
       provider.replaceMetricValues(this, latencies);
     }
   };;
