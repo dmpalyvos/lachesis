@@ -8,13 +8,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OperatorMetricCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
+public class OperatorMetricCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "OPERATOR-METRIC";
   private final SchedulerMetric metric;
   private Map<String, CGroup> taskCgroup = new HashMap<>();
 
-  public OperatorMetricCGroupSchedulingPolicy(SchedulerMetric metric) {
+  public OperatorMetricCGroupPolicy(SchedulerMetric metric) {
     this.metric = metric;
   }
 

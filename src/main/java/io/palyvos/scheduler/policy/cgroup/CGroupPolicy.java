@@ -4,7 +4,7 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
-public interface CGroupSchedulingPolicy {
+public interface CGroupPolicy {
 
   void init(Collection<Task> tasks, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider);

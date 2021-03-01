@@ -4,7 +4,7 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
-public interface MultiSpeSinglePrioritySchedulingPolicy {
+public interface MultiSpeSinglePriorityPolicy {
 
   void init(SinglePriorityTranslator translator,
       Collection<SchedulerMetricProvider> metricProviders);

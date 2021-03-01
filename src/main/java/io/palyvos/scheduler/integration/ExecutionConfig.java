@@ -3,25 +3,25 @@ package io.palyvos.scheduler.integration;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
-import io.palyvos.scheduler.integration.converter.CGroupSchedulingPolicyConverter;
+import io.palyvos.scheduler.integration.converter.CGroupPolicyConverter;
 import io.palyvos.scheduler.integration.converter.CGroupTranslatorConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
-import io.palyvos.scheduler.integration.converter.SinglePrioritySchedulingPolicyConverter;
+import io.palyvos.scheduler.integration.converter.SinglePriorityPolicyConverter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.cgroup.CGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.CpuSharesCGroupTranslator;
-import io.palyvos.scheduler.policy.cgroup.NoopCGroupSchedulingPolicy;
+import io.palyvos.scheduler.policy.cgroup.NoopCGroupPolicy;
 import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.ExponentialSmoothingDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
-import io.palyvos.scheduler.policy.single_priority.ConstantSinglePrioritySchedulingPolicy;
-import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.ConstantSinglePriorityPolicy;
+import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
-import io.palyvos.scheduler.policy.single_priority.NoopSinglePrioritySchedulingPolicy;
-import io.palyvos.scheduler.policy.single_priority.SinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.NoopSinglePriorityPolicy;
+import io.palyvos.scheduler.policy.single_priority.SinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
@@ -65,11 +65,11 @@ class ExecutionConfig {
 
   @Parameter(names = "--policy", description =
       "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true] or none. "
-          + "The optional true argument controls scheduling of helper threads", converter = SinglePrioritySchedulingPolicyConverter.class, required = true)
-  SinglePrioritySchedulingPolicy policy = new NoopSinglePrioritySchedulingPolicy();
+          + "The optional true argument controls scheduling of helper threads", converter = SinglePriorityPolicyConverter.class, required = true)
+  SinglePriorityPolicy policy = new NoopSinglePriorityPolicy();
 
-  @Parameter(names = "--cgroupPolicy", converter = CGroupSchedulingPolicyConverter.class)
-  CGroupSchedulingPolicy cgroupPolicy = new NoopCGroupSchedulingPolicy();
+  @Parameter(names = "--cgroupPolicy", converter = CGroupPolicyConverter.class)
+  CGroupPolicy cgroupPolicy = new NoopCGroupPolicy();
 
   @Parameter(names = "--cgroupTranslator", converter = CGroupTranslatorConverter.class)
   CGroupTranslator cGroupTranslator = new CpuSharesCGroupTranslator();
@@ -165,7 +165,7 @@ class ExecutionConfig {
   }
 
 
-  void scheduleMulti(DelegatingMultiSpeSinglePrioritySchedulingPolicy policy,
+  void scheduleMulti(DelegatingMultiSpeSinglePriorityPolicy policy,
       List<SpeAdapter> adapters,
       List<SchedulerMetricProvider> metricProviders, SinglePriorityTranslator translator,
       List<Double> scalingFactors) {
@@ -231,7 +231,7 @@ class ExecutionConfig {
 
 
   SinglePriorityTranslator newSinglePriorityTranslator() {
-    if (policy instanceof ConstantSinglePrioritySchedulingPolicy) {
+    if (policy instanceof ConstantSinglePriorityPolicy) {
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     }
     DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(minPriority,

@@ -4,8 +4,8 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
-public class NoopCGroupSchedulingPolicy implements
-    CGroupSchedulingPolicy {
+public class NoopCGroupPolicy implements
+    CGroupPolicy {
 
   @Override
   public void init(Collection<Task> tasks,

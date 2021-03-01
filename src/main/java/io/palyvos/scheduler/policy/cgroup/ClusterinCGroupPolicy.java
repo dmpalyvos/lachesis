@@ -16,7 +16,7 @@ import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
+public class ClusterinCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "CLUSTERING";
   private static final Logger LOG = LogManager.getLogger();
@@ -25,7 +25,7 @@ public class ClusterinCGroupSchedulingPolicy implements CGroupSchedulingPolicy {
   private final int ngroups;
   private final SchedulerMetric metric;
 
-  public ClusterinCGroupSchedulingPolicy(SchedulerMetric metric, int ngroups) {
+  public ClusterinCGroupPolicy(SchedulerMetric metric, int ngroups) {
     Validate.isTrue(ngroups > 0, "ngroups <= 0");
     Validate.notNull(metric, "metric");
     this.metric = metric;

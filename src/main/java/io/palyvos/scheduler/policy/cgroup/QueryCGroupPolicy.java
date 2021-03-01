@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class QueryCGroupPolicy implements CGroupSchedulingPolicy {
+public abstract class QueryCGroupPolicy implements CGroupPolicy {
 
   public void apply(Collection<Task> tasks, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {

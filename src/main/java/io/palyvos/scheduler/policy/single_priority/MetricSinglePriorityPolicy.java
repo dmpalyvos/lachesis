@@ -6,12 +6,12 @@ import io.palyvos.scheduler.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MetricSinglePrioritySchedulingPolicy extends AbstractSinglePrioritySchedulingPolicy {
+public class MetricSinglePriorityPolicy extends AbstractSinglePriorityPolicy {
 
   private static final Logger LOG = LogManager.getLogger();
   private final SchedulerMetric metric;
 
-  public MetricSinglePrioritySchedulingPolicy(SchedulerMetric metric, boolean scheduleHelpers) {
+  public MetricSinglePriorityPolicy(SchedulerMetric metric, boolean scheduleHelpers) {
     super(scheduleHelpers);
     this.metric = metric;
   }

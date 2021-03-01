@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConstantSinglePrioritySchedulingPolicy implements SinglePrioritySchedulingPolicy {
+public class ConstantSinglePriorityPolicy implements SinglePriorityPolicy {
 
   private final double normalizedPriority;
   private final boolean scheduleHelpers;
 
-  public ConstantSinglePrioritySchedulingPolicy(long normalizedPriority, boolean scheduleHelpers) {
+  public ConstantSinglePriorityPolicy(long normalizedPriority, boolean scheduleHelpers) {
     this.normalizedPriority = normalizedPriority;
     this.scheduleHelpers = scheduleHelpers;
   }

@@ -3,7 +3,7 @@ package io.palyvos.scheduler.integration;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrioritySchedulingPolicy;
+import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public class MultiSpeIntegration {
         .initMetricProvider(config, flinkAdapter, flinkPids);
 
     SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    DelegatingMultiSpeSinglePrioritySchedulingPolicy multiPolicy = new DelegatingMultiSpeSinglePrioritySchedulingPolicy(
+    DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(
         config.policy);
 
     multiPolicy.init(translator, Arrays.asList(stormMetricProvider, flinkMetricProvider));

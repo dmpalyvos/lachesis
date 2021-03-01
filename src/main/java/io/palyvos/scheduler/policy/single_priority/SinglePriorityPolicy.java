@@ -6,7 +6,7 @@ import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 import java.util.Map;
 
-public interface SinglePrioritySchedulingPolicy {
+public interface SinglePriorityPolicy {
 
   void init(SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider);

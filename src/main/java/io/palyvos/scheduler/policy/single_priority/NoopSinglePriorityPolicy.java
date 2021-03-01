@@ -6,8 +6,8 @@ import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 import java.util.Map;
 
-public class NoopSinglePrioritySchedulingPolicy implements
-    SinglePrioritySchedulingPolicy {
+public class NoopSinglePriorityPolicy implements
+    SinglePriorityPolicy {
 
   @Override
   public void init(SinglePriorityTranslator translator,

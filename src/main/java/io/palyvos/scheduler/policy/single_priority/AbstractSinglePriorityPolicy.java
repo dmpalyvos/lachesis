@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractSinglePrioritySchedulingPolicy implements
-    SinglePrioritySchedulingPolicy {
+public abstract class AbstractSinglePriorityPolicy implements
+    SinglePriorityPolicy {
 
   protected final boolean scheduleHelpers;
 
-  public AbstractSinglePrioritySchedulingPolicy(boolean scheduleHelpers) {
+  public AbstractSinglePriorityPolicy(boolean scheduleHelpers) {
     this.scheduleHelpers = scheduleHelpers;
   }
 

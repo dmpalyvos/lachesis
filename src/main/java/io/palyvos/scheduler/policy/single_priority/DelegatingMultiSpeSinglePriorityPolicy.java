@@ -10,14 +10,14 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class DelegatingMultiSpeSinglePrioritySchedulingPolicy implements
-    MultiSpeSinglePrioritySchedulingPolicy {
+public class DelegatingMultiSpeSinglePriorityPolicy implements
+    MultiSpeSinglePriorityPolicy {
 
   private static final Logger LOG = LogManager.getLogger();
   private final Map<ExternalThread, Double> mergedSchedule = new HashMap<>();
-  private final SinglePrioritySchedulingPolicy delegate;
+  private final SinglePriorityPolicy delegate;
 
-  public DelegatingMultiSpeSinglePrioritySchedulingPolicy(SinglePrioritySchedulingPolicy delegate) {
+  public DelegatingMultiSpeSinglePriorityPolicy(SinglePriorityPolicy delegate) {
     this.delegate = delegate;
   }
 
