@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 public class MetricQueryCGroupPolicy extends QueryCGroupPolicy {
 
-  public static final String NAME = "QUERY";
+  public static final String NAME = "QUERY-METRIC";
   private static final Logger LOG = LogManager.getLogger();
 
   private final BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction;

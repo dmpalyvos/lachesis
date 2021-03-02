@@ -37,7 +37,7 @@ public abstract class AbstractSinglePriorityTranslator implements
     Validate.notEmpty(schedule, "No scheduling decisions found!");
     final long start = System.currentTimeMillis();
     if (!normalizer.isValid(schedule)) {
-      LOG.warn("Invalid schedule detected. Skipping scheduling round...");
+      LOG.debug("Invalid schedule detected. Skipping scheduling round...");
       return;
     }
     final Map<ExternalThread, Long> normalizedSchedule = normalizer.normalize(schedule);

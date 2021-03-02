@@ -18,9 +18,11 @@ import org.apache.commons.lang3.Validate;
 
 public class CGroupPolicyConverter implements IStringConverter<CGroupPolicy> {
 
-  public static final BiFunction<Query, Map<String, Double>, Double> DEFAULT_QUERY_FUNCTION =
+  // Default function takes the source priority as the query priority
+  private static final BiFunction<Query, Map<String, Double>, Double> SOURCE_PRIORITY_QUERY_FUNCTION =
       (query, values) -> query.sources().stream().map(source -> values.get(source.id()))
           .filter(Objects::nonNull).mapToDouble(Double::doubleValue).average().orElse(0);
+
   public static final int DEFAULT_NGROUPS = 5;
   //policy(:metric)?
   private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("([\\w\\-]+):?(\\w+)?");
@@ -45,7 +47,7 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupPolicy> {
     }
     if (MetricQueryCGroupPolicy.NAME.equals(policyName)) {
       Validate.notNull(metric, "No metric specified");
-      return new MetricQueryCGroupPolicy(metric, DEFAULT_QUERY_FUNCTION);
+      return new MetricQueryCGroupPolicy(metric, SOURCE_PRIORITY_QUERY_FUNCTION);
     }
     if (ClusterinCGroupPolicy.NAME.equals(policyName)) {
       Validate.notNull(metric, "No metric specified");

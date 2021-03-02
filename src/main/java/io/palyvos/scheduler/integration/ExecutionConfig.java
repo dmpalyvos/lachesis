@@ -79,6 +79,12 @@ class ExecutionConfig {
   @Parameter(names = "--minPriority", description = "Minimum translated priority value")
   Integer minPriority;
 
+  @Parameter(names = "--maxCGPriority", description = "Maximum translated priority value")
+  Integer maxCGPriority;
+
+  @Parameter(names = "--minCGPriority", description = "Minimum translated priority value")
+  Integer minCGPriority;
+
   @Parameter(names = "--logarithmic", description = "Take the logarithm of the priorities before converting to nice values")
   boolean logarithmic = false;
 
@@ -235,16 +241,16 @@ class ExecutionConfig {
     if (policy instanceof ConstantSinglePriorityPolicy) {
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     }
-    DecisionNormalizer normalizer = newNormalizer();
+    DecisionNormalizer normalizer = newNormalizer(minPriority, maxPriority);
     SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(normalizer);
     return translator;
   }
 
-  DecisionNormalizer newNormalizer() {
+  DecisionNormalizer newNormalizer(Integer minPrio, Integer maxPrio) {
     DecisionNormalizer normalizer;
-    if (minPriority != null && maxPriority != null) {
-      normalizer = new MinMaxDecisionNormalizer(minPriority, maxPriority);
-      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPriority, maxPriority);
+    if (minPrio != null && maxPrio != null) {
+      normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio);
+      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPrio, maxPrio);
     }
     else {
       normalizer = new IdentityDecisionNormalizer();
@@ -262,10 +268,10 @@ class ExecutionConfig {
     LOG.info("Creating cgroup translator");
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period, newNormalizer());
+      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period, newNormalizer(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuSharesCGroupTranslator(newNormalizer());
+      return new CpuSharesCGroupTranslator(newNormalizer(minCGPriority, maxCGPriority));
     }
     throw new IllegalArgumentException(
         String.format("Unknown cgroup translator requested: %s", cGroupTranslator));

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 public abstract class QueryCGroupPolicy implements CGroupPolicy {
 
+  //FIXME: Optimize query resolution
   public void apply(Collection<Task> tasks, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final QueryResolver resolver = new QueryResolver(tasks);
