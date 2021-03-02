@@ -23,7 +23,7 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupPolicy> {
           .filter(Objects::nonNull).mapToDouble(Double::doubleValue).average().orElse(0);
   public static final int DEFAULT_NGROUPS = 5;
   //policy(:metric)?
-  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("(\\w+):?(\\w+)?");
+  private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("([\\w\\-]+):?(\\w+)?");
 
   @Override
   public CGroupPolicy convert(String argument) {

@@ -21,19 +21,23 @@ public class CGroupScheduleGraphiteReporter {
 
   public void report(Map<CGroup, Double> internalMetrics,
       Map<CGroup, Collection<CGroupParameterContainer>> schedule) {
-    final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    reporter.open();
-    for (CGroup cgroup : internalMetrics.keySet()) {
-      Double internalValue = internalMetrics.get(cgroup);
-      if (internalValue != null) {
-        reportInternalValue(now, cgroup, internalValue);
+    try {
+      final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+      reporter.open();
+      for (CGroup cgroup : internalMetrics.keySet()) {
+        Double internalValue = internalMetrics.get(cgroup);
+        if (internalValue != null) {
+          reportInternalValue(now, cgroup, internalValue);
+        }
+        Collection<CGroupParameterContainer> parameters = schedule.get(cgroup);
+        if (parameters != null) {
+          reportExternalValues(now, cgroup, parameters);
+        }
       }
-      Collection<CGroupParameterContainer> parameters = schedule.get(cgroup);
-      if (parameters != null) {
-        reportExternalValues(now, cgroup, parameters);
-      }
+      reporter.close();
+    } catch (Exception exception) {
+      LOG.error("Failed to report to graphite: {}", exception.getMessage());
     }
-    reporter.close();
   }
 
   private void reportExternalValues(long now, CGroup cgroup,
@@ -51,7 +55,7 @@ public class CGroupScheduleGraphiteReporter {
 
   private void reportInternalValue(long now, CGroup cgroup, Double value) {
     try {
-      reporter.report(now, graphiteKey("internal", cgroup.path()), value);
+      reporter.report(now, graphiteKey("internal", cgroup.path()), Math.round(value));
     } catch (Exception e) {
       LOG.warn("Failed to report to graphite: {}", e.getMessage());
     }

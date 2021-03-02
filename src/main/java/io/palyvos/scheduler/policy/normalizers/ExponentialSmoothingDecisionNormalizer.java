@@ -2,10 +2,14 @@ package io.palyvos.scheduler.policy.normalizers;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Implementation is partially broken and results in schedule equal to 0 in some cases. Needs debugging
+ */
+@Deprecated
 public class ExponentialSmoothingDecisionNormalizer implements DecisionNormalizer {
 
   private static final Logger LOG = LogManager.getLogger();
@@ -15,11 +19,12 @@ public class ExponentialSmoothingDecisionNormalizer implements DecisionNormalize
 
   public ExponentialSmoothingDecisionNormalizer(DecisionNormalizer delegate,
       double smoothingFactor) {
-    Validate.notNull(delegate, "delegate");
-    this.delegate = delegate;
-    Validate.isTrue(smoothingFactor >= 0 && smoothingFactor <= 1,
-        "smoothingFactor must be in [0, 1]: %f", smoothingFactor);
-    this.alpha = smoothingFactor;
+    throw new NotImplementedException("Needs debugging");
+//    Validate.notNull(delegate, "delegate");
+//    this.delegate = delegate;
+//    Validate.isTrue(smoothingFactor >= 0 && smoothingFactor <= 1,
+//        "smoothingFactor must be in [0, 1]: %f", smoothingFactor);
+//    this.alpha = smoothingFactor;
   }
 
   @Override
@@ -32,6 +37,7 @@ public class ExponentialSmoothingDecisionNormalizer implements DecisionNormalize
   }
 
   private Double ewma(Double previous, Double current) {
+    //FIXME: Bug is probably connected to NaN values
     if (previous == null) {
       return current;
     }

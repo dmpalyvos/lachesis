@@ -17,6 +17,10 @@ public class LogDecisionNormalizer implements DecisionNormalizer {
     this.delegate = delegate;
   }
 
+  public LogDecisionNormalizer() {
+    this(new IdentityDecisionNormalizer());
+  }
+
   @Override
   public <T> Map<T, Long> normalize(Map<T, Double> schedule) {
     Map<T, Double> logSchedule = new HashMap<>();

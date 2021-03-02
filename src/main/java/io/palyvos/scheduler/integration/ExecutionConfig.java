@@ -4,16 +4,15 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.integration.converter.CGroupPolicyConverter;
-import io.palyvos.scheduler.integration.converter.CGroupTranslatorConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.integration.converter.SinglePriorityPolicyConverter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
+import io.palyvos.scheduler.policy.cgroup.CpuQuotaCGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.CpuSharesCGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.NoopCGroupPolicy;
 import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
-import io.palyvos.scheduler.policy.normalizers.ExponentialSmoothingDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
@@ -60,8 +59,8 @@ class ExecutionConfig {
   @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
   int window = 10;
 
-  @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
-  double smoothingFactor = 1;
+//  @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
+//  double smoothingFactor = 1;
 
   @Parameter(names = "--policy", description =
       "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true] or none. "
@@ -71,14 +70,14 @@ class ExecutionConfig {
   @Parameter(names = "--cgroupPolicy", converter = CGroupPolicyConverter.class)
   CGroupPolicy cgroupPolicy = new NoopCGroupPolicy();
 
-  @Parameter(names = "--cgroupTranslator", converter = CGroupTranslatorConverter.class)
-  CGroupTranslator cGroupTranslator = new CpuSharesCGroupTranslator();
+  @Parameter(names = "--cgroupTranslator")
+  String cGroupTranslator = CpuSharesCGroupTranslator.NAME;
 
   @Parameter(names = "--maxPriority", description = "Maximum translated priority value")
-  int maxPriority = -20;
+  Integer maxPriority;
 
   @Parameter(names = "--minPriority", description = "Minimum translated priority value")
-  int minPriority = 0;
+  Integer minPriority;
 
   @Parameter(names = "--logarithmic", description = "Take the logarithm of the priorities before converting to nice values")
   boolean logarithmic = false;
@@ -186,7 +185,8 @@ class ExecutionConfig {
   }
 
   void schedule(SpeAdapter adapter,
-      SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator) {
+      SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator,
+      CGroupTranslator cGroupTranslator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     boolean timeToRunPolicy = isTimeToRunPolicy(now);
     boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
@@ -231,17 +231,44 @@ class ExecutionConfig {
 
 
   SinglePriorityTranslator newSinglePriorityTranslator() {
+    LOG.info("Creating single-priority translator");
     if (policy instanceof ConstantSinglePriorityPolicy) {
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     }
-    DecisionNormalizer normalizer = new MinMaxDecisionNormalizer(minPriority,
-        maxPriority);
-    if (logarithmic) {
-      normalizer = new LogDecisionNormalizer(normalizer);
-    }
-    normalizer = new ExponentialSmoothingDecisionNormalizer(normalizer, smoothingFactor);
+    DecisionNormalizer normalizer = newNormalizer();
     SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(normalizer);
     return translator;
+  }
+
+  DecisionNormalizer newNormalizer() {
+    DecisionNormalizer normalizer;
+    if (minPriority != null && maxPriority != null) {
+      normalizer = new MinMaxDecisionNormalizer(minPriority, maxPriority);
+      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPriority, maxPriority);
+    }
+    else {
+      normalizer = new IdentityDecisionNormalizer();
+    }
+    if (logarithmic) {
+      LOG.info("Using logarithmic priority scaling");
+      normalizer = new LogDecisionNormalizer(normalizer);
+    }
+    return normalizer;
+  }
+
+  CGroupTranslator newCGroupTranslator() {
+    final int defalt_ngroups = 5;
+    final int default_cpu_period = 100000;
+    LOG.info("Creating cgroup translator");
+    String translatorName = cGroupTranslator.trim().toUpperCase();
+    if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
+      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period, newNormalizer());
+    }
+    if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
+      return new CpuSharesCGroupTranslator(newNormalizer());
+    }
+    throw new IllegalArgumentException(
+        String.format("Unknown cgroup translator requested: %s", cGroupTranslator));
   }
 
 }

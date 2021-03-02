@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.cgroup;
 
+import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -7,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,27 +16,25 @@ public class CpuSharesCGroupTranslator implements CGroupTranslator {
 
   public static final String NAME = "CPU_SHARES";
   private static final Logger LOG = LogManager.getLogger();
+  public static final int MIN_SHARES = 2;
 
   private final CGroupActionExecutor cgroupActionExecutor;
-  private final Function<Double, Double> preprocessFunction;
+  private final DecisionNormalizer normalizer;
   private CGroupScheduleGraphiteReporter graphiteReporter;
 
 
   public CpuSharesCGroupTranslator(
-      Function<Double, Double> preprocessFunction,
+      DecisionNormalizer normalizer,
       CGroupActionExecutor cgroupActionExecutor) {
-    Validate.notNull(preprocessFunction, "preprocessFunction");
+    Validate.notNull(normalizer, "normalizer");
     Validate.notNull(cgroupActionExecutor, "cgroupActionExecutor");
-    this.preprocessFunction = preprocessFunction;
+    this.normalizer = normalizer;
     this.cgroupActionExecutor = cgroupActionExecutor;
   }
 
-  public CpuSharesCGroupTranslator(Function<Double, Double> preprocessFunction) {
-    this(preprocessFunction, new BasicCGroupActionExecutor());
-  }
-
-  public CpuSharesCGroupTranslator() {
-    this(s -> s, new BasicCGroupActionExecutor());
+  public CpuSharesCGroupTranslator(
+      DecisionNormalizer normalizer) {
+    this(normalizer, new BasicCGroupActionExecutor());
   }
 
   @Override
@@ -55,18 +53,17 @@ public class CpuSharesCGroupTranslator implements CGroupTranslator {
   @Override
   public void apply(Map<CGroup, Double> schedule) {
 
+    Map<CGroup, Long> normalizedSchedule = normalizer.normalize(schedule);
     Map<CGroup, Collection<CGroupParameterContainer>> rawSchedule = new HashMap<>();
-    for (CGroup cgroup : schedule.keySet()) {
-      Double value = schedule.get(cgroup);
-      if (value == null || !Double.isFinite(value)) {
+    for (CGroup cgroup : normalizedSchedule.keySet()) {
+      Long value = normalizedSchedule.get(cgroup);
+      if (value == null) {
         LOG.warn("Invalid/missing value for cgroup {}", cgroup.toString());
         continue;
       }
-      final Double preprocessedValue = preprocessFunction.apply(value);
-      long convertedValue = Math.max(2, Math.round(preprocessedValue));
-      rawSchedule.put(cgroup, Arrays.asList(CGroupParameter.CPU_SHARES.of(convertedValue)));
+      long shares = Math.max(MIN_SHARES, value);
+      rawSchedule.put(cgroup, Arrays.asList(CGroupParameter.CPU_SHARES.of(shares)));
     }
-
     cgroupActionExecutor.updateParameters(rawSchedule);
     graphiteReporter.report(schedule, rawSchedule);
   }

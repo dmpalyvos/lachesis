@@ -5,6 +5,7 @@ import io.palyvos.scheduler.adapters.linux.LinuxMetricProvider;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.adapters.storm.StormGraphiteMetricProvider;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
@@ -26,14 +27,15 @@ public class StormIntegration {
     StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
     SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
+    CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), config.cGroupTranslator, metricProvider);
+    config.cgroupPolicy.init(adapter.tasks(), cGroupTranslator, metricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.schedule(adapter, metricProvider, translator);
+        config.schedule(adapter, metricProvider, translator, cGroupTranslator);
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
