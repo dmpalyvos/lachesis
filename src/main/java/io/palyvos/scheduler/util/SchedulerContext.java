@@ -31,7 +31,7 @@ public class SchedulerContext {
   public static int GRAPHITE_STATS_PORT = 2003;
   // Total cpu shares assigned to the root /lachesis cgroup
   // Needs to be much higher than the cpu shares of other root cgroups to avoid starving the SPE tasks
-  public static final int TOTAL_CPU_SHARES = 20000;
+  public static final int TOTAL_CPU_SHARES = 40000;
   // Number of threads that apply the external commands
   public static final int SINGLE_PRIO_ENFORCER_THREADS = 8;
   public static final int CGROUP_ENFORCER_THREADS = 8;
