@@ -9,7 +9,7 @@ public class NoopCGroupPolicy implements CGroupPolicy {
   @Override
   public void init(Collection<Task> tasks,
       CGroupTranslator translator, SchedulerMetricProvider metricProvider) {
-
+    translator.init(tasks);
   }
 
   @Override
