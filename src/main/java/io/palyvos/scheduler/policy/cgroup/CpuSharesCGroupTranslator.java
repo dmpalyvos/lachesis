@@ -39,7 +39,7 @@ public class CpuSharesCGroupTranslator implements CGroupTranslator {
 
   @Override
   public void init(Collection<Task> tasks) {
-    CGroup.init();
+    CGroup.init(cgroupActionExecutor);
     graphiteReporter = new CGroupScheduleGraphiteReporter(
         SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
   }

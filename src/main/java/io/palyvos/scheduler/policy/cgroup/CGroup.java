@@ -12,6 +12,7 @@ import io.palyvos.scheduler.util.command.cgroup.CGDeleteCommand;
 import io.palyvos.scheduler.util.command.cgroup.CGSetCommand;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,10 +31,12 @@ public class CGroup {
   private final Map<String, String> parameters = new HashMap<>();
   private final String asShortString;
 
-  public static void init() {
-    PARENT_CPU_CGROUP.delete();
-    PARENT_CPU_CGROUP.create();
-    PARENT_CPU_CGROUP.set(CGroupParameter.CPU_SHARES.id, SchedulerContext.TOTAL_CPU_SHARES);
+  public static void init(CGroupActionExecutor executor) {
+    executor.delete(Collections.singletonList(PARENT_CPU_CGROUP));
+    executor.create(Collections.singletonList(PARENT_CPU_CGROUP));
+    executor.updateParameters(Collections.singletonMap(PARENT_CPU_CGROUP,
+        Collections
+            .singletonList(CGroupParameter.CPU_SHARES.of(SchedulerContext.TOTAL_CPU_SHARES))));
   }
 
   public CGroup(String path, CGroupController... controllers) {
