@@ -50,7 +50,7 @@ public class CpuQuotaCGroupTranslator implements CGroupTranslator {
 
   @Override
   public void init(Collection<Task> tasks) {
-    cgroupActionExecutor.delete(Arrays.asList(CGroup.PARENT_CPU_CGROUP));
+    CGroup.init();
     graphiteReporter = new CGroupScheduleGraphiteReporter(
         SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
   }

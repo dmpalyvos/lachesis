@@ -30,6 +30,12 @@ public class CGroup {
   private final Map<String, String> parameters = new HashMap<>();
   private final String asShortString;
 
+  public static void init() {
+    PARENT_CPU_CGROUP.delete();
+    PARENT_CPU_CGROUP.create();
+    PARENT_CPU_CGROUP.set(CGroupParameter.CPU_SHARES.id, SchedulerContext.TOTAL_CPU_SHARES);
+  }
+
   public CGroup(String path, CGroupController... controllers) {
     this.path = path;
     this.controllers = controllers;

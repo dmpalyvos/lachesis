@@ -29,6 +29,12 @@ public class SchedulerContext {
   public static boolean STATISTICS_AUTO_FLUSH = true;
   public static String GRAPHITE_STATS_HOST = "129.16.20.158";
   public static int GRAPHITE_STATS_PORT = 2003;
+  // Total cpu shares assigned to the root /lachesis cgroup
+  // Needs to be much higher than the cpu shares of other root cgroups to avoid starving the SPE tasks
+  public static final int TOTAL_CPU_SHARES = 20000;
+  // Number of threads that apply the external commands
+  public static final int SINGLE_PRIO_ENFORCER_THREADS = 8;
+  public static final int CGROUP_ENFORCER_THREADS = 8;
 
   static {
     ToStringBuilder.setDefaultStyle(ToStringStyle.NO_CLASS_NAME_STYLE);

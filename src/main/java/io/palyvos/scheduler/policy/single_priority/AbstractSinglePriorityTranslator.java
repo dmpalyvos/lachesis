@@ -20,7 +20,6 @@ public abstract class AbstractSinglePriorityTranslator implements
     SinglePriorityTranslator {
 
   private static final Logger LOG = LogManager.getLogger();
-  public static final int TRANSLATOR_THREADS = 4;
   protected final DecisionNormalizer normalizer;
   private final Map<ExternalThread, Long> lastSchedule = new HashMap<>();
   private final SinglePriorityScheduleFileReporter reporter = new SinglePriorityScheduleFileReporter();
@@ -52,7 +51,7 @@ public abstract class AbstractSinglePriorityTranslator implements
   protected final int applyDirect(Map<ExternalThread, Long> normalizedSchedule) {
     final List<Future<?>> futures = new ArrayList<>();
     SchedulerContext.switchToRootContext();
-    final ExecutorService executor = Executors.newFixedThreadPool(TRANSLATOR_THREADS);
+    final ExecutorService executor = Executors.newFixedThreadPool(SchedulerContext.SINGLE_PRIO_ENFORCER_THREADS);
     for (ExternalThread thread : normalizedSchedule.keySet()) {
       long priority = normalizedSchedule.get(thread);
       Long previousPriority = lastSchedule.put(thread, priority);

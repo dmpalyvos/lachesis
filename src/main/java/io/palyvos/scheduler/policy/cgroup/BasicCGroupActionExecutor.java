@@ -14,10 +14,13 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * {@link io.palyvos.scheduler.policy.cgroup.CGroupActionExecutor} that executes cgroup-management
+ * commands in parallel using multiple threads
+ */
 class BasicCGroupActionExecutor implements CGroupActionExecutor {
 
   private static final Logger LOG = LogManager.getLogger();
-  private static final int ENFORCER_THREADS = 4;
 
   @Override
   public void create(Collection<CGroup> cgroups) {
@@ -25,7 +28,7 @@ class BasicCGroupActionExecutor implements CGroupActionExecutor {
     final ExecutorService executor = newExecutor();
     final List<Future<Boolean>> futures = new ArrayList<>();
     for (CGroup cgroup : cgroups) {
-          futures.add(executor.submit(() -> cgroup.create()));
+      futures.add(executor.submit(() -> cgroup.create()));
     }
     wait(futures, true);
     executor.shutdown();
@@ -75,7 +78,7 @@ class BasicCGroupActionExecutor implements CGroupActionExecutor {
   }
 
   private ExecutorService newExecutor() {
-    return Executors.newFixedThreadPool(ENFORCER_THREADS);
+    return Executors.newFixedThreadPool(SchedulerContext.CGROUP_ENFORCER_THREADS);
   }
 
   private void wait(List<Future<Boolean>> futures, boolean checkSuccess) {
