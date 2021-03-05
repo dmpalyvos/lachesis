@@ -155,6 +155,8 @@ class ExecutionConfig {
       try {
         adapter.updateTasks();
         Validate.validState(!adapter.tasks().isEmpty(), "No tasks found!");
+        Validate.isTrue(adapter.tasks().stream().filter(task -> task.hasThreads()).count() > 0,
+            "No task running in this machine!");
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
@@ -255,9 +257,9 @@ class ExecutionConfig {
     DecisionNormalizer normalizer;
     if (minPrio != null && maxPrio != null) {
       normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio);
-      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPrio, maxPrio);
-    }
-    else {
+      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPrio,
+          maxPrio);
+    } else {
       normalizer = new IdentityDecisionNormalizer();
     }
     if (logarithmic) {
@@ -273,7 +275,8 @@ class ExecutionConfig {
     LOG.info("Creating cgroup translator");
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period, newNormalizer(minCGPriority, maxCGPriority));
+      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period,
+          newNormalizer(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
       return new CpuSharesCGroupTranslator(newNormalizer(minCGPriority, maxCGPriority));
