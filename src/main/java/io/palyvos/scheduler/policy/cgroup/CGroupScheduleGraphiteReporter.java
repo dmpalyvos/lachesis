@@ -2,6 +2,8 @@ package io.palyvos.scheduler.policy.cgroup;
 
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import io.palyvos.scheduler.util.SchedulerContext;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -14,9 +16,15 @@ public class CGroupScheduleGraphiteReporter {
   private static final String GRAPHITE_PREFIX = "schedule.cgroup";
 
   private final SimpleGraphiteReporter reporter;
+  private final String localIp;
 
   public CGroupScheduleGraphiteReporter(String host, int port) {
     this.reporter = new SimpleGraphiteReporter(host, port);
+    try {
+      this.localIp = Inet4Address.getLocalHost().getHostAddress().replace(".", "-");
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public void report(Map<CGroup, Double> internalMetrics,
@@ -64,6 +72,7 @@ public class CGroupScheduleGraphiteReporter {
 
   private String graphiteKey(String type, String entity) {
     return String.valueOf(SchedulerContext.SCHEDULER_NAME) + "."
+        + localIp + "."
         + GRAPHITE_PREFIX + "."
         + type + "."
         + entity;

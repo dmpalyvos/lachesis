@@ -22,6 +22,7 @@ public class SchedulerContext {
   private static UserInfo SPE_PROCESS_USER_INFO;
 
   // Global configuration parameters
+  public static boolean IS_DISTRIBUTED = false;
   public static Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER = s -> s;
   public static int METRIC_RECENT_PERIOD_SECONDS = 10;
   public static int METRIC_TOTAL_PERIOD_SECONDS = 600;

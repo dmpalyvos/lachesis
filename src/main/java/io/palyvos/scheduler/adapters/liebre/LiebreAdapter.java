@@ -44,6 +44,7 @@ public class LiebreAdapter implements SpeAdapter {
     this.tasks.clear();
     tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath));
     LiebreThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
+    tasks.forEach(task -> task.checkHasThreads());
     this.taskIndex = new TaskIndex(tasks);
   }
 

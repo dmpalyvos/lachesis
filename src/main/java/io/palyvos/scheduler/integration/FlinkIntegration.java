@@ -11,6 +11,7 @@ import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 public class FlinkIntegration {
 
@@ -46,7 +47,8 @@ public class FlinkIntegration {
 
   static FlinkAdapter initAdapter(ExecutionConfig config, List<Integer> pids)
       throws InterruptedException {
-    FlinkAdapter adapter = new FlinkAdapter(pids, "localhost",
+    String leader = Strings.isBlank(config.distributed) ? "localhost" : config.distributed;
+    FlinkAdapter adapter = new FlinkAdapter(pids, leader,
         FlinkAdapter.DEFAULT_FLINK_PORT, new LinuxAdapter());
     config.tryUpdateTasks(adapter);
     return adapter;

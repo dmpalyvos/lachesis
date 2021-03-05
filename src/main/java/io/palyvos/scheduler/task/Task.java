@@ -16,6 +16,7 @@ public class Task {
   private final String id;
   private final String internalId;
   private final String jobId;
+  private boolean hasThreads;
   private Set<Subtask> subtasks = new HashSet<>();
   private Set<Task> upstream = new HashSet<>();
   private Set<Task> downstream = new HashSet<>();
@@ -80,8 +81,17 @@ public class Task {
     return helpers;
   }
 
+  public boolean hasThreads() {
+    return hasThreads;
+  }
+
+  public void checkHasThreads() {
+    hasThreads = !threads().isEmpty();
+  }
+
   public Collection<ExternalThread> threads() {
-    return subtasks().stream().map(subtask -> subtask.thread()).collect(Collectors.toList());
+    return subtasks().stream().map(subtask -> subtask.thread()).filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   public int parallelism() {

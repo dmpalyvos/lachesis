@@ -59,6 +59,7 @@ public class FlinkAdapter implements SpeAdapter {
         tasks.addAll(fetchTasks(job)));
     FlinkThreadAssigner.assign(tasks, threads());
     tasks.forEach(task -> updateOperators(task));
+    tasks.forEach(task -> task.checkHasThreads());
     this.taskIndex = new TaskIndex(this.tasks);
   }
 

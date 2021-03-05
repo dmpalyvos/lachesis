@@ -22,7 +22,6 @@ public abstract class AbstractSinglePriorityTranslator implements
   private static final Logger LOG = LogManager.getLogger();
   protected final DecisionNormalizer normalizer;
   private final Map<ExternalThread, Long> lastSchedule = new HashMap<>();
-  private final SinglePriorityScheduleFileReporter reporter = new SinglePriorityScheduleFileReporter();
   private final SinglePriorityScheduleGraphiteReporter graphiteReporter = new SinglePriorityScheduleGraphiteReporter(
       SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);
 
@@ -71,9 +70,6 @@ public abstract class AbstractSinglePriorityTranslator implements
     graphiteReporter.open();
     normalizedSchedule.entrySet().stream().forEach(threadPriorityEntry ->
     {
-      reporter.add(now,
-          threadPriorityEntry.getKey().name(),
-          threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey()));
       graphiteReporter.add(now,
           threadPriorityEntry.getKey().name(),
           threadPriorityEntry.getValue(), schedule.get(threadPriorityEntry.getKey()));

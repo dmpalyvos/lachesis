@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.task;
 
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,8 +11,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class TaskIndex {
+
+  private static final Logger LOG = LogManager.getLogger();
 
   private final List<Task> tasks;
   private final List<Subtask> subtasks;
@@ -34,8 +39,13 @@ public final class TaskIndex {
           flatMap(t -> t.subtasks().stream()).collect(Collectors.toList());
       for (Subtask subtask : task.subtasks()) {
         List<Integer> pids = new ArrayList<>();
-        Validate.validState(subtask.thread() != null, "Subtask %s has no thread assigned to it!",
-            subtask);
+        if (subtask.thread() == null) {
+          if (SchedulerContext.IS_DISTRIBUTED) {
+            continue;
+          }
+          throw new IllegalStateException(
+              String.format("Subtask %s has no thread assigned to it.", subtask));
+        }
         pids.add(subtask.thread().pid());
         subtask.helpers().forEach(helper -> pids.add(subtask.thread().pid()));
         upstream.put(subtask, upstreamSubtasks);

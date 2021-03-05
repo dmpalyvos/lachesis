@@ -33,6 +33,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 
 class ExecutionConfig {
 
@@ -58,6 +59,9 @@ class ExecutionConfig {
 
   @Parameter(names = "--window", description = "Time-window (seconds) to consider for recent metrics")
   int window = 10;
+
+  @Parameter(names = "--distributed", description = "Leader hostname (in case of distributed execution)")
+  String distributed;
 
 //  @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
 //  double smoothingFactor = 1;
@@ -123,6 +127,7 @@ class ExecutionConfig {
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
     SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
+    SchedulerContext.IS_DISTRIBUTED = !Strings.isBlank(config.distributed);
     return config;
   }
 
@@ -184,7 +189,7 @@ class ExecutionConfig {
     for (int i = 0; i < adapters.size(); i++) {
       SpeAdapter adapter = adapters.get(i);
       SchedulerMetricProvider metricProvider = metricProviders.get(i);
-      policy.update(adapter.taskIndex().tasks(), metricProvider, scalingFactors.get(i));
+      policy.update(adapter.tasks(), metricProvider, scalingFactors.get(i));
     }
     policy.apply(translator);
     onPolicyExecuted(now);
@@ -200,7 +205,7 @@ class ExecutionConfig {
       metricProvider.run();
     }
     if (timeToRunPolicy) {
-      policy.apply(adapter.taskIndex().tasks(), translator, metricProvider);
+      policy.apply(adapter.tasks(), translator, metricProvider);
       onPolicyExecuted(now);
     }
     if (timeToRunCGroupPolicy) {

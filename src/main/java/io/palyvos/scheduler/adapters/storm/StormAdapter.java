@@ -41,6 +41,7 @@ public class StormAdapter implements SpeAdapter {
   public void updateTasks() {
     tasks.clear();
     StormThreadAssigner.assign(tasks, threads());
+    tasks.forEach(task -> task.checkHasThreads());
     queryGraphFileParser.initTaskGraph(tasks, queryGraphPath);
     this.taskIndex = new TaskIndex(tasks);
   }
