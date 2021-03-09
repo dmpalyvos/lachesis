@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.single_priority;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
@@ -16,13 +17,15 @@ public class NoopSinglePriorityPolicy implements
   }
 
   @Override
-  public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
+  public void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
 
   }
 
   @Override
-  public Map<ExternalThread, Double> computeSchedule(Collection<Task> tasks,
+  public Map<ExternalThread, Double> computeSchedule(
+      Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
       SchedulerMetricProvider metricProvider) {
     return null;
   }

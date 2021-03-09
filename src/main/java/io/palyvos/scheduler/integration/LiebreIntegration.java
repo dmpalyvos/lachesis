@@ -24,12 +24,13 @@ public class LiebreIntegration {
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = initAdapter(config, config.pids.get(0), config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newNiceTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     int retries = 0;
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), cGroupTranslator, metricProvider);
+    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
+    );
     while (true) {
       long start = System.currentTimeMillis();
       try {
@@ -56,8 +57,8 @@ public class LiebreIntegration {
       LiebreAdapter adapter) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter
-            .tasks()));
+        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.
+            taskIndex().tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;
   }

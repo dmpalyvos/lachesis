@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.single_priority;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
@@ -29,9 +30,11 @@ public class DelegatingMultiSpeSinglePriorityPolicy implements
   }
 
   @Override
-  public void update(Collection<Task> tasks, SchedulerMetricProvider metricProvider,
+  public void update(Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
+      SchedulerMetricProvider metricProvider,
       double scalingFactor) {
-    Map<ExternalThread, Double> schedule = delegate.computeSchedule(tasks, metricProvider);
+    Map<ExternalThread, Double> schedule = delegate.computeSchedule(tasks,
+        speRuntimeInfo, metricProvider);
     for (Map.Entry<ExternalThread, Double> entry : schedule.entrySet()) {
       ExternalThread key = entry.getKey();
       Double value = entry.getValue();

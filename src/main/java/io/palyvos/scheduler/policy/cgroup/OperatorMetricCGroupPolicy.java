@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.cgroup;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
@@ -19,9 +20,10 @@ public class OperatorMetricCGroupPolicy implements CGroupPolicy {
   }
 
   @Override
-  public void init(Collection<Task> tasks, CGroupTranslator translator,
+  public void init(Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
+      CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
-    translator.init(tasks);
+    translator.init();
     translator.assign(oneCGroupPerTask(tasks));
     metricProvider.register(metric);
   }
@@ -37,11 +39,11 @@ public class OperatorMetricCGroupPolicy implements CGroupPolicy {
   }
 
   @Override
-  public void apply(Collection<Task> tasks, CGroupTranslator translator,
+  public void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final Map<String, Double> taskMetrics = metricProvider.get(metric);
     Map<CGroup, Double> schedule = new HashMap<>();
-    final Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
     for (Task task : tasks) {
       schedule.put(taskCgroup.get(task.id()), taskMetrics.get(task.id()));
     }

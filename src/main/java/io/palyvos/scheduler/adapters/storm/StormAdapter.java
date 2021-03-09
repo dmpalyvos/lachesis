@@ -2,17 +2,14 @@ package io.palyvos.scheduler.adapters.storm;
 
 import io.palyvos.scheduler.adapters.OsAdapter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
 import io.palyvos.scheduler.util.QueryGraphFileParser;
-import io.palyvos.scheduler.util.SchedulerContext;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,10 +22,11 @@ public class StormAdapter implements SpeAdapter {
   public static final String SPE_NAME = "storm";
 
   private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
-  private final List<Task> tasks = new ArrayList<>();
   private final OsAdapter osAdapter;
-  private final List<Integer> pids;
   private final String queryGraphPath;
+  private final List<Integer> pids;
+
+  private SpeRuntimeInfo speRuntimeInfo;
   private TaskIndex taskIndex;
 
   public StormAdapter(List<Integer> pids, OsAdapter osAdapter, String queryGraphPath) {
@@ -41,36 +39,23 @@ public class StormAdapter implements SpeAdapter {
   }
 
   @Override
-  public void updateTasks() {
-    tasks.clear();
-    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath, id -> new Task(id, id, "DEFAULT",
-        SPE_NAME)));
-    StormThreadAssigner.assign(tasks, threads());
-    tasks.forEach(task -> task.checkHasThreads());
-    final long missingTasks = tasks.stream().filter(task -> !task.hasThreads()).count();
-    Validate.validState(missingTasks == 0 || (SchedulerContext.IS_DISTRIBUTED
-            && (missingTasks <= SchedulerContext.MAX_REMOTE_TASKS)),
-        "More remote tasks than the max allowed: %s",
-        tasks.stream().filter(task -> !task.hasThreads()).collect(Collectors.toList()));
+  public void updateState() {
+    Collection<Task> tasks = queryGraphFileParser.loadTasks(queryGraphPath, id -> new Task(id, id, "DEFAULT",
+        SPE_NAME));
+    List<ExternalThread> threads = osAdapter.retrieveThreads(pids);
+    StormThreadAssigner.assign(tasks, threads);
     this.taskIndex = new TaskIndex(tasks);
+    this.speRuntimeInfo = new SpeRuntimeInfo(pids, threads, SPE_NAME);
   }
 
-  @Override
-  public Collection<Task> tasks() {
-    return tasks;
-  }
-
-  @Override
-  public Collection<ExternalThread> threads() {
-    List<ExternalThread> threads = new ArrayList<>();
-    for (int pid : pids) {
-      threads.addAll(osAdapter.jvmThreads(pid));
-    }
-    return Collections.unmodifiableList(threads);
-  }
 
   @Override
   public TaskIndex taskIndex() {
     return taskIndex;
+  }
+
+  @Override
+  public SpeRuntimeInfo runtimeInfo() {
+    return speRuntimeInfo;
   }
 }

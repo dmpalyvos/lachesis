@@ -16,6 +16,7 @@ import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.IdentityDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
+import io.palyvos.scheduler.policy.normalizers.NiceDecisionNormalizer;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
@@ -89,7 +90,7 @@ class ExecutionConfig {
   @Parameter(names = "--minCGPriority", description = "Minimum translated priority value")
   Integer minCGPriority;
 
-  @Parameter(names = "--logarithmic", description = "Take the logarithm of the priorities before converting to nice values")
+  @Parameter(names = "--logarithmic", description = "Take the logarithm of the priorities before converting to OS priorities (only for cgroups)!")
   boolean logarithmic = false;
 
   @Parameter(names = "--statisticsFolder", description = "Path to store the scheduler statistics")
@@ -153,10 +154,7 @@ class ExecutionConfig {
     LOG.info("Trying to fetch tasks...");
     while (true) {
       try {
-        adapter.updateTasks();
-        Validate.validState(!adapter.tasks().isEmpty(), "No tasks found!");
-        Validate.isTrue(adapter.tasks().stream().filter(task -> task.hasThreads()).count() > 0,
-            "No task running in this machine!");
+        adapter.updateState();
         LOG.info("Success!");
         return;
       } catch (Exception exception) {
@@ -191,7 +189,9 @@ class ExecutionConfig {
     for (int i = 0; i < adapters.size(); i++) {
       SpeAdapter adapter = adapters.get(i);
       SchedulerMetricProvider metricProvider = metricProviders.get(i);
-      policy.update(adapter.tasks(), metricProvider, scalingFactors.get(i));
+      policy.update(adapter.taskIndex().tasks(), adapter.runtimeInfo(), metricProvider,
+          scalingFactors.get(i)
+      );
     }
     policy.apply(translator);
     onPolicyExecuted(now);
@@ -207,11 +207,12 @@ class ExecutionConfig {
       metricProvider.run();
     }
     if (timeToRunPolicy) {
-      policy.apply(adapter.tasks(), translator, metricProvider);
+      policy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), translator, metricProvider);
       onPolicyExecuted(now);
     }
     if (timeToRunCGroupPolicy) {
-      cgroupPolicy.apply(adapter.tasks(), cGroupTranslator, metricProvider);
+      cgroupPolicy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+          metricProvider);
       onCGroupPolicyExecuted(now);
     }
   }
@@ -243,28 +244,35 @@ class ExecutionConfig {
   }
 
 
-  SinglePriorityTranslator newSinglePriorityTranslator() {
+  SinglePriorityTranslator newNiceTranslator() {
     LOG.info("Creating single-priority translator");
     if (policy instanceof ConstantSinglePriorityPolicy) {
+      Validate
+          .isTrue(minPriority == null && maxPriority == null, "Cannot define priority range for %s",
+              ConstantSinglePriorityPolicy.class.getSimpleName());
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     }
-    DecisionNormalizer normalizer = newNormalizer(minPriority, maxPriority);
-    SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(normalizer);
+    Validate.isTrue(minPriority != null && maxPriority != null,
+        "Nice translator requires defining min and max priorities!");
+    LOG.info("Using {} [{}, {}]", NiceDecisionNormalizer.class.getSimpleName(),
+        minPriority, maxPriority);
+    SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(
+        new NiceDecisionNormalizer(minPriority, maxPriority));
     return translator;
   }
 
-  DecisionNormalizer newNormalizer(Integer minPrio, Integer maxPrio) {
+  DecisionNormalizer newCGroupNormalize(Integer minPrio, Integer maxPrio) {
     DecisionNormalizer normalizer;
     if (minPrio != null && maxPrio != null) {
-      normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio);
-      LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(), minPrio,
+      normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio, false);
+      LOG.info("Using {} [{}, {}]", normalizer.getClass().getSimpleName(), minPrio,
           maxPrio);
     } else {
       normalizer = new IdentityDecisionNormalizer();
+      LOG.info("Using {}", normalizer.getClass().getSimpleName());
     }
     if (logarithmic) {
-      LOG.info("Using logarithmic priority scaling");
-      normalizer = new LogDecisionNormalizer(normalizer);
+      return new LogDecisionNormalizer(normalizer);
     }
     return normalizer;
   }
@@ -276,10 +284,10 @@ class ExecutionConfig {
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
       return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period,
-          newNormalizer(minCGPriority, maxCGPriority));
+          newCGroupNormalize(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuSharesCGroupTranslator(newNormalizer(minCGPriority, maxCGPriority));
+      return new CpuSharesCGroupTranslator(newCGroupNormalize(minCGPriority, maxCGPriority));
     }
     throw new IllegalArgumentException(
         String.format("Unknown cgroup translator requested: %s", cGroupTranslator));

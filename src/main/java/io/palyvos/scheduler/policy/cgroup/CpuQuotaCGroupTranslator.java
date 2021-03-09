@@ -2,7 +2,6 @@ package io.palyvos.scheduler.policy.cgroup;
 
 import io.palyvos.scheduler.policy.normalizers.DecisionNormalizer;
 import io.palyvos.scheduler.task.ExternalThread;
-import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,7 +48,7 @@ public class CpuQuotaCGroupTranslator implements CGroupTranslator {
 
 
   @Override
-  public void init(Collection<Task> tasks) {
+  public void init() {
     CGroup.init(cgroupActionExecutor);
     graphiteReporter = new CGroupScheduleGraphiteReporter(
         SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT);

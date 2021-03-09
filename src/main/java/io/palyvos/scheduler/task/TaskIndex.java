@@ -26,6 +26,7 @@ public final class TaskIndex {
 
   public TaskIndex(Collection<Task> tasks) {
     Validate.notNull(tasks, "tasks");
+    checkForMissingTasks(tasks);
     this.tasks = Collections.unmodifiableList(new ArrayList(new HashSet(tasks)));
     final List<Subtask> subtasks = new ArrayList<>();
     final Map<String, List<Integer>> subtaskThreadPids = new HashMap<>();
@@ -55,8 +56,22 @@ public final class TaskIndex {
     }
     this.subtasks = Collections.unmodifiableList(subtasks);
     this.subtaskThreadPids = Collections.unmodifiableMap(subtaskThreadPids);
-    this.upstream = upstream;
-    this.downstream = downstream;
+    this.upstream = Collections.unmodifiableMap(upstream);
+    this.downstream = Collections.unmodifiableMap(downstream);
+  }
+
+  private void checkForMissingTasks(Collection<Task> tasks) {
+    tasks.forEach(task -> task.checkHasThreads());
+    final Collection<Task> missingTasks = tasks.stream().filter(task -> !task.hasThreads())
+        .collect(Collectors.toList());
+    Validate.validState(missingTasks.size() <= maxMissingTasksAllowed(),
+        "More remote tasks than the max allowed (%d): %s",maxMissingTasksAllowed(),
+        missingTasks);
+  }
+
+
+  private int maxMissingTasksAllowed() {
+    return SchedulerContext.IS_DISTRIBUTED ? SchedulerContext.MAX_REMOTE_TASKS : 0;
   }
 
   public Collection<Task> tasks() {

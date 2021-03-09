@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.single_priority;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
@@ -11,9 +12,11 @@ public interface SinglePriorityPolicy {
   void init(SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider);
 
-  void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
+  void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider);
 
-  Map<ExternalThread, Double> computeSchedule(Collection<Task> tasks,
+  Map<ExternalThread, Double> computeSchedule(
+      Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
       SchedulerMetricProvider metricProvider);
 }

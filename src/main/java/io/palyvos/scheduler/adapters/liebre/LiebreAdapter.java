@@ -2,12 +2,12 @@ package io.palyvos.scheduler.adapters.liebre;
 
 import io.palyvos.scheduler.adapters.OsAdapter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.adapters.linux.LinuxAdapter;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
 import io.palyvos.scheduler.util.QueryGraphFileParser;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +23,9 @@ public class LiebreAdapter implements SpeAdapter {
   private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final OsAdapter osAdapter;
   private final String queryGraphPath;
-  private final List<Task> tasks = new ArrayList<>();
   private final int pid;
+
+  private SpeRuntimeInfo speRuntimeInfo;
   private TaskIndex taskIndex;
 
   public LiebreAdapter(int pid, String queryGraphPath) {
@@ -41,30 +42,23 @@ public class LiebreAdapter implements SpeAdapter {
   }
 
   @Override
-  public void updateTasks() {
-    this.tasks.clear();
-    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath,
-        id -> Task.ofSingleSubtask(id, SPE_NAME)));
-    LiebreThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
-    tasks.forEach(task -> task.checkHasThreads());
+  public void updateState() {
+    Collection<Task> tasks = queryGraphFileParser.loadTasks(queryGraphPath,
+        id -> Task.ofSingleSubtask(id, SPE_NAME));
+    List<ExternalThread> threads = osAdapter.retrieveThreads(pid);
+    LiebreThreadAssigner.assign(tasks, threads);
     this.taskIndex = new TaskIndex(tasks);
-  }
-
-
-  @Override
-  public Collection<Task> tasks() {
-    return Collections.unmodifiableCollection(tasks);
+    this.speRuntimeInfo = new SpeRuntimeInfo(Collections.singletonList(pid), threads, SPE_NAME);
   }
 
   @Override
-  public Collection<ExternalThread> threads() {
-    return osAdapter.jvmThreads(pid);
+  public SpeRuntimeInfo runtimeInfo() {
+    return speRuntimeInfo;
   }
 
   @Override
   public TaskIndex taskIndex() {
     return taskIndex;
   }
-
 
 }

@@ -4,17 +4,16 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.palyvos.scheduler.adapters.OsAdapter;
 import io.palyvos.scheduler.adapters.SpeAdapter;
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Operator;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
 import io.palyvos.scheduler.util.RequestHelper;
-import io.palyvos.scheduler.util.SchedulerContext;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -39,9 +38,10 @@ public class FlinkAdapter implements SpeAdapter {
   private static final Pattern MULTIPLE_OPERATOR_PATTERN = Pattern.compile("\\s*\\((.+)\\)\\s*");
   private final URI flinkURI;
   private final Gson gson = new Gson();
-  private final List<Task> tasks = new ArrayList<>();
   private final OsAdapter osAdapter;
   private final List<Integer> pids;
+
+  private SpeRuntimeInfo speRuntimeInfo;
   private TaskIndex taskIndex;
 
   public FlinkAdapter(List<Integer> pids, String host, int port, OsAdapter osAdapter) {
@@ -55,19 +55,15 @@ public class FlinkAdapter implements SpeAdapter {
   }
 
   @Override
-  public void updateTasks() {
-    this.tasks.clear();
+  public void updateState() {
+    List<Task> tasks = new ArrayList<>();
     jobs().stream().filter(job -> job.isRunning()).forEach(job ->
         tasks.addAll(fetchTasks(job)));
-    FlinkThreadAssigner.assign(tasks, threads());
+    List<ExternalThread> threads = osAdapter.retrieveThreads(pids);
+    FlinkThreadAssigner.assign(tasks, threads);
     tasks.forEach(task -> updateOperators(task));
-    tasks.forEach(task -> task.checkHasThreads());
-    final long missingTasks = tasks.stream().filter(task -> !task.hasThreads()).count();
-    Validate.validState(missingTasks == 0 || (SchedulerContext.IS_DISTRIBUTED
-            && (missingTasks <= SchedulerContext.MAX_REMOTE_TASKS)),
-        "More remote tasks than the max allowed: %s",
-        tasks.stream().filter(task -> !task.hasThreads()).collect(Collectors.toList()));
-    this.taskIndex = new TaskIndex(this.tasks);
+    this.taskIndex = new TaskIndex(tasks);
+    this.speRuntimeInfo = new SpeRuntimeInfo(pids, threads, SPE_NAME);
   }
 
   private void updateOperators(Task task) {
@@ -123,17 +119,8 @@ public class FlinkAdapter implements SpeAdapter {
   }
 
   @Override
-  public Collection<Task> tasks() {
-    return Collections.unmodifiableCollection(tasks);
-  }
-
-  @Override
-  public Collection<ExternalThread> threads() {
-    List<ExternalThread> threads = new ArrayList<>();
-    for (int pid : pids) {
-      threads.addAll(osAdapter.jvmThreads(pid));
-    }
-    return Collections.unmodifiableList(threads);
+  public SpeRuntimeInfo runtimeInfo() {
+    return speRuntimeInfo;
   }
 
   @Override

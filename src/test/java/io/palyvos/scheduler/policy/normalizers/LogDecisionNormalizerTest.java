@@ -20,7 +20,7 @@ public class LogDecisionNormalizerTest {
     Map<String, Double> schedule = new HashMap<>();
     schedule.put("A", 10.0);
     Map<String, Long> normalized = normalizer.normalize(schedule);
-    Assert.assertEquals((long) normalized.get("A"), 3);
+    Assert.assertEquals((long) normalized.get("A"), 1);
   }
 
   @Test
@@ -30,8 +30,8 @@ public class LogDecisionNormalizerTest {
     schedule.put("A", 10.0);
     schedule.put("B", 100.0);
     Map<String, Long> normalized = normalizer.normalize(schedule);
-    Assert.assertEquals((long)normalized.get("A"), 3);
-    Assert.assertEquals((long)normalized.get("B"), 5);
+    Assert.assertEquals((long)normalized.get("A"), 1);
+    Assert.assertEquals((long)normalized.get("B"), 2);
   }
 
   @Test
@@ -53,9 +53,9 @@ public class LogDecisionNormalizerTest {
     schedule.put("D", 10000.0);
     Map<String, Long> normalized = normalizer.normalize(schedule);
     Assert.assertEquals((long)normalized.get("A"), 0);
-    Assert.assertEquals((long)normalized.get("B"), 7);
-    Assert.assertEquals((long)normalized.get("C"), 8);
-    Assert.assertEquals((long)normalized.get("D"), 9);
+    Assert.assertEquals((long)normalized.get("B"), 3);
+    Assert.assertEquals((long)normalized.get("C"), 3);
+    Assert.assertEquals((long)normalized.get("D"), 4);
   }
 
 }

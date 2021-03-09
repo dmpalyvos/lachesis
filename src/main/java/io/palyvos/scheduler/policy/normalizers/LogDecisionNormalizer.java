@@ -26,10 +26,10 @@ public class LogDecisionNormalizer implements DecisionNormalizer {
     Map<T, Double> logSchedule = new HashMap<>();
     OptionalDouble min = schedule.values().stream().mapToDouble(Double::doubleValue).min();
     Validate.isTrue(min.isPresent(), "Empty schedule!");
-    double shift = Math.abs(min.getAsDouble()) + 1; // Necessary shift to move all input values above 1
+    final double inputShift = min.getAsDouble() < 0 ? (1 + Math.abs(min.getAsDouble())) : 1;
+    // Apply the log, using values in the range [1, inf]
     for (T key : schedule.keySet()) {
-      // Apply the log, using values in the range [1, inf]
-      logSchedule.put(key, Math.log(schedule.get(key) + shift));
+      logSchedule.put(key, Math.log10(schedule.get(key) + inputShift));
     }
     return delegate.normalize(logSchedule);
   }

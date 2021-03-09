@@ -26,11 +26,12 @@ public class StormIntegration {
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newNiceTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), cGroupTranslator, metricProvider);
+    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
+    );
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();

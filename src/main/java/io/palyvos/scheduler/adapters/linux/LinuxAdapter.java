@@ -5,7 +5,6 @@ import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.util.command.ExternalCommandRunner.CommandResult;
 import io.palyvos.scheduler.util.command.JstackCommand;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +22,7 @@ public final class LinuxAdapter implements OsAdapter {
 
 
   @Override
-  public Collection<ExternalThread> jvmThreads(int pid) {
+  public List<ExternalThread> retrieveThreads(int pid) {
     final List<ExternalThread> externalThreads = new ArrayList<>();
     CommandResult result = new JstackCommand(pid).call();
     if (result.exitCode != 0 || result.stdout.isEmpty()) {

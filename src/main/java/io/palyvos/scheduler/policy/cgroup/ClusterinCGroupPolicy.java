@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.cgroup;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
@@ -33,14 +34,16 @@ public class ClusterinCGroupPolicy implements CGroupPolicy {
   }
 
   @Override
-  public void init(Collection<Task> tasks, CGroupTranslator translator,
+  public void init(Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
+      CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
-    translator.init(tasks);
+    translator.init();
     metricProvider.register(metric);
   }
 
   @Override
-  public void apply(Collection<Task> tasks, CGroupTranslator translator,
+  public void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
 
     final List<ClusterableMetricValue> values = new ArrayList<>();

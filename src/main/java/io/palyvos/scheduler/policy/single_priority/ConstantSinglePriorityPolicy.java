@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.single_priority;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
@@ -25,13 +26,15 @@ public class ConstantSinglePriorityPolicy implements SinglePriorityPolicy {
   }
 
   @Override
-  public void apply(Collection<Task> tasks, SinglePriorityTranslator translator,
+  public void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, SinglePriorityTranslator translator,
       SchedulerMetricProvider metricProvider) {
-    translator.apply(computeSchedule(tasks, metricProvider));
+    translator.apply(computeSchedule(tasks, speRuntimeInfo, metricProvider));
   }
 
   @Override
-  public Map<ExternalThread, Double> computeSchedule(Collection<Task> tasks,
+  public Map<ExternalThread, Double> computeSchedule(
+      Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
       SchedulerMetricProvider metricProvider) {
     final Map<ExternalThread, Double> normalizedSchedule = new HashMap<>();
     for (Task task : tasks) {

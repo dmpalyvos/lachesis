@@ -25,12 +25,13 @@ public class FlinkIntegration {
 
     FlinkAdapter adapter = initAdapter(config, config.pids);
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newNiceTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     int retries = 0;
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.tasks(), cGroupTranslator, metricProvider);
+    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
+    );
     while (true) {
       long start = System.currentTimeMillis();
       try {
@@ -58,7 +59,7 @@ public class FlinkIntegration {
       FlinkAdapter adapter, List<Integer> pids) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new FlinkGraphiteMetricProvider(config.statisticsHost,
-            ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.tasks()),
+            ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.taskIndex().tasks()),
         new LinuxMetricProvider(pids));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;

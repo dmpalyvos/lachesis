@@ -29,7 +29,7 @@ public class MinMaxDecisionNormalizerTest {
   public void rangeOneValue() {
     final double oneValue = 0.1;
     MinMaxDecisionNormalizer normalizer = new MinMaxDecisionNormalizer(0, 10);
-    Range r = normalizer.range(Arrays.asList(oneValue));
+    Range r = Range.of(Arrays.asList(oneValue));
     Assert.assertEquals(r.min, r.max);
     Assert.assertEquals(oneValue, r.min);
   }
@@ -38,7 +38,7 @@ public class MinMaxDecisionNormalizerTest {
   public void rangeTwoEqualValues() {
     final double oneValue = 0.1;
     MinMaxDecisionNormalizer normalizer = new MinMaxDecisionNormalizer(0, 10);
-    Range r = normalizer.range(Arrays.asList(oneValue, oneValue));
+    Range r = Range.of(Arrays.asList(oneValue, oneValue));
     Assert.assertEquals(r.min, r.max);
     Assert.assertEquals(oneValue, r.min);
   }
@@ -48,7 +48,7 @@ public class MinMaxDecisionNormalizerTest {
     final double value1 = -1000;
     final double value2 = 1424151;
     MinMaxDecisionNormalizer normalizer = new MinMaxDecisionNormalizer(0, 10);
-    Range r = normalizer.range(Arrays.asList(value2, value1));
+    Range r = Range.of(Arrays.asList(value2, value1));
     Assert.assertEquals(value1, r.min);
     Assert.assertEquals(value2, r.max);
   }
@@ -60,7 +60,7 @@ public class MinMaxDecisionNormalizerTest {
     final double value3 = 0;
     final double value4 = -5041401401041.0;
     MinMaxDecisionNormalizer normalizer = new MinMaxDecisionNormalizer(0, 10);
-    Range r = normalizer.range(Arrays.asList(value2, value1, value3, value4));
+    Range r = Range.of(Arrays.asList(value2, value1, value3, value4));
     Assert.assertEquals(value4, r.min);
     Assert.assertEquals(value2, r.max);
   }
@@ -131,6 +131,22 @@ public class MinMaxDecisionNormalizerTest {
     Assert.assertEquals(newDecisions.size(), decisions.size());
     Assert.assertEquals((long) newDecisions.get(task1), newMin);
     Assert.assertEquals((long) newDecisions.get(task2), newMax);
+  }
+
+  @Test
+  public void normalizeTwoTasksNoForce() {
+    int newMin = -10;
+    int newMax = 15;
+    MinMaxDecisionNormalizer normalizer = new MinMaxDecisionNormalizer(newMin, newMax, false);
+    final Map<Subtask, Double> decisions = new HashMap<>();
+    Subtask task1 = new Subtask("1", "1", 0);
+    decisions.put(task1, -10.0);
+    Subtask task2 = new Subtask("2", "2", 1);
+    decisions.put(task2, 10.0);
+    Map<Subtask, Long> newDecisions = normalizer.normalize(decisions);
+    Assert.assertEquals(newDecisions.size(), decisions.size());
+    Assert.assertEquals((long) newDecisions.get(task1), -10);
+    Assert.assertEquals((long) newDecisions.get(task2), 10);
   }
 
   @Test

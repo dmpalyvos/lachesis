@@ -42,7 +42,7 @@ public class MultiSpeIntegration {
     SchedulerMetricProvider flinkMetricProvider = FlinkIntegration
         .initMetricProvider(config, flinkAdapter, flinkPids);
 
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
+    SinglePriorityTranslator translator = config.newNiceTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(

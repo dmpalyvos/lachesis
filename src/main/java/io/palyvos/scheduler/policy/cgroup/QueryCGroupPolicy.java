@@ -1,5 +1,6 @@
 package io.palyvos.scheduler.policy.cgroup;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Query;
@@ -13,7 +14,8 @@ import java.util.stream.Collectors;
 public abstract class QueryCGroupPolicy implements CGroupPolicy {
 
   //FIXME: Optimize query resolution
-  public void apply(Collection<Task> tasks, CGroupTranslator translator,
+  public void apply(Collection<Task> tasks,
+      SpeRuntimeInfo speRuntimeInfo, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final QueryResolver resolver = new QueryResolver(tasks);
     final Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();

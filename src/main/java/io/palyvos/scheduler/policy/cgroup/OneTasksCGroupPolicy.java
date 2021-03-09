@@ -13,11 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Assign all SPE processes to a single cgroup.
+ * Assign all SPE task threads to a single cgroup.
  */
-public class OneCGroupPolicy implements CGroupPolicy {
+public class OneTasksCGroupPolicy implements CGroupPolicy {
 
-  public static final String NAME = "ONE";
+  public static final String NAME = "ONE-TASKS";
   private static final Logger LOG = LogManager.getLogger();
   private static final CGroup DEFAULT_CGROUP = CGroup.PARENT_CPU_CGROUP.newChild("all");
 
@@ -27,10 +27,10 @@ public class OneCGroupPolicy implements CGroupPolicy {
       SchedulerMetricProvider metricProvider) {
     translator.init();
     Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
-    List<ExternalThread> speProcesses = new ArrayList<>();
-    speRuntimeInfo.pids().forEach(pid -> speProcesses.add(new ExternalThread(pid, "SPE_PROCESS")));
-    assignment.put(DEFAULT_CGROUP, speProcesses);
-    LOG.info("Assigning all SPE processes ({}) to the default cgroup: {}", speRuntimeInfo.pids(), DEFAULT_CGROUP.path());
+    List<ExternalThread> allThreads = new ArrayList<>();
+    tasks.forEach(task -> allThreads.addAll(task.threads()));
+    assignment.put(DEFAULT_CGROUP, allThreads);
+    LOG.info("Assigning all SPE task threads processes to the default cgroup: {}", DEFAULT_CGROUP.path());
     translator.assign(assignment);
   }
 
