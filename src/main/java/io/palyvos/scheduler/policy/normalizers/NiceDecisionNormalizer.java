@@ -24,8 +24,8 @@ public class NiceDecisionNormalizer implements DecisionNormalizer {
     Validate.notEmpty(schedule, "Empty schedule!");
     Map<T, Double> nicePriorities = new HashMap<>();
     final Range inputRange = Range.of(schedule.values());
-    // Shift input if necessary to prevent negative values
-    final double inputShift = inputRange.min < 0 ? Math.abs(inputRange.min) : 0;
+    // Shift input if necessary to prevent negative/zero values
+    final double inputShift = inputRange.min < 0 ? (1 + Math.abs(inputRange.min)) : 1;
     for (Map.Entry<T, Double> decision : schedule.entrySet()) {
       double niceValue = niceValue(decision.getValue(), inputRange.max, inputShift);
       nicePriorities.put(decision.getKey(), niceValue);
@@ -35,7 +35,8 @@ public class NiceDecisionNormalizer implements DecisionNormalizer {
   }
 
   double niceValue(double priority, double maxPriority, double inputShift) {
-    return max + ((Math.log10(maxPriority + inputShift) - Math.log10(priority + inputShift)) / Math.log10(NICE_PRIORITY_RATIO));
+    return max + ((Math.log10(maxPriority + inputShift) - Math.log10(priority + inputShift)) / Math
+        .log10(NICE_PRIORITY_RATIO));
   }
 
   @Override
