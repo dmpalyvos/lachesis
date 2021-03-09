@@ -13,7 +13,8 @@ public class NiceDecisionNormalizer implements DecisionNormalizer {
   public NiceDecisionNormalizer(long min, long max) {
     // min > max always for nice priorities
     Validate.isTrue(min > max, "nice max >= min!");
-    this.delegate = new MinMaxDecisionNormalizer(min, max, false);
+    // Need to reverse min and max in delegate, otherwise it will reverse the priorities again
+    this.delegate = new MinMaxDecisionNormalizer(max, min, false);
     this.max = max;
   }
 
