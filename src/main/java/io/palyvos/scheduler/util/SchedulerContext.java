@@ -33,6 +33,9 @@ public class SchedulerContext {
   // Total cpu shares assigned to the root /lachesis cgroup
   // Needs to be much higher than the cpu shares of other root cgroups to avoid starving the SPE tasks
   public static final long TOTAL_CPU_SHARES = 40000;
+  // Number of tasks that can be found not running locally
+  // This is used a simple heuristic to wait until all worker threads have started in each node
+  public static int MAX_REMOTE_TASKS = 1;
   // Number of threads that apply the external commands
   public static final int SINGLE_PRIO_ENFORCER_THREADS = 8;
   public static final int CGROUP_ENFORCER_THREADS = 8;

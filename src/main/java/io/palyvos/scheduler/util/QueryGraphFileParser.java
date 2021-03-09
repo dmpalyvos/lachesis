@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.yaml.snakeyaml.Yaml;
@@ -18,12 +19,16 @@ public class QueryGraphFileParser {
 
   private final Yaml yaml = new Yaml();
 
-  public Collection<Task> loadTasks(String queryGraphPath) {
+  public Collection<Task> loadTasks(String queryGraphPath, Function<String, Task> supplier) {
     Map<String, List<String>> downstreamEdges = loadQueryGraph(queryGraphPath);
     List<Task> tasks = new ArrayList<>();
-    downstreamEdges.keySet().forEach(id -> tasks.add(Task.ofSingleSubtask(id)));
+    downstreamEdges.keySet().forEach(id -> tasks.add(supplier.apply(id)));
     initTaskGraph(tasks, downstreamEdges);
     return tasks;
+  }
+
+  public Collection<Task> loadTasks(String queryGraphPath) {
+    return loadTasks(queryGraphPath, id -> Task.ofSingleSubtask(id));
   }
 
   public void initTaskGraph(Collection<Task> tasks, String queryGraphPath) {

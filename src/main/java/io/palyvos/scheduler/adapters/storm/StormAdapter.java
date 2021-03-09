@@ -6,11 +6,13 @@ import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
 import io.palyvos.scheduler.util.QueryGraphFileParser;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,9 +42,14 @@ public class StormAdapter implements SpeAdapter {
   @Override
   public void updateTasks() {
     tasks.clear();
+    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath, id -> new Task(id, id, "DEFAULT")));
     StormThreadAssigner.assign(tasks, threads());
     tasks.forEach(task -> task.checkHasThreads());
-    queryGraphFileParser.initTaskGraph(tasks, queryGraphPath);
+    final long missingTasks = tasks.stream().filter(task -> !task.hasThreads()).count();
+    Validate.validState(missingTasks == 0 || (SchedulerContext.IS_DISTRIBUTED
+            && (missingTasks <= SchedulerContext.MAX_REMOTE_TASKS)),
+        "More remote tasks than the max allowed: %s",
+        tasks.stream().filter(task -> !task.hasThreads()).collect(Collectors.toList()));
     this.taskIndex = new TaskIndex(tasks);
   }
 

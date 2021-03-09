@@ -9,6 +9,7 @@ import io.palyvos.scheduler.task.Operator;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.task.TaskIndex;
 import io.palyvos.scheduler.util.RequestHelper;
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +61,11 @@ public class FlinkAdapter implements SpeAdapter {
     FlinkThreadAssigner.assign(tasks, threads());
     tasks.forEach(task -> updateOperators(task));
     tasks.forEach(task -> task.checkHasThreads());
+    final long missingTasks = tasks.stream().filter(task -> !task.hasThreads()).count();
+    Validate.validState(missingTasks == 0 || (SchedulerContext.IS_DISTRIBUTED
+            && (missingTasks <= SchedulerContext.MAX_REMOTE_TASKS)),
+        "More remote tasks than the max allowed: %s",
+        tasks.stream().filter(task -> !task.hasThreads()).collect(Collectors.toList()));
     this.taskIndex = new TaskIndex(this.tasks);
   }
 
