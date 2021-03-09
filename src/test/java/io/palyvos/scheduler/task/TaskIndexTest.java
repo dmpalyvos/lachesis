@@ -8,6 +8,8 @@ import org.testng.annotations.Test;
 @Test
 public class TaskIndexTest {
 
+  private static final String DEFAULT_SPE = "default";
+
   @Test(expectedExceptions = {NullPointerException.class})
   void nullConstructor() {
     new TaskIndex(null);
@@ -22,13 +24,13 @@ public class TaskIndexTest {
   @Test(expectedExceptions = {IllegalStateException.class})
   void singleTaskNoThreads() {
     final String id = "test";
-    Task task = Task.ofSingleSubtask(id);
+    Task task = Task.ofSingleSubtask(id, DEFAULT_SPE);
     TaskIndex taskIndex = new TaskIndex(Arrays.asList(task));
   }
 
   @Test
   void singleTaskSingleSubtask() {
-    Task task = new Task("id", "name", "job");
+    Task task = new Task("id", "name", "job", DEFAULT_SPE);
     Subtask subtask = new Subtask("id", "name", 0);
     ExternalThread thread = new ExternalThread(2, "thread");
 
@@ -43,7 +45,7 @@ public class TaskIndexTest {
 
   @Test()
   void duplicateTask() {
-    Task task = new Task("id", "name", "job");
+    Task task = new Task("id", "name", "job", DEFAULT_SPE);
     Subtask subtask = new Subtask("id", "name", 0);
     ExternalThread thread = new ExternalThread(2, "thread");
 

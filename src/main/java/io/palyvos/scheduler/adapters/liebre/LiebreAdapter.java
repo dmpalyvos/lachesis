@@ -18,6 +18,7 @@ public class LiebreAdapter implements SpeAdapter {
 
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
       s -> s.replace(".", "-");
+  public static final String SPE_NAME = "liebre";
 
   private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final OsAdapter osAdapter;
@@ -42,7 +43,8 @@ public class LiebreAdapter implements SpeAdapter {
   @Override
   public void updateTasks() {
     this.tasks.clear();
-    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath));
+    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath,
+        id -> Task.ofSingleSubtask(id, SPE_NAME)));
     LiebreThreadAssigner.assign(tasks, osAdapter.jvmThreads(pid));
     tasks.forEach(task -> task.checkHasThreads());
     this.taskIndex = new TaskIndex(tasks);

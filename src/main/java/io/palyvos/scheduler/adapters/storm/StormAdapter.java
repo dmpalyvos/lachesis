@@ -22,6 +22,7 @@ public class StormAdapter implements SpeAdapter {
   private static final Logger LOG = LogManager.getLogger();
   public static final Function<String, String> THREAD_NAME_GRAPHITE_CONVERTER =
       s -> s.replace(".", "-");
+  public static final String SPE_NAME = "storm";
 
   private final QueryGraphFileParser queryGraphFileParser = new QueryGraphFileParser();
   private final List<Task> tasks = new ArrayList<>();
@@ -42,7 +43,8 @@ public class StormAdapter implements SpeAdapter {
   @Override
   public void updateTasks() {
     tasks.clear();
-    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath, id -> new Task(id, id, "DEFAULT")));
+    tasks.addAll(queryGraphFileParser.loadTasks(queryGraphPath, id -> new Task(id, id, "DEFAULT",
+        SPE_NAME)));
     StormThreadAssigner.assign(tasks, threads());
     tasks.forEach(task -> task.checkHasThreads());
     final long missingTasks = tasks.stream().filter(task -> !task.hasThreads()).count();

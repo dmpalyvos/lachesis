@@ -27,7 +27,7 @@ class StormSpoutInfo {
   }
 
   public Task toTask(String topologyId) {
-    Task task = new Task(spoutId, spoutId, topologyId);
+    Task task = new Task(spoutId, spoutId, topologyId, StormUiAdapter.SPE_NAME);
     for (int i = 0; i < executors; i++) {
       task.subtasks().add(new Subtask(spoutId, spoutId, i));
     }

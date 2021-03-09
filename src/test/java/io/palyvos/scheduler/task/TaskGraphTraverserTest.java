@@ -13,11 +13,12 @@ import org.testng.annotations.Test;
 
 @Test
 public class TaskGraphTraverserTest {
+  private static final String DEFAULT_SPE = "default";
 
-  private static final Task task1 = new Task("id1", "name1", "job");
-  private static final Task task2 = new Task("id2", "name2", "job");
-  private static final Task task3 = new Task("id3", "name3", "job");
-  private static final Task task4 = new Task("id4", "name4", "job");
+  private static final Task task1 = new Task("id1", "name1", "job", DEFAULT_SPE);
+  private static final Task task2 = new Task("id2", "name2", "job", DEFAULT_SPE);
+  private static final Task task3 = new Task("id3", "name3", "job", DEFAULT_SPE);
+  private static final Task task4 = new Task("id4", "name4", "job", DEFAULT_SPE);
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   void invalidConstruction() {

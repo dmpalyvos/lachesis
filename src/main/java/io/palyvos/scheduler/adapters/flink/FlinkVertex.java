@@ -42,7 +42,7 @@ class FlinkVertex {
   public FlinkJobMetrics metrics;
 
   public Task toTask(String jid) {
-    Task task = new Task(name, id, jid);
+    Task task = new Task(name, id, jid, FlinkAdapter.SPE_NAME);
     for (int i = 0; i < parallelism; i++) {
       final String subtaskId = String.format("%s.%d", id, i);
       task.subtasks().add(new Subtask(name, id, i));

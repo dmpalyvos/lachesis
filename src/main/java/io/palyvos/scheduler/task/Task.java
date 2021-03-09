@@ -16,6 +16,7 @@ public class Task {
   private final String id;
   private final String internalId;
   private final String jobId;
+  private final String spe;
   private boolean hasThreads;
   private Set<Subtask> subtasks = new HashSet<>();
   private Set<Task> upstream = new HashSet<>();
@@ -25,24 +26,26 @@ public class Task {
   private final Set<Operator> headOperators = new HashSet<>();
   private final Set<Operator> tailOperators = new HashSet<>();
 
-  public static Task ofSingleSubtask(String id) {
-    return ofSingleSubtask(id, id, DEFAULT_JOB_ID);
+  public static Task ofSingleSubtask(String id, String spe) {
+    return ofSingleSubtask(id, id, DEFAULT_JOB_ID, spe);
   }
 
-  public static Task ofSingleSubtask(String id, String name, String jobId) {
-    Task task = new Task(id, name, jobId);
+  public static Task ofSingleSubtask(String id, String name, String jobId, String spe) {
+    Task task = new Task(id, name, jobId, spe);
     Subtask singleSubtask = new Subtask(id, name, 0);
     task.subtasks.add(singleSubtask);
     return task;
   }
 
-  public Task(String id, String internalId, String jobId) {
-    Validate.notBlank(id, "Blank subtask id!");
-    Validate.notBlank(internalId, "Blank subtask name!");
-    Validate.notBlank(jobId, "Blank subtask job id!");
+  public Task(String id, String internalId, String jobId, String spe) {
+    Validate.notBlank(id, "Blank task id!");
+    Validate.notBlank(internalId, "Blank task name!");
+    Validate.notBlank(jobId, "Blank task job id!");
+    Validate.notBlank(jobId, "Blank task SPE!");
     this.id = id;
     this.internalId = internalId;
     this.jobId = jobId;
+    this.spe = spe;
   }
 
   public String internalId() {
@@ -51,6 +54,10 @@ public class Task {
 
   public String id() {
     return id;
+  }
+
+  public String spe() {
+    return spe;
   }
 
   public Collection<Subtask> subtasks() {
@@ -107,14 +114,14 @@ public class Task {
       return false;
     }
     Task task = (Task) o;
-    return id.equals(task.id) &&
-        internalId.equals(task.internalId) &&
-        jobId.equals(task.jobId);
+    return id.equals(task.id) && internalId.equals(task.internalId) && jobId.equals(task.jobId)
+        && spe
+        .equals(task.spe);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, internalId, jobId);
+    return Objects.hash(id, internalId, jobId, spe);
   }
 
   @Override
@@ -123,6 +130,7 @@ public class Task {
         .append("id", id)
         .append("internalId", internalId)
         .append("jobId", jobId)
+        .append("spe", spe)
         .append("subtasks", subtasks)
         .append("operators", operators)
         .append("helpers", helpers)

@@ -7,6 +7,9 @@ import org.testng.annotations.Test;
 @Test
 public class TaskTest {
 
+  private static final String DEFAULT_SPE = "default";
+
+
   @DataProvider(name = "scheduler-task-constructor")
   public Object[][] constructorProvider() {
     return new Object[][]{
@@ -24,7 +27,7 @@ public class TaskTest {
       Class<? extends Exception> expectedException) {
     Assert.assertNotNull(expectedException);
     try {
-      new Task(id, name, jobId);
+      new Task(id, name, jobId, DEFAULT_SPE);
     } catch (Exception e) {
       Assert.assertTrue(expectedException.isInstance(e));
     }
@@ -32,16 +35,16 @@ public class TaskTest {
 
   @Test
   public void validConstruction() {
-    new Task("id", "name", "job");
+    new Task("id", "name", "job", DEFAULT_SPE);
   }
 
   @Test
   public void equality() {
-    Task task1 = new Task("id1", "name1", "job");
-    Task task2 = new Task("id1", "name1", "job");
+    Task task1 = new Task("id1", "name1", "job", DEFAULT_SPE);
+    Task task2 = new Task("id1", "name1", "job", DEFAULT_SPE);
     Assert.assertTrue(task1.equals(task2), "Equality check failed");
     Assert.assertTrue(task1.hashCode() == task2.hashCode(), "HashCode check failed!");
-    Task task3 = new Task("id2", "name1", "job");
+    Task task3 = new Task("id2", "name1", "job", DEFAULT_SPE);
     Assert.assertTrue(!task1.equals(task3), "Inequality check failed!");
   }
 }

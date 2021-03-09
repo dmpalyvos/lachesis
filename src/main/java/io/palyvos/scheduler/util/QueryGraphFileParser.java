@@ -27,8 +27,8 @@ public class QueryGraphFileParser {
     return tasks;
   }
 
-  public Collection<Task> loadTasks(String queryGraphPath) {
-    return loadTasks(queryGraphPath, id -> Task.ofSingleSubtask(id));
+  public Collection<Task> loadTasks(String queryGraphPath, String spe) {
+    return loadTasks(queryGraphPath, id -> Task.ofSingleSubtask(id, spe));
   }
 
   public void initTaskGraph(Collection<Task> tasks, String queryGraphPath) {

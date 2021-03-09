@@ -12,7 +12,7 @@ public class MockTaskFactory {
 
   public static Task singleSubtaskWithThread(int index) {
     String id = String.valueOf(index);
-    Task task = new Task(id, id, "job");
+    Task task = new Task(id, id, "job", "default");
     Subtask subtask = new Subtask(id, id, 0);
     subtask.assignThread(new ExternalThread(index + START_PID, id));
     task.subtasks().add(subtask);

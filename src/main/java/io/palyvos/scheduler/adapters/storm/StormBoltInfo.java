@@ -21,7 +21,7 @@ class StormBoltInfo {
   public long failed;
 
   public Task toTask(String topologyId) {
-    Task task = new Task(boltId, boltId, topologyId);
+    Task task = new Task(boltId, boltId, topologyId, StormUiAdapter.SPE_NAME);
     for (int i = 0; i < executors; i++) {
       task.subtasks().add(new Subtask(boltId, boltId, i));
     }

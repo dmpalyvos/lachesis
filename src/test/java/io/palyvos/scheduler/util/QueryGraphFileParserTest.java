@@ -12,11 +12,12 @@ import org.testng.annotations.Test;
 public class QueryGraphFileParserTest {
 
   private static final String QUERY_DAG_PATH = "src/test/resources/query_dag.yaml";
+  public static final String DEFAULT_SPE = "DEFAULT";
 
   @Test
   void loadTasks() {
     final QueryGraphFileParser parser = new QueryGraphFileParser();
-    Collection<Task> tasks = parser.loadTasks(QUERY_DAG_PATH);
+    Collection<Task> tasks = parser.loadTasks(QUERY_DAG_PATH, id -> Task.ofSingleSubtask(id, DEFAULT_SPE));
     runAssertions(tasks);
   }
 
@@ -37,7 +38,7 @@ public class QueryGraphFileParserTest {
   void initTaskGraph() {
     final QueryGraphFileParser parser = new QueryGraphFileParser();
     List<Task> tasks = Stream.of("SOURCE", "A", "B", "C", "SINK")
-        .map(id -> Task.ofSingleSubtask(id)).collect(
+        .map(id -> Task.ofSingleSubtask(id, DEFAULT_SPE)).collect(
             Collectors.toList());
     parser.initTaskGraph(tasks, QUERY_DAG_PATH);
     runAssertions(tasks);
@@ -47,7 +48,7 @@ public class QueryGraphFileParserTest {
   void initTaskGraphWithMissingTask() {
     final QueryGraphFileParser parser = new QueryGraphFileParser();
     List<Task> tasks = Stream.of("SOURCE", "A", "C", "SINK")
-        .map(id -> Task.ofSingleSubtask(id)).collect(
+        .map(id -> Task.ofSingleSubtask(id, DEFAULT_SPE)).collect(
             Collectors.toList());
     parser.initTaskGraph(tasks, QUERY_DAG_PATH);
     runAssertions(tasks);
@@ -57,7 +58,7 @@ public class QueryGraphFileParserTest {
   void initTaskGraphWithExtraTask() {
     final QueryGraphFileParser parser = new QueryGraphFileParser();
     List<Task> tasks = Stream.of("SOURCE", "A", "B", "C", "D", "SINK")
-        .map(id -> Task.ofSingleSubtask(id)).collect(
+        .map(id -> Task.ofSingleSubtask(id, DEFAULT_SPE)).collect(
             Collectors.toList());
     parser.initTaskGraph(tasks, QUERY_DAG_PATH);
   }

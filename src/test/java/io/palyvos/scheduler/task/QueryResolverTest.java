@@ -12,10 +12,12 @@ import org.testng.annotations.Test;
 
 public class QueryResolverTest {
 
-  private static final Task task1 = new Task("id1", "name1", "job");
-  private static final Task task2 = new Task("id2", "name2", "job");
-  private static final Task task3 = new Task("id3", "name3", "job");
-  private static final Task task4 = new Task("id4", "name4", "job");
+  private static final String DEFAULT_SPE = "default";
+
+  private static final Task task1 = new Task("id1", "name1", "job", DEFAULT_SPE);
+  private static final Task task2 = new Task("id2", "name2", "job", DEFAULT_SPE);
+  private static final Task task3 = new Task("id3", "name3", "job", DEFAULT_SPE);
+  private static final Task task4 = new Task("id4", "name4", "job", DEFAULT_SPE);
 
   @Test(expectedExceptions = IllegalArgumentException.class)
   void noTasks() {
@@ -24,7 +26,7 @@ public class QueryResolverTest {
 
   @Test
   void oneQueryOneTask() {
-    Task task1 = Task.ofSingleSubtask("task1");
+    Task task1 = Task.ofSingleSubtask("task1", DEFAULT_SPE);
     List<Task> tasks = Arrays.asList(task1);
     Collection<Query> queries = new QueryResolver(tasks).queries();
     Assert.assertNotNull(queries);
@@ -38,8 +40,8 @@ public class QueryResolverTest {
 
   @Test
   void oneQueryTwoTasks() {
-    Task task1 = Task.ofSingleSubtask("task1");
-    Task task2 = Task.ofSingleSubtask("task2");
+    Task task1 = Task.ofSingleSubtask("task1", DEFAULT_SPE);
+    Task task2 = Task.ofSingleSubtask("task2", DEFAULT_SPE);
     task1.downstream().add(task2);
     task2.upstream().add(task1);
     List<Task> tasks = Arrays.asList(task1, task2);
@@ -55,10 +57,10 @@ public class QueryResolverTest {
 
   @Test
   void twoQueriesFourTasks() {
-    Task task1 = Task.ofSingleSubtask("task1");
-    Task task2 = Task.ofSingleSubtask("task2");
-    Task task3 = Task.ofSingleSubtask("task3");
-    Task task4 = Task.ofSingleSubtask("task4");
+    Task task1 = Task.ofSingleSubtask("task1", DEFAULT_SPE);
+    Task task2 = Task.ofSingleSubtask("task2", DEFAULT_SPE);
+    Task task3 = Task.ofSingleSubtask("task3", DEFAULT_SPE);
+    Task task4 = Task.ofSingleSubtask("task4", DEFAULT_SPE);
     task1.downstream().add(task2);
     task2.upstream().add(task1);
     task3.downstream().add(task4);
@@ -82,10 +84,10 @@ public class QueryResolverTest {
 
   @Test
   void twoQueriesSinkFork() {
-    Task task1 = Task.ofSingleSubtask("task1");
-    Task task2 = Task.ofSingleSubtask("task2");
-    Task task3 = Task.ofSingleSubtask("task3");
-    Task task4 = Task.ofSingleSubtask("task4");
+    Task task1 = Task.ofSingleSubtask("task1", DEFAULT_SPE);
+    Task task2 = Task.ofSingleSubtask("task2", DEFAULT_SPE);
+    Task task3 = Task.ofSingleSubtask("task3", DEFAULT_SPE);
+    Task task4 = Task.ofSingleSubtask("task4", DEFAULT_SPE);
     task1.downstream().add(task2);
     task1.downstream().add(task3);
     task2.upstream().add(task1);
@@ -109,10 +111,10 @@ public class QueryResolverTest {
 
   @Test
   void twoQueriesSourceFork() {
-    Task task1 = Task.ofSingleSubtask("task1");
-    Task task2 = Task.ofSingleSubtask("task2");
-    Task task3 = Task.ofSingleSubtask("task3");
-    Task task4 = Task.ofSingleSubtask("task4");
+    Task task1 = Task.ofSingleSubtask("task1", DEFAULT_SPE);
+    Task task2 = Task.ofSingleSubtask("task2", DEFAULT_SPE);
+    Task task3 = Task.ofSingleSubtask("task3", DEFAULT_SPE);
+    Task task4 = Task.ofSingleSubtask("task4", DEFAULT_SPE);
     task1.downstream().add(task3);
     task2.downstream().add(task3);
     task3.upstream().add(task1);

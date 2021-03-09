@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 public class StormUiAdapter implements SpeAdapter {
 
+  public static final String SPE_NAME = "storm";
   private static final Logger LOG = LogManager.getLogger();
 
 
