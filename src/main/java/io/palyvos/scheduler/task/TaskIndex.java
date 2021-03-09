@@ -25,7 +25,7 @@ public final class TaskIndex {
   private final Map<Subtask, Collection<Subtask>> downstream;
 
   public TaskIndex(Collection<Task> tasks) {
-    Validate.notNull(tasks, "tasks");
+    Validate.notEmpty(tasks, "no tasks provided");
     checkForMissingTasks(tasks);
     this.tasks = Collections.unmodifiableList(new ArrayList(new HashSet(tasks)));
     final List<Subtask> subtasks = new ArrayList<>();

@@ -1,8 +1,10 @@
 package io.palyvos.scheduler.task;
 
+import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
 import java.util.Collections;
 import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 @Test
@@ -10,15 +12,20 @@ public class TaskIndexTest {
 
   private static final String DEFAULT_SPE = "default";
 
+  @BeforeTest
+  void prepareContext() {
+    SchedulerContext.IS_DISTRIBUTED = false;
+    SchedulerContext.MAX_REMOTE_TASKS = 0;
+  }
+
   @Test(expectedExceptions = {NullPointerException.class})
   void nullConstructor() {
     new TaskIndex(null);
   }
 
-  @Test
+  @Test(expectedExceptions = {IllegalArgumentException.class})
   void emptyConstructor() {
     TaskIndex taskIndex = new TaskIndex(Collections.emptyList());
-    taskIndex.tasks();
   }
 
   @Test(expectedExceptions = {IllegalStateException.class})
@@ -26,6 +33,24 @@ public class TaskIndexTest {
     final String id = "test";
     Task task = Task.ofSingleSubtask(id, DEFAULT_SPE);
     TaskIndex taskIndex = new TaskIndex(Arrays.asList(task));
+  }
+
+  @Test(expectedExceptions = {IllegalStateException.class})
+  void singleTaskNoThreadsDistributedForbidden() {
+    final String id = "test";
+    SchedulerContext.IS_DISTRIBUTED = true;
+    SchedulerContext.MAX_REMOTE_TASKS = 0;
+    Task task = Task.ofSingleSubtask(id, DEFAULT_SPE);
+    new TaskIndex(Arrays.asList(task));
+  }
+
+  @Test
+  void singleTaskNoThreadsDistributedAllowed() {
+    final String id = "test";
+    SchedulerContext.IS_DISTRIBUTED = true;
+    SchedulerContext.MAX_REMOTE_TASKS = 1;
+    Task task = Task.ofSingleSubtask(id, DEFAULT_SPE);
+    new TaskIndex(Arrays.asList(task));
   }
 
   @Test

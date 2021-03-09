@@ -21,8 +21,8 @@ public class FlinkGraphiteMetricProvider extends AbstractMetricProvider<FlinkGra
 
   public FlinkGraphiteMetricProvider(String graphiteHost, int graphitePort, Collection<Task> tasks) {
     super(mappingFor(FlinkGraphiteMetric.values()), FlinkGraphiteMetric.class);
-    this.graphiteDataFetcher = new GraphiteDataFetcher(graphiteHost, graphitePort);
     Validate.notEmpty(tasks, "no tasks given");
+    this.graphiteDataFetcher = new GraphiteDataFetcher(graphiteHost, graphitePort);
     this.traverser = new TaskGraphTraverser(tasks);
   }
 
