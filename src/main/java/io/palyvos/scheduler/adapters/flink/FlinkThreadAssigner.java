@@ -2,6 +2,7 @@ package io.palyvos.scheduler.adapters.flink;
 
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
+import io.palyvos.scheduler.task.HelperTaskType;
 import io.palyvos.scheduler.task.Subtask;
 import io.palyvos.scheduler.task.Task;
 import java.util.ArrayList;
@@ -32,14 +33,14 @@ class FlinkThreadAssigner {
             .add(thread));
     for (Task task : tasks) {
       outputFlusherThreads(threadIndex, task)
-          .forEach(thread -> task.helpers().add(new HelperTask(thread)));
+          .forEach(thread -> task.helpers().add(new HelperTask(thread, HelperTaskType.OUTPUT_FLUSHER)));
       for (Subtask subtask : task.subtasks()) {
         executorThreads(threadIndex, subtask, task.parallelism()).forEach(
             thread -> subtask.assignThread(thread));
         legacySourceThreads(threadIndex, subtask, task.parallelism()).forEach(
-            thread -> subtask.helpers().add(new HelperTask(thread)));
+            thread -> subtask.helpers().add(new HelperTask(thread, HelperTaskType.OTHER)));
         timeTriggerThreads(threadIndex, subtask, task.parallelism()).forEach(
-            thread -> subtask.helpers().add(new HelperTask(thread)));
+            thread -> subtask.helpers().add(new HelperTask(thread, HelperTaskType.OTHER)));
       }
     }
   }

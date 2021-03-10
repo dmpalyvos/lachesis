@@ -4,6 +4,7 @@ import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
+import io.palyvos.scheduler.task.HelperTaskType;
 import io.palyvos.scheduler.task.Subtask;
 import io.palyvos.scheduler.task.Task;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -52,13 +53,21 @@ public abstract class AbstractSinglePriorityPolicy implements
         }
         schedule.put(subtask.thread(), priority);
       }
-      if (scheduleHelpers) {
-        for (HelperTask helper : task.helpers()) {
-          schedule.put(helper.thread(), priority);
-        }
-      }
+      scheduleTaskOutputFlushers(task, priority, schedule);
     }
     return schedule;
+  }
+
+  private void scheduleTaskOutputFlushers(Task task, double priority,
+      Map<ExternalThread, Double> schedule) {
+    if (!scheduleHelpers) {
+      return;
+    }
+    for (HelperTask helper : task.helpers()) {
+      if (helper.type() == HelperTaskType.OUTPUT_FLUSHER) {
+        schedule.put(helper.thread(), priority);
+      }
+    }
   }
 
 

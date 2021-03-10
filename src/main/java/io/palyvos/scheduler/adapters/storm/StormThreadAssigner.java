@@ -2,6 +2,7 @@ package io.palyvos.scheduler.adapters.storm;
 
 import io.palyvos.scheduler.task.ExternalThread;
 import io.palyvos.scheduler.task.HelperTask;
+import io.palyvos.scheduler.task.HelperTaskType;
 import io.palyvos.scheduler.task.Subtask;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
@@ -40,7 +41,7 @@ class StormThreadAssigner {
         final int executorId = Integer.valueOf(matcher.group(1));
         Task mainTask = executorsIndex.get(executorId);
         if (mainTask != null) {
-          mainTask.helpers().add(new HelperTask(thread));
+          mainTask.helpers().add(new HelperTask(thread, HelperTaskType.OUTPUT_FLUSHER));
         }
       }
     }

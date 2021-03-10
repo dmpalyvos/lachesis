@@ -8,12 +8,20 @@ public class HelperTask {
 
   private final String id;
   private final ExternalThread thread;
+  private final HelperTaskType type;
 
-  public HelperTask(ExternalThread thread) {
+  public HelperTask(ExternalThread thread, HelperTaskType type) {
     Validate.notNull(thread, "thread");
+    Validate.notNull(type, "type");
+    this.type = type;
     this.id = helperId(thread);
     this.thread = thread;
   }
+
+  public HelperTask(ExternalThread thread) {
+    this(thread, HelperTaskType.OTHER);
+  }
+
 
   private String helperId(ExternalThread thread) {
     return String.format("%s_%d", thread.name(), thread.pid());
@@ -45,11 +53,16 @@ public class HelperTask {
     return Objects.hash(id, thread);
   }
 
+  public HelperTaskType type() {
+    return type;
+  }
+
   @Override
   public String toString() {
     return new ToStringBuilder(this)
         .append("id", id)
         .append("thread", thread)
+        .append("type", type)
         .toString();
   }
 }
