@@ -53,21 +53,30 @@ public abstract class AbstractSinglePriorityPolicy implements
         }
         schedule.put(subtask.thread(), priority);
       }
-      scheduleTaskOutputFlushers(task, priority, schedule);
+      scheduleTaskOutputFlushers(task, metricProvider, schedule);
     }
     return schedule;
   }
 
-  private void scheduleTaskOutputFlushers(Task task, double priority,
+  private void scheduleTaskOutputFlushers(Task task,
+      SchedulerMetricProvider metricProvider,
       Map<ExternalThread, Double> schedule) {
     if (!scheduleHelpers) {
       return;
     }
     for (HelperTask helper : task.helpers()) {
-      if (helper.type() == HelperTaskType.OUTPUT_FLUSHER) {
-        schedule.put(helper.thread(), priority);
+      if (scheduleHelper(helper)) {
+        schedule.put(helper.thread(), getHelperPriority(metricProvider, task));
       }
     }
+  }
+
+  private boolean scheduleHelper(HelperTask helper) {
+    return helper.type() == HelperTaskType.OUTPUT_FLUSHER;
+  }
+
+  protected Double getHelperPriority(SchedulerMetricProvider metricProvider, Task task) {
+    return getPriority(metricProvider, task);
   }
 
 

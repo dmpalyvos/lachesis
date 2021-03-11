@@ -9,6 +9,7 @@ import java.util.Map;
 public enum StormGraphiteMetric implements Metric<StormGraphiteMetric> {
   TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(
       "groupByNode(Storm.*.%s.*.*.*.receive.population.value, %d, 'avg')"),
+  TASK_OUTPUT_QUEUE_SIZE_FROM_SUBTASK_DATA("groupByNode(Storm.*.%s.*.*.*.sendqueue.population.value, %d, 'avg')"),
   SUBTASK_TUPLES_IN_RECENT("groupByNode(Storm.*.%s.*.*.*.execute-count.*.value, %d, 'avg')"),
   SUBTASK_TUPLES_OUT_RECENT("groupByNode(Storm.*.%s.*.*.*.transfer-count.*.value, %d, 'avg')");
 

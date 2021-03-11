@@ -2,6 +2,7 @@ package io.palyvos.scheduler.integration.converter;
 
 import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
+import io.palyvos.scheduler.policy.single_priority.InputOutputQueuePolicy;
 import io.palyvos.scheduler.policy.single_priority.MetricPerQuerySinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.NoopSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePriorityPolicy;
@@ -22,6 +23,9 @@ public class SinglePriorityPolicyConverter implements IStringConverter<SinglePri
   public SinglePriorityPolicy convert(String argument) {
     if (NO_POLICY.equals(argument.trim())) {
       return new NoopSinglePriorityPolicy();
+    }
+    else if (InputOutputQueuePolicy.NAME.equals(argument.toUpperCase())) {
+      return new InputOutputQueuePolicy();
     }
     final Matcher metricMatcher = METRIC_POLICY_PATTERN.matcher(argument);
     if (metricMatcher.matches()) {

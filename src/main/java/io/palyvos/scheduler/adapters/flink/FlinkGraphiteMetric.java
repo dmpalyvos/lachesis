@@ -24,6 +24,10 @@ public enum FlinkGraphiteMetric implements Metric<FlinkGraphiteMetric> {
   TASK_QUEUE_SIZE_FROM_SUBTASK_DATA(
       "groupByNode(%s.taskmanager.*.*.*.*.Shuffle.Netty.Input.Buffers.inputQueueLength, 4, 'avg')",
       SchedulerContext.METRIC_RECENT_PERIOD_SECONDS, Task::headOperators,
+      report -> report.average(0)),
+  TASK_OUTPUT_QUEUE_SIZE_FROM_SUBTASK_DATA(
+      "groupByNode(%s.taskmanager.*.*.*.*.Shuffle.Netty.Output.Buffers.outputQueueLength, 4, 'avg')",
+      SchedulerContext.METRIC_RECENT_PERIOD_SECONDS, Task::tailOperators,
       report -> report.average(0));
 
   protected final String graphiteQuery;
