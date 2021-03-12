@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,25 +20,42 @@ public class OneCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "ONE";
   private static final Logger LOG = LogManager.getLogger();
-  private static final CGroup DEFAULT_CGROUP = CGroup.PARENT_CPU_CGROUP.newChild("all");
+  private final CGroup cgroup;
+  private final int maxRepetitions;
+  private int repetitions;
+
+  public OneCGroupPolicy(String cgroupName, int maxRepetitions) {
+    Validate.notBlank(cgroupName, "blank cgroupName");
+    Validate.isTrue(maxRepetitions > 0, "maxRepetitions <=0");
+    this.cgroup = CGroup.PARENT_CPU_CGROUP.newChild(cgroupName);
+    this.maxRepetitions = maxRepetitions;
+  }
+
+  public OneCGroupPolicy() {
+    this("all", 1);
+  }
 
   @Override
   public void init(Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,
-      CGroupTranslator translator,
-      SchedulerMetricProvider metricProvider) {
+      CGroupTranslator translator, SchedulerMetricProvider metricProvider) {
     translator.init();
-    Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
-    List<ExternalThread> speProcesses = new ArrayList<>();
-    speRuntimeInfo.pids().forEach(pid -> speProcesses.add(new ExternalThread(pid, "SPE_PROCESS")));
-    assignment.put(DEFAULT_CGROUP, speProcesses);
-    LOG.info("Assigning all SPE processes ({}) to the default cgroup: {}", speRuntimeInfo.pids(), DEFAULT_CGROUP.path());
-    translator.assign(assignment);
+
   }
 
   @Override
   public void apply(Collection<Task> tasks,
       SpeRuntimeInfo speRuntimeInfo, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
-
+    if (repetitions >= maxRepetitions) {
+      return;
+    }
+    Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
+    List<ExternalThread> speProcesses = new ArrayList<>();
+    speRuntimeInfo.pids().forEach(pid -> speProcesses.add(new ExternalThread(pid, "SPE_PROCESS")));
+    assignment.put(cgroup, speProcesses);
+    LOG.info("Assigning SPE processes {} to cgroup: {}", speRuntimeInfo.pids(),
+        cgroup.path());
+    translator.assign(assignment);
+    repetitions++;
   }
 }

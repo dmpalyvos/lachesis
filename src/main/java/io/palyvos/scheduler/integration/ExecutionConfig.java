@@ -178,23 +178,32 @@ class ExecutionConfig {
   void scheduleMulti(DelegatingMultiSpeSinglePriorityPolicy policy,
       List<SpeAdapter> adapters,
       List<SchedulerMetricProvider> metricProviders, SinglePriorityTranslator translator,
-      List<Double> scalingFactors) {
+      CGroupTranslator cGroupTranslator, List<Double> scalingFactors) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     boolean timeToRunPolicy = isTimeToRunPolicy(now);
-    if (!timeToRunPolicy) {
-      return;
+    boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
+    if (timeToRunPolicy) {
+      policy.reset();
+      metricProviders.forEach(metricProvider -> metricProvider.run());
+      for (int i = 0; i < adapters.size(); i++) {
+        SpeAdapter adapter = adapters.get(i);
+        SchedulerMetricProvider metricProvider = metricProviders.get(i);
+        policy.update(adapter.taskIndex().tasks(), adapter.runtimeInfo(), metricProvider,
+            scalingFactors.get(i)
+        );
+      }
+      policy.apply(translator);
+      onPolicyExecuted(now);
     }
-    policy.reset();
-    metricProviders.forEach(metricProvider -> metricProvider.run());
-    for (int i = 0; i < adapters.size(); i++) {
-      SpeAdapter adapter = adapters.get(i);
-      SchedulerMetricProvider metricProvider = metricProviders.get(i);
-      policy.update(adapter.taskIndex().tasks(), adapter.runtimeInfo(), metricProvider,
-          scalingFactors.get(i)
-      );
+    if (timeToRunCGroupPolicy) {
+      for (int i = 0; i < adapters.size(); i++) {
+        SpeAdapter adapter = adapters.get(i);
+        SchedulerMetricProvider metricProvider = metricProviders.get(i);
+        cgroupPolicy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+            metricProvider);
+      }
+      onCGroupPolicyExecuted(now);
     }
-    policy.apply(translator);
-    onPolicyExecuted(now);
   }
 
   void schedule(SpeAdapter adapter,

@@ -1,9 +1,12 @@
 package io.palyvos.scheduler.integration;
 
+import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
+import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
+import io.palyvos.scheduler.policy.cgroup.OneCGroupPolicy;
 import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -48,14 +51,22 @@ public class MultiSpeIntegration {
     DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(
         config.policy);
 
+    Validate.isTrue(config.cgroupPolicy instanceof OneCGroupPolicy,
+        "OneCGroupPolicy is hardcoded for this experiment, please define it in the config");
+    // Apply cgroup for both SPEs
+    config.cgroupPolicy.init(null, null, cGroupTranslator, null); // Hackish way for now
+    config.cgroupPolicy = new OneCGroupPolicy("one", 2);
+
+
     multiPolicy.init(translator, Arrays.asList(stormMetricProvider, flinkMetricProvider));
+
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
         config.scheduleMulti(multiPolicy, Arrays.asList(flinkAdapter, stormAdapter),
             Arrays.asList(flinkMetricProvider, stormMetricProvider), translator,
-            Arrays.asList(1.0, 5.0));
+            cGroupTranslator, Arrays.asList(1.0, 5.0));
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
@@ -64,6 +75,15 @@ public class MultiSpeIntegration {
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
       config.sleep();
     }
+  }
+
+  private static void applyOneCGroupPolicy(StormAdapter stormAdapter, FlinkAdapter flinkAdapter,
+      CGroupTranslator cGroupTranslator) {
+    CGroupPolicy cgroupPolicy = new OneCGroupPolicy();
+    cgroupPolicy.init(null, null, cGroupTranslator, null);
+    cgroupPolicy.apply(null,
+        SpeRuntimeInfo.combination(stormAdapter.runtimeInfo(), flinkAdapter.runtimeInfo()),
+        cGroupTranslator, null);
   }
 
 
