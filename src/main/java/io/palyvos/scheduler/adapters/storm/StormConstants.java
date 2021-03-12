@@ -13,6 +13,8 @@ public class StormConstants {
       .compile("Thread-\\d+-disruptor-executor\\[(\\d+) \\d+\\]-send-queue");
   public static final String ACKER_NAME = "_acker";
   public static final String METRIC_REPORTER_NAME = "MetricReporter";
+  public static final Pattern METRIC_REPORTER_THREAD_PATTERN = Pattern
+      .compile("Thread-\\d+-.+storm\\.metrics\\.MetricReporter-executor\\[\\d+ \\d+\\]");
 
   private StormConstants() {
   }

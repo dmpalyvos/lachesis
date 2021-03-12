@@ -9,8 +9,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
-//Thread-33-disruptor-executor[11 11]-send-queue
 class StormThreadAssigner {
 
   public static void assign(Collection<Task> tasks, Collection<ExternalThread> threads) {
@@ -45,6 +45,12 @@ class StormThreadAssigner {
         }
       }
     }
+  }
+
+  static Collection<ExternalThread> genericHelperThreads(Collection<ExternalThread> threads) {
+    return threads.stream().filter(
+        thread -> StormConstants.METRIC_REPORTER_THREAD_PATTERN.asPredicate().test(thread.name()))
+        .collect(Collectors.toList());
   }
 
   private StormThreadAssigner() {
