@@ -21,6 +21,7 @@ import io.palyvos.scheduler.policy.single_priority.ConstantSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.NoopSinglePriorityPolicy;
+import io.palyvos.scheduler.policy.single_priority.RandomSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -260,6 +261,9 @@ class ExecutionConfig {
           .isTrue(minPriority == null && maxPriority == null, "Cannot define priority range for %s",
               ConstantSinglePriorityPolicy.class.getSimpleName());
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
+    } else if (policy instanceof RandomSinglePriorityPolicy) {
+      return new NiceSinglePriorityTranslator(
+          new MinMaxDecisionNormalizer(maxPriority, minPriority, true));
     }
     Validate.isTrue(minPriority != null && maxPriority != null,
         "Nice translator requires defining min and max priorities!");
@@ -270,7 +274,7 @@ class ExecutionConfig {
     return translator;
   }
 
-  DecisionNormalizer newCGroupNormalize(Integer minPrio, Integer maxPrio) {
+  DecisionNormalizer newCGroupNormalizer(Integer minPrio, Integer maxPrio) {
     DecisionNormalizer normalizer;
     if (minPrio != null && maxPrio != null) {
       normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio, false);
@@ -293,10 +297,10 @@ class ExecutionConfig {
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
       return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period,
-          newCGroupNormalize(minCGPriority, maxCGPriority));
+          newCGroupNormalizer(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuSharesCGroupTranslator(newCGroupNormalize(minCGPriority, maxCGPriority));
+      return new CpuSharesCGroupTranslator(newCGroupNormalizer(minCGPriority, maxCGPriority));
     }
     throw new IllegalArgumentException(
         String.format("Unknown cgroup translator requested: %s", cGroupTranslator));
