@@ -256,10 +256,10 @@ class ExecutionConfig {
 
   SinglePriorityTranslator newNiceTranslator() {
     LOG.info("Creating single-priority translator");
-    if (policy instanceof ConstantSinglePriorityPolicy) {
+    if (policy instanceof ConstantSinglePriorityPolicy || policy instanceof NoopSinglePriorityPolicy) {
       Validate
           .isTrue(minPriority == null && maxPriority == null, "Cannot define priority range for %s",
-              ConstantSinglePriorityPolicy.class.getSimpleName());
+              policy.getClass().getSimpleName());
       return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
     } else if (policy instanceof RandomSinglePriorityPolicy) {
       return new NiceSinglePriorityTranslator(
@@ -285,6 +285,7 @@ class ExecutionConfig {
       LOG.info("Using {}", normalizer.getClass().getSimpleName());
     }
     if (logarithmic) {
+      LOG.info("Using logarithmic scaling");
       return new LogDecisionNormalizer(normalizer);
     }
     return normalizer;
