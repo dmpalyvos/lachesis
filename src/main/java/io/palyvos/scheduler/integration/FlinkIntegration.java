@@ -19,13 +19,13 @@ public class FlinkIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionConfig config = ExecutionConfig.init(args, FlinkIntegration.class);
+    ExecutionController config = ExecutionController.init(args, FlinkIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     FlinkAdapter adapter = initAdapter(config, config.pids);
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newNiceTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     int retries = 0;
@@ -46,7 +46,7 @@ public class FlinkIntegration {
     }
   }
 
-  static FlinkAdapter initAdapter(ExecutionConfig config, List<Integer> pids)
+  static FlinkAdapter initAdapter(ExecutionController config, List<Integer> pids)
       throws InterruptedException {
     String leader = Strings.isBlank(config.distributed) ? "localhost" : config.distributed;
     FlinkAdapter adapter = new FlinkAdapter(pids, leader,
@@ -55,11 +55,11 @@ public class FlinkIntegration {
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionConfig config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
       FlinkAdapter adapter, List<Integer> pids) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new FlinkGraphiteMetricProvider(config.statisticsHost,
-            ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.taskIndex().tasks()),
+            ExecutionController.GRAPHITE_RECEIVE_PORT, adapter.taskIndex().tasks()),
         new LinuxMetricProvider(pids));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;

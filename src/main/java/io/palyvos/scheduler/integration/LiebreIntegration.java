@@ -16,7 +16,7 @@ public class LiebreIntegration {
   private static final Logger LOG = LogManager.getLogger(LiebreIntegration.class);
 
   public static void main(String[] args) throws InterruptedException {
-    ExecutionConfig config = ExecutionConfig.init(args, LiebreIntegration.class);
+    ExecutionController config = ExecutionController.init(args, LiebreIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
@@ -24,7 +24,7 @@ public class LiebreIntegration {
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
     LiebreAdapter adapter = initAdapter(config, config.pids.get(0), config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter);
-    SinglePriorityTranslator translator = config.newNiceTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     int retries = 0;
@@ -46,18 +46,18 @@ public class LiebreIntegration {
     }
   }
 
-  static LiebreAdapter initAdapter(ExecutionConfig config, int pid, String queryGraphPath)
+  static LiebreAdapter initAdapter(ExecutionController config, int pid, String queryGraphPath)
       throws InterruptedException {
     LiebreAdapter adapter = new LiebreAdapter(pid, queryGraphPath);
     config.tryUpdateTasks(adapter);
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionConfig config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
       LiebreAdapter adapter) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, ExecutionConfig.GRAPHITE_RECEIVE_PORT, adapter.
+        new LiebreMetricProvider(config.statisticsHost, ExecutionController.GRAPHITE_RECEIVE_PORT, adapter.
             taskIndex().tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 public class RealTimeSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
+  public static String NAME = "REAL-TIME";
   private static final Logger LOG = LogManager.getLogger(RealTimeSinglePriorityTranslator.class);
   private final RealTimeSchedulingAlgorithm algorithm;
 

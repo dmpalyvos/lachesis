@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CpuSharesCGroupTranslator implements CGroupTranslator {
 
-  public static final String NAME = "CPU_SHARES";
+  public static final String NAME = "CPU-SHARES";
   private static final Logger LOG = LogManager.getLogger();
   public static final int MIN_SHARES = 2;
 

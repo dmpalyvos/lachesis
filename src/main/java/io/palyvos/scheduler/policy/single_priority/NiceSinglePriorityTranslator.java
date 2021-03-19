@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 public class NiceSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
+  public static final String NAME = "NICE";
   private static final Logger LOG = LogManager.getLogger(NiceSinglePriorityTranslator.class);
 
   public static NiceSinglePriorityTranslator withLinearNormalizer(int minPriorityNiceValue,

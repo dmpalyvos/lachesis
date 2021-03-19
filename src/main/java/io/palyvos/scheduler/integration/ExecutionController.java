@@ -22,10 +22,12 @@ import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePrior
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.NoopSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.RandomSinglePriorityPolicy;
+import io.palyvos.scheduler.policy.single_priority.RealTimeSinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
+import io.palyvos.scheduler.util.command.RealTimeThreadCommand.RealTimeSchedulingAlgorithm;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,13 +39,13 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
 
-class ExecutionConfig {
+class ExecutionController {
 
   private static final Logger LOG = LogManager.getLogger();
   final static int GRAPHITE_RECEIVE_PORT = 80;
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
-  private static final long MAX_RETRY_TIME_SECONDS = 75;
+  private static final long MAX_SCHEDULE_RETRY_TIME = 75;
 
   final List<Integer> pids = new ArrayList<>();
 
@@ -73,6 +75,9 @@ class ExecutionConfig {
           + "The optional true argument controls scheduling of helper threads", converter = SinglePriorityPolicyConverter.class, required = true)
   SinglePriorityPolicy policy = new NoopSinglePriorityPolicy();
 
+  @Parameter(names = "--translator")
+  String translator = NiceSinglePriorityTranslator.NAME;
+
   @Parameter(names = "--cgroupPolicy", converter = CGroupPolicyConverter.class)
   CGroupPolicy cgroupPolicy = new NoopCGroupPolicy();
 
@@ -100,6 +105,12 @@ class ExecutionConfig {
   @Parameter(names = "--statisticsHost", description = "Path to store the scheduler statistics", required = true)
   String statisticsHost;
 
+  @Parameter(names = "--ncores", description = "Maximum #cores to use (for quota translator)")
+  int ncores = 4;
+
+  @Parameter(names = "--cfsPeriod", description = "CFS Period in us (for quota translator)")
+  long cfsPeriod = 1000000;
+
   @Parameter(names = "--help", help = true)
   boolean help = false;
 
@@ -110,9 +121,9 @@ class ExecutionConfig {
   private long lastPolicyRun;
   private long sleepTime = -1;
 
-  public static ExecutionConfig init(String[] args, Class<?> mainClass)
+  public static ExecutionController init(String[] args, Class<?> mainClass)
       throws InterruptedException {
-    ExecutionConfig config = new ExecutionConfig();
+    ExecutionController config = new ExecutionController();
     JCommander jCommander = JCommander.newBuilder().addObject(config).build();
     jCommander.parse(args);
     if (config.help) {
@@ -124,7 +135,8 @@ class ExecutionConfig {
     for (String workerPattern : config.workerPatterns) {
       config.retrievePids(workerPattern, mainClass);
     }
-
+    LOG.info("Policy: {}", config.policy.getClass().getSimpleName());
+    LOG.info("CGroup Policy: {}", config.cgroupPolicy.getClass().getSimpleName());
     SchedulerContext.initSpeProcessInfo(config.pids.get(0));
     SchedulerContext.switchToSpeProcessContext();
     SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
@@ -250,28 +262,47 @@ class ExecutionConfig {
   }
 
   long maxRetries() {
-    return MAX_RETRY_TIME_SECONDS / period;
+    return MAX_SCHEDULE_RETRY_TIME / period;
   }
 
 
-  SinglePriorityTranslator newNiceTranslator() {
-    LOG.info("Creating single-priority translator");
-    if (policy instanceof ConstantSinglePriorityPolicy || policy instanceof NoopSinglePriorityPolicy) {
+  DecisionNormalizer newSinglePriorityNormalizer(boolean realTime) {
+    if ((policy instanceof ConstantSinglePriorityPolicy)
+        || (policy instanceof NoopSinglePriorityPolicy)) {
       Validate
           .isTrue(minPriority == null && maxPriority == null, "Cannot define priority range for %s",
               policy.getClass().getSimpleName());
-      return new NiceSinglePriorityTranslator(new IdentityDecisionNormalizer());
-    } else if (policy instanceof RandomSinglePriorityPolicy) {
-      return new NiceSinglePriorityTranslator(
-          new MinMaxDecisionNormalizer(maxPriority, minPriority, true));
+      LOG.info("Using {}", IdentityDecisionNormalizer.class.getSimpleName());
+      return new IdentityDecisionNormalizer();
+    } else {
+      Validate.isTrue(minPriority != null && maxPriority != null,
+          "Single-priority translators require min and max priorities!");
+      if (realTime || (policy instanceof RandomSinglePriorityPolicy)) {
+        LOG.info("Forcing enabled");
+        LOG.info("Using {} [{}, {}]", MinMaxDecisionNormalizer.class.getSimpleName(),
+            minPriority, maxPriority);
+        return new MinMaxDecisionNormalizer(maxPriority, minPriority, true);
+      }
+      LOG.info("Forcing disabled");
+      LOG.info("Using {} [{}, {}]", NiceDecisionNormalizer.class.getSimpleName(),
+          minPriority, maxPriority);
+      return new NiceDecisionNormalizer(minPriority, maxPriority);
     }
-    Validate.isTrue(minPriority != null && maxPriority != null,
-        "Nice translator requires defining min and max priorities!");
-    LOG.info("Using {} [{}, {}]", NiceDecisionNormalizer.class.getSimpleName(),
-        minPriority, maxPriority);
-    SinglePriorityTranslator translator = new NiceSinglePriorityTranslator(
-        new NiceDecisionNormalizer(minPriority, maxPriority));
-    return translator;
+  }
+
+  SinglePriorityTranslator newSinglePriorityTranslator() {
+    LOG.info("Creating single-priority translator");
+    String translatorName = translator.trim().toUpperCase();
+    if (NiceSinglePriorityTranslator.NAME.equals(translatorName)) {
+      LOG.info("Using nice translator");
+      return new NiceSinglePriorityTranslator(newSinglePriorityNormalizer(false));
+    } else if (RealTimeSinglePriorityTranslator.NAME.equals(translatorName)) {
+      LOG.info("Using real-time translator (RR)");
+      return new RealTimeSinglePriorityTranslator(newSinglePriorityNormalizer(true),
+          RealTimeSchedulingAlgorithm.ROUND_ROBIN);
+    }
+    throw new IllegalArgumentException(
+        String.format("Unknown single-priority translator requested: %s", translator));
   }
 
   DecisionNormalizer newCGroupNormalizer(Integer minPrio, Integer maxPrio) {
@@ -292,12 +323,10 @@ class ExecutionConfig {
   }
 
   CGroupTranslator newCGroupTranslator() {
-    final int defalt_ngroups = 5;
-    final int default_cpu_period = 100000;
     LOG.info("Creating cgroup translator");
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
-      return new CpuQuotaCGroupTranslator(defalt_ngroups, default_cpu_period,
+      return new CpuQuotaCGroupTranslator(ncores, cfsPeriod,
           newCGroupNormalizer(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {

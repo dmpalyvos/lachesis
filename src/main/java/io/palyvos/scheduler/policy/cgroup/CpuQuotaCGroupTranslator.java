@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CpuQuotaCGroupTranslator implements CGroupTranslator {
 
-  public static final String NAME = "CPU_QUOTA";
+  public static final String NAME = "CPU-QUOTA";
   private static final Logger LOG = LogManager.getLogger();
   public static final int MIN_QUOTA = 1;
 

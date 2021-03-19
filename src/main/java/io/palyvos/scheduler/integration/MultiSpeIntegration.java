@@ -25,7 +25,7 @@ public class MultiSpeIntegration {
     LOG.info("Usage: --worker <storm_worker> --worker <flink_worker>");
     Thread.sleep(2000);
 
-    ExecutionConfig config = ExecutionConfig.init(args, MultiSpeIntegration.class);
+    ExecutionController config = ExecutionController.init(args, MultiSpeIntegration.class);
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1,
@@ -45,7 +45,7 @@ public class MultiSpeIntegration {
     SchedulerMetricProvider flinkMetricProvider = FlinkIntegration
         .initMetricProvider(config, flinkAdapter, flinkPids);
 
-    SinglePriorityTranslator translator = config.newNiceTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(

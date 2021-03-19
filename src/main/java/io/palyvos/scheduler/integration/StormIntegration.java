@@ -19,14 +19,14 @@ public class StormIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionConfig config = ExecutionConfig.init(args, StormIntegration.class);
+    ExecutionController config = ExecutionController.init(args, StormIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newNiceTranslator();
+    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     config.policy.init(translator, metricProvider);
@@ -47,7 +47,7 @@ public class StormIntegration {
     }
   }
 
-  static StormAdapter initAdapter(ExecutionConfig config, List<Integer> pids, String queryGraphPath)
+  static StormAdapter initAdapter(ExecutionController config, List<Integer> pids, String queryGraphPath)
       throws InterruptedException {
     StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(),
         queryGraphPath);
@@ -55,11 +55,11 @@ public class StormIntegration {
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionConfig config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
       StormAdapter adapter, List<Integer> pids) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new StormGraphiteMetricProvider(config.statisticsHost,
-            ExecutionConfig.GRAPHITE_RECEIVE_PORT),
+            ExecutionController.GRAPHITE_RECEIVE_PORT),
         new LinuxMetricProvider(pids));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;
