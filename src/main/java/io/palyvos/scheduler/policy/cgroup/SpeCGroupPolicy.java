@@ -20,8 +20,11 @@ public class SpeCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "SPE";
   private static final Logger LOG = LogManager.getLogger();
-  private static final int TOTAL_PRIORITY = 10000;
+  private static final int TOTAL_PRIORITY = 1000;
   private final Map<String, Double> weights;
+  private final Map<CGroup, Double> schedule = new HashMap<>();
+  private final Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
+  private int calls;
 
   public SpeCGroupPolicy(Map<String, Double> weights) {
     Validate.notEmpty(weights, "empty weights");
@@ -39,8 +42,6 @@ public class SpeCGroupPolicy implements CGroupPolicy {
       SpeRuntimeInfo speRuntimeInfo, CGroupTranslator translator,
       SchedulerMetricProvider metricProvider) {
     final CGroup cgroup = CGroup.PARENT_CPU_CGROUP.newChild(speRuntimeInfo.spe());
-    final Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
-    final Map<CGroup, Double> schedule = new HashMap<>();
     Double speWeight = weights.get(speRuntimeInfo.spe());
     Validate.validState(speWeight != null, "No weight for %s", speRuntimeInfo.spe());
     schedule.put(cgroup, TOTAL_PRIORITY * speWeight);
@@ -49,7 +50,17 @@ public class SpeCGroupPolicy implements CGroupPolicy {
     assignment.put(cgroup, speProcesses);
     LOG.info("Assigning SPE processes {} to cgroup {} with weight {}", speRuntimeInfo.pids(),
         cgroup.path(), speWeight);
-    translator.assign(assignment);
-    translator.apply(schedule);
+    applyIfAllSpesReady(translator);
+  }
+
+  private void applyIfAllSpesReady(CGroupTranslator translator) {
+    if (++calls >= weights.size()) {
+      LOG.info("Applying for all SPEs...");
+      translator.assign(assignment);
+      translator.apply(schedule);
+      assignment.clear();
+      schedule.clear();
+      calls = 0;
+    }
   }
 }

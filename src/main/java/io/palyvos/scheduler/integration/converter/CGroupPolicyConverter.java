@@ -33,8 +33,8 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupPolicy> {
   private static final Map<String, Double> SPE_EXPERIMERIMENT_WEIGHTS = new HashMap<>();
   static {
     // Hard-coded weights for the purpose of the multi-class experiment
-    SPE_EXPERIMERIMENT_WEIGHTS.put(StormAdapter.SPE_NAME, 0.80);
-    SPE_EXPERIMERIMENT_WEIGHTS.put(FlinkAdapter.SPE_NAME, 0.20);
+    SPE_EXPERIMERIMENT_WEIGHTS.put(StormAdapter.SPE_NAME, 99.0);
+    SPE_EXPERIMERIMENT_WEIGHTS.put(FlinkAdapter.SPE_NAME, 1.0);
   }
   //policy(:metric)?
   private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("([\\w\\-]+):?(\\w+)?");
