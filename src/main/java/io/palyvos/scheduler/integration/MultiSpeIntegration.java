@@ -7,6 +7,7 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.OneCGroupPolicy;
+import io.palyvos.scheduler.policy.cgroup.SpeCGroupPolicy;
 import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
@@ -32,6 +33,8 @@ public class MultiSpeIntegration {
         "Only one query graph allowed (storm)!");
     Validate.validState(config.pids.size() == 2,
         "Expected 2 pids but got %d", config.pids.size());
+    Validate.isTrue((config.cgroupPolicy instanceof OneCGroupPolicy) || (config.cgroupPolicy instanceof SpeCGroupPolicy),
+        "OneCGroupPolicy|SpeCGroupPolicy is hardcoded for this experiment, please define it in the config");
 
     final List<Integer> stormPids = config.pids.subList(0, 1);
     final List<Integer> flinkPids = config.pids.subList(1, 2);
@@ -51,11 +54,12 @@ public class MultiSpeIntegration {
     DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(
         config.policy);
 
-    Validate.isTrue(config.cgroupPolicy instanceof OneCGroupPolicy,
-        "OneCGroupPolicy is hardcoded for this experiment, please define it in the config");
     // Apply cgroup for both SPEs
-    config.cgroupPolicy.init(null, null, cGroupTranslator, null); // Hackish way for now
-    config.cgroupPolicy = new OneCGroupPolicy("one", 2);
+    config.cgroupPolicy.init(null, null, cGroupTranslator, null);
+    if (config.cgroupPolicy instanceof OneCGroupPolicy) {
+      // Reconfigure policy to prevent repeated calls
+      config.cgroupPolicy = new OneCGroupPolicy("one", 2);
+    }
 
 
     multiPolicy.init(translator, Arrays.asList(stormMetricProvider, flinkMetricProvider));

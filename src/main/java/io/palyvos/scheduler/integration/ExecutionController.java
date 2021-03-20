@@ -326,10 +326,12 @@ class ExecutionController {
     LOG.info("Creating cgroup translator");
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
+      LOG.info("Using {}", CpuQuotaCGroupTranslator.class.getSimpleName());
       return new CpuQuotaCGroupTranslator(ncores, cfsPeriod,
           newCGroupNormalizer(minCGPriority, maxCGPriority));
     }
     if (CpuSharesCGroupTranslator.NAME.equals(translatorName)) {
+      LOG.info("Using {}", CpuSharesCGroupTranslator.class.getSimpleName());
       return new CpuSharesCGroupTranslator(newCGroupNormalizer(minCGPriority, maxCGPriority));
     }
     throw new IllegalArgumentException(
