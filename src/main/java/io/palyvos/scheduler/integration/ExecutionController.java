@@ -18,7 +18,6 @@ import io.palyvos.scheduler.policy.normalizers.LogDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.MinMaxDecisionNormalizer;
 import io.palyvos.scheduler.policy.normalizers.NiceDecisionNormalizer;
 import io.palyvos.scheduler.policy.single_priority.ConstantSinglePriorityPolicy;
-import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.NiceSinglePriorityTranslator;
 import io.palyvos.scheduler.policy.single_priority.NoopSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.RandomSinglePriorityPolicy;
@@ -188,24 +187,21 @@ class ExecutionController {
   }
 
 
-  void scheduleMulti(DelegatingMultiSpeSinglePriorityPolicy policy,
-      List<SpeAdapter> adapters,
+  void scheduleMulti(List<SpeAdapter> adapters,
       List<SchedulerMetricProvider> metricProviders, SinglePriorityTranslator translator,
-      CGroupTranslator cGroupTranslator, List<Double> scalingFactors) {
+      CGroupTranslator cGroupTranslator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     boolean timeToRunPolicy = isTimeToRunPolicy(now);
     boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
-    if (timeToRunPolicy) {
-      policy.reset();
+    if (timeToRunPolicy || timeToRunCGroupPolicy) {
       metricProviders.forEach(metricProvider -> metricProvider.run());
+    }
+    if (timeToRunPolicy) {
       for (int i = 0; i < adapters.size(); i++) {
         SpeAdapter adapter = adapters.get(i);
         SchedulerMetricProvider metricProvider = metricProviders.get(i);
-        policy.update(adapter.taskIndex().tasks(), adapter.runtimeInfo(), metricProvider,
-            scalingFactors.get(i)
-        );
+        policy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), translator, metricProvider);
       }
-      policy.apply(translator);
       onPolicyExecuted(now);
     }
     if (timeToRunCGroupPolicy) {

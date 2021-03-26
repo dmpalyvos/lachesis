@@ -11,8 +11,8 @@ import java.util.Map;
 public class FairQueryCGroupPolicy extends
     QueryCGroupPolicy {
 
-  public static final String NAME = "FAIR";
-  private static final double PRIORITY = 100;
+  public static final String NAME = "QUERY-FAIR";
+  private static final double PRIORITY = 1024;
 
   @Override
   public void init(Collection<Task> tasks, SpeRuntimeInfo speRuntimeInfo,

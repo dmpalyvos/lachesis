@@ -1,14 +1,11 @@
 package io.palyvos.scheduler.integration;
 
-import io.palyvos.scheduler.adapters.SpeRuntimeInfo;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
-import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.OneCGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.SpeCGroupPolicy;
-import io.palyvos.scheduler.policy.single_priority.DelegatingMultiSpeSinglePriorityPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
@@ -51,9 +48,6 @@ public class MultiSpeIntegration {
     SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
-    DelegatingMultiSpeSinglePriorityPolicy multiPolicy = new DelegatingMultiSpeSinglePriorityPolicy(
-        config.policy);
-
     // Apply cgroup for both SPEs
     config.cgroupPolicy.init(null, null, cGroupTranslator, null);
     if (config.cgroupPolicy instanceof OneCGroupPolicy) {
@@ -61,16 +55,15 @@ public class MultiSpeIntegration {
       config.cgroupPolicy = new OneCGroupPolicy("one", 2);
     }
 
-
-    multiPolicy.init(translator, Arrays.asList(stormMetricProvider, flinkMetricProvider));
-
+    config.policy.init(translator, flinkMetricProvider);
+    config.policy.init(translator, stormMetricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.scheduleMulti(multiPolicy, Arrays.asList(flinkAdapter, stormAdapter),
+        config.scheduleMulti(Arrays.asList(flinkAdapter, stormAdapter),
             Arrays.asList(flinkMetricProvider, stormMetricProvider), translator,
-            cGroupTranslator, Arrays.asList(1.0, 5.0));
+            cGroupTranslator);
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
@@ -80,15 +73,5 @@ public class MultiSpeIntegration {
       config.sleep();
     }
   }
-
-  private static void applyOneCGroupPolicy(StormAdapter stormAdapter, FlinkAdapter flinkAdapter,
-      CGroupTranslator cGroupTranslator) {
-    CGroupPolicy cgroupPolicy = new OneCGroupPolicy();
-    cgroupPolicy.init(null, null, cGroupTranslator, null);
-    cgroupPolicy.apply(null,
-        SpeRuntimeInfo.combination(stormAdapter.runtimeInfo(), flinkAdapter.runtimeInfo()),
-        cGroupTranslator, null);
-  }
-
 
 }

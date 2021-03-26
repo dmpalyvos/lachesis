@@ -20,7 +20,7 @@ public class SpeCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "SPE";
   private static final Logger LOG = LogManager.getLogger();
-  private static final int TOTAL_PRIORITY = 1000;
+  private static final int TOTAL_PRIORITY = 100;
   private final Map<String, Double> weights;
   private final Map<CGroup, Double> schedule = new HashMap<>();
   private final Map<CGroup, Collection<ExternalThread>> assignment = new HashMap<>();
