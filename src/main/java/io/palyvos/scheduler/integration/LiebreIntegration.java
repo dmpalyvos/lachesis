@@ -28,6 +28,7 @@ public class LiebreIntegration {
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
     int retries = 0;
+    config.initExtraMetrics(metricProvider);
     config.policy.init(translator, metricProvider);
     config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
     );

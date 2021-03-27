@@ -3,6 +3,8 @@ package io.palyvos.scheduler.metric;
 import io.palyvos.scheduler.metric.graphite.SimpleGraphiteReporter;
 import io.palyvos.scheduler.util.SchedulerContext;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +21,7 @@ public class MetricGraphiteReporter<T extends Metric> {
   private final MetricProvider<T> provider;
   private final T metric;
   private static final Logger LOG = LogManager.getLogger();
+  private final String localIp;
 
   public static <T extends Metric> Collection<MetricGraphiteReporter<T>> reportersFor(
       String graphiteHost, int graphitePort, MetricProvider<T> provider, T... metrics) {
@@ -38,6 +41,11 @@ public class MetricGraphiteReporter<T extends Metric> {
     this.reporter = new SimpleGraphiteReporter(graphiteHost, graphitePort);
     this.provider = provider;
     this.metric = metric;
+    try {
+      this.localIp = Inet4Address.getLocalHost().getHostAddress().replace(".", "-");
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public void report() {
@@ -55,6 +63,7 @@ public class MetricGraphiteReporter<T extends Metric> {
 
   private String graphiteKey(T metric, String key) {
     return SchedulerContext.SCHEDULER_NAME + "."
+        + localIp + "."
         + METRICS_GRAPHITE_PREFIX + "."
         + SimpleGraphiteReporter.cleanGraphiteId(metric.toString()) + "."
         + SimpleGraphiteReporter.cleanGraphiteId(key);

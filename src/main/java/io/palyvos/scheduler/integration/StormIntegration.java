@@ -29,9 +29,10 @@ public class StormIntegration {
     SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
     CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
 
+    config.initExtraMetrics(metricProvider);
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
-    );
+    config.cgroupPolicy
+        .init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
@@ -47,7 +48,10 @@ public class StormIntegration {
     }
   }
 
-  static StormAdapter initAdapter(ExecutionController config, List<Integer> pids, String queryGraphPath)
+
+
+  static StormAdapter initAdapter(ExecutionController config, List<Integer> pids,
+      String queryGraphPath)
       throws InterruptedException {
     StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(),
         queryGraphPath);

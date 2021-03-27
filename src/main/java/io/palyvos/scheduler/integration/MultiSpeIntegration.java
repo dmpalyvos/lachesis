@@ -55,6 +55,8 @@ public class MultiSpeIntegration {
       config.cgroupPolicy = new OneCGroupPolicy("one", 2);
     }
 
+    config.initExtraMetrics(flinkMetricProvider);
+    config.initExtraMetrics(stormMetricProvider);
     config.policy.init(translator, flinkMetricProvider);
     config.policy.init(translator, stormMetricProvider);
     int retries = 0;

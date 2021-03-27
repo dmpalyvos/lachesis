@@ -6,6 +6,9 @@ import io.palyvos.scheduler.adapters.SpeAdapter;
 import io.palyvos.scheduler.integration.converter.CGroupPolicyConverter;
 import io.palyvos.scheduler.integration.converter.Log4jLevelConverter;
 import io.palyvos.scheduler.integration.converter.SinglePriorityPolicyConverter;
+import io.palyvos.scheduler.metric.BasicSchedulerMetric;
+import io.palyvos.scheduler.metric.MetricGraphiteReporter;
+import io.palyvos.scheduler.metric.SchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.policy.cgroup.CGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
@@ -28,6 +31,7 @@ import io.palyvos.scheduler.util.SchedulerContext;
 import io.palyvos.scheduler.util.command.JcmdCommand;
 import io.palyvos.scheduler.util.command.RealTimeThreadCommand.RealTimeSchedulingAlgorithm;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.Validate;
@@ -45,6 +49,8 @@ class ExecutionController {
   private static final int RETRY_INTERVAL_MILLIS = 5000;
   private static final int MAX_RETRIES = 20;
   private static final long MAX_SCHEDULE_RETRY_TIME = 75;
+
+  private Collection<MetricGraphiteReporter<SchedulerMetric>> extraMetricReporters;
 
   final List<Integer> pids = new ArrayList<>();
 
@@ -115,6 +121,9 @@ class ExecutionController {
 
   @Parameter(names = "--worker", description = "Part of the command of the worker thread (e.g., class name). Argument can be repeated for multiple worker patterns.", required = true)
   List<String> workerPatterns = new ArrayList<>();
+
+  @Parameter(names = "--extraMetric", description = "Metrics that are not necessarily used for scheduling but are reported to graphite (e.g., for debugging)")
+  List<BasicSchedulerMetric> extraMetric = new ArrayList<>();
 
   private long lastCgroupPolicyRun;
   private long lastPolicyRun;
@@ -195,6 +204,7 @@ class ExecutionController {
     boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
     if (timeToRunPolicy || timeToRunCGroupPolicy) {
       metricProviders.forEach(metricProvider -> metricProvider.run());
+      reportExtraMetrics();
     }
     if (timeToRunPolicy) {
       for (int i = 0; i < adapters.size(); i++) {
@@ -215,6 +225,21 @@ class ExecutionController {
     }
   }
 
+  void initExtraMetrics(SchedulerMetricProvider metricProvider) {
+    if (!extraMetric.isEmpty()) {
+      LOG.info("Reporting extra metrics: {}", extraMetric);
+      extraMetricReporters = MetricGraphiteReporter
+          .reportersFor(SchedulerContext.GRAPHITE_STATS_HOST, SchedulerContext.GRAPHITE_STATS_PORT,
+              metricProvider, extraMetric.toArray(new BasicSchedulerMetric[0]));
+    }
+  }
+
+  private void reportExtraMetrics() {
+    if (extraMetricReporters != null) {
+      extraMetricReporters.stream().forEach(reporter -> reporter.report());
+    }
+  }
+
   void schedule(SpeAdapter adapter,
       SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator,
       CGroupTranslator cGroupTranslator) {
@@ -223,6 +248,7 @@ class ExecutionController {
     boolean timeToRunCGroupPolicy = isTimeToRunCGroupPolicy(now);
     if (timeToRunPolicy || timeToRunCGroupPolicy) {
       metricProvider.run();
+      reportExtraMetrics();
     }
     if (timeToRunPolicy) {
       policy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), translator, metricProvider);
