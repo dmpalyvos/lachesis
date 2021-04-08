@@ -5,4 +5,4 @@
 
 This repository only contains the implementation of Lachesis. 
 
-The the evaluation platform and related artifacts are found [here](https://github.com/dmpalyvos/lachesis-evaluation).
+The evaluation platform and related artifacts are found [here](https://github.com/dmpalyvos/lachesis-evaluation).
