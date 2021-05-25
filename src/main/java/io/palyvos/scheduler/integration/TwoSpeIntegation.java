@@ -14,7 +14,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MultiSpeIntegration {
+public class TwoSpeIntegation {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -23,7 +23,7 @@ public class MultiSpeIntegration {
     LOG.info("Usage: --worker <storm_worker> --worker <flink_worker>");
     Thread.sleep(2000);
 
-    ExecutionController config = ExecutionController.init(args, MultiSpeIntegration.class);
+    ExecutionController config = ExecutionController.init(args, TwoSpeIntegation.class);
     SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1,

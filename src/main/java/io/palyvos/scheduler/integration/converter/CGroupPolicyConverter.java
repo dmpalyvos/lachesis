@@ -2,6 +2,7 @@ package io.palyvos.scheduler.integration.converter;
 
 import com.beust.jcommander.IStringConverter;
 import io.palyvos.scheduler.adapters.flink.FlinkAdapter;
+import io.palyvos.scheduler.adapters.liebre.LiebreAdapter;
 import io.palyvos.scheduler.adapters.storm.StormAdapter;
 import io.palyvos.scheduler.metric.BasicSchedulerMetric;
 import io.palyvos.scheduler.metric.SchedulerMetric;
@@ -35,6 +36,7 @@ public class CGroupPolicyConverter implements IStringConverter<CGroupPolicy> {
     // Hard-coded weights for the purpose of the multi-spe experiment
     SPE_EXPERIMERIMENT_WEIGHTS.put(StormAdapter.SPE_NAME, 50.0);
     SPE_EXPERIMERIMENT_WEIGHTS.put(FlinkAdapter.SPE_NAME, 50.0);
+    SPE_EXPERIMERIMENT_WEIGHTS.put(LiebreAdapter.SPE_NAME, 50.0);
   }
   //policy(:metric)?
   private final Pattern METRIC_POLICY_PATTERN = Pattern.compile("([\\w\\-]+):?(\\w+)?");
