@@ -70,6 +70,8 @@ public class ThreeSpeIntegration {
     config.policy.init(translator, stormMetricProvider);
     config.policy.init(translator, liebreMetricProvider);
     int retries = 0;
+    // Wait a bit until the queries have really started processing data
+    Thread.sleep(30000);
     while (true) {
       long start = System.currentTimeMillis();
       try {

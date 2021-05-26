@@ -86,7 +86,17 @@ enum LiebreMetric implements Metric<LiebreMetric> {
           .forEach(task -> latencies.put(task.id(), sourceLatency));
       provider.replaceMetricValues(this, latencies);
     }
-  };;
+  },
+  TASK_OUTPUT_QUEUE_SIZE_FROM_SUBTASK_DATA {
+    @Override
+    protected void compute(LiebreMetricProvider provider) {
+      // Add map with one dummy value to prevent warnings for empty metric values
+      // Liebre has not helper operators so output queue will not be used
+      Map<String, Double> dummy = new HashMap<>();
+      dummy.put("Not Implemented", 0.0);
+      provider.replaceMetricValues(this, dummy);
+    }
+  };
 
 
   private final Set<LiebreMetric> dependencies;
