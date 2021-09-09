@@ -1,4 +1,4 @@
-# Lachesis: A Standalone Stream-Aware OS Scheduling Framework
+# Lachesis: A Middleware for Customizing OS Scheduling of Stream Processing Queries
 
 > *In Greek mythology [Lachesis](https://en.wikipedia.org/wiki/Lachesis) was one of the three Moirai (Fates). She measured the thread of life allotted to each person with her measuring rod.*
 
