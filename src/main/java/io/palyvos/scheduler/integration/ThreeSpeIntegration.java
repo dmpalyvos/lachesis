@@ -8,7 +8,6 @@ import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.OneCGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.SpeCGroupPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
-import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
@@ -25,7 +24,6 @@ public class ThreeSpeIntegration {
     Thread.sleep(2000);
 
     ExecutionController config = ExecutionController.init(args, ThreeSpeIntegration.class);
-    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 2,
         "2 query graph paths expected: storm, liebre (in that order)");

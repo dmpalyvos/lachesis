@@ -21,7 +21,6 @@ public class FlinkIntegration {
 
     ExecutionController config = ExecutionController.init(args, FlinkIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
-    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     FlinkAdapter adapter = initAdapter(config, config.pids);
     SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);

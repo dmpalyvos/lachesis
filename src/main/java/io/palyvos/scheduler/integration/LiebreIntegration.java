@@ -18,7 +18,6 @@ public class LiebreIntegration {
   public static void main(String[] args) throws InterruptedException {
     ExecutionController config = ExecutionController.init(args, LiebreIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
-    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");

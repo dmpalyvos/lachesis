@@ -21,7 +21,6 @@ public class StormIntegration {
 
     ExecutionController config = ExecutionController.init(args, StormIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
-    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
     StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));

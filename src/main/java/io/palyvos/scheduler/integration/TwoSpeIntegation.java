@@ -7,7 +7,6 @@ import io.palyvos.scheduler.policy.cgroup.CGroupTranslator;
 import io.palyvos.scheduler.policy.cgroup.OneCGroupPolicy;
 import io.palyvos.scheduler.policy.cgroup.SpeCGroupPolicy;
 import io.palyvos.scheduler.policy.single_priority.SinglePriorityTranslator;
-import io.palyvos.scheduler.util.SchedulerContext;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.Validate;
@@ -24,7 +23,6 @@ public class TwoSpeIntegation {
     Thread.sleep(2000);
 
     ExecutionController config = ExecutionController.init(args, TwoSpeIntegation.class);
-    SchedulerContext.GRAPHITE_STATS_HOST = config.statisticsHost;
 
     Validate.isTrue(config.queryGraphPath.size() == 1,
         "Only one query graph allowed (storm)!");

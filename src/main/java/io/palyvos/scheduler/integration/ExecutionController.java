@@ -46,9 +46,9 @@ class ExecutionController {
 
   private static final Logger LOG = LogManager.getLogger();
   final static int GRAPHITE_RECEIVE_PORT = 80;
-  private static final int RETRY_INTERVAL_MILLIS = 5000;
-  private static final int MAX_RETRIES = 20;
-  private static final long MAX_SCHEDULE_RETRY_TIME = 75;
+  public static final int RETRY_INTERVAL_MILLIS = 5000;
+  public static final int MAX_RETRIES = 20;
+  public static final long MAX_SCHEDULE_RETRY_TIME = 75;
 
   private Collection<MetricGraphiteReporter<SchedulerMetric>> extraMetricReporters;
 
@@ -71,9 +71,6 @@ class ExecutionController {
 
   @Parameter(names = "--distributed", description = "Leader hostname (in case of distributed execution)")
   String distributed;
-
-//  @Parameter(names = "--smoothingFactor", description = "Alpha for exponential smoothing, between [0, 1]. Lower alpha -> smoother priorities.")
-//  double smoothingFactor = 1;
 
   @Parameter(names = "--policy", description =
       "Scheduling policy to apply, either random[:true], constant:{PRIORITY_VALUE}[:true], or metric:{METRIC_NAME}[:true] or none. "
@@ -129,8 +126,40 @@ class ExecutionController {
   private long lastPolicyRun;
   private long sleepTime = -1;
 
+  /**
+   * Create a new {@link ExecutionController} from user-provided CLI arguments, retrieving the PIDs
+   * of the running SPE workers and initializing the {@link SchedulerContext}.
+   *
+   * @param args      The CLI arguments
+   * @param mainClass The class that contains the main function of the program. Necessary to omit
+   *                  current program from automated PID retrieval
+   * @return A new instance of this class
+   * @throws InterruptedException In case there is an interrupt during PID retrieval.
+   */
   public static ExecutionController init(String[] args, Class<?> mainClass)
       throws InterruptedException {
+    ExecutionController controller = newInstanceFromArgs(args);
+    Configurator.setRootLevel(controller.log);
+
+    for (String workerPattern : controller.workerPatterns) {
+      controller.retrievePids(workerPattern, mainClass);
+    }
+    LOG.info("Policy: {}", controller.policy.getClass().getSimpleName());
+    LOG.info("CGroup Policy: {}", controller.cgroupPolicy.getClass().getSimpleName());
+    initSchedulerContext(controller);
+    return controller;
+  }
+
+  private static void initSchedulerContext(ExecutionController controller) {
+    SchedulerContext.initSpeProcessInfo(controller.pids.get(0));
+    SchedulerContext.switchToSpeProcessContext();
+    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = controller.window;
+    SchedulerContext.STATISTICS_FOLDER = controller.statisticsFolder;
+    SchedulerContext.IS_DISTRIBUTED = !Strings.isBlank(controller.distributed);
+    SchedulerContext.GRAPHITE_STATS_HOST = controller.statisticsHost;
+  }
+
+  private static ExecutionController newInstanceFromArgs(String[] args) {
     ExecutionController config = new ExecutionController();
     JCommander jCommander = JCommander.newBuilder().addObject(config).build();
     jCommander.parse(args);
@@ -138,22 +167,10 @@ class ExecutionController {
       jCommander.usage();
       System.exit(0);
     }
-    Configurator.setRootLevel(config.log);
-
-    for (String workerPattern : config.workerPatterns) {
-      config.retrievePids(workerPattern, mainClass);
-    }
-    LOG.info("Policy: {}", config.policy.getClass().getSimpleName());
-    LOG.info("CGroup Policy: {}", config.cgroupPolicy.getClass().getSimpleName());
-    SchedulerContext.initSpeProcessInfo(config.pids.get(0));
-    SchedulerContext.switchToSpeProcessContext();
-    SchedulerContext.METRIC_RECENT_PERIOD_SECONDS = config.window;
-    SchedulerContext.STATISTICS_FOLDER = config.statisticsFolder;
-    SchedulerContext.IS_DISTRIBUTED = !Strings.isBlank(config.distributed);
     return config;
   }
 
-  void retrievePids(String workerPattern, Class<?> mainClass) throws InterruptedException {
+  private void retrievePids(String workerPattern, Class<?> mainClass) throws InterruptedException {
     LOG.info("Trying to retrieve worker PID for '{}'...", workerPattern);
     for (int i = 0; i < MAX_RETRIES; i++) {
       try {
@@ -170,7 +187,14 @@ class ExecutionController {
         String.format("Failed to retrieve worker PID(s): %s", workerPattern));
   }
 
-  static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
+  /**
+   * Try to load the update the state of the SPE, retrying for {@link #MAX_RETRIES} to handle cases
+   * the query is still being deployed. Waits for {@link #RETRY_INTERVAL_MILLIS} between retries.
+   *
+   * @param adapter The {@link SpeAdapter} whose tasks need to be loaded.
+   * @throws InterruptedException In case there is an interrupt during retrying.
+   */
+  public static void tryUpdateTasks(SpeAdapter adapter) throws InterruptedException {
     int tries = 0;
     LOG.info("Trying to fetch tasks...");
     while (true) {
@@ -188,15 +212,30 @@ class ExecutionController {
     }
   }
 
-  void sleep() throws InterruptedException {
+  /**
+   * Wait until it is time to run the next single-priority or cgroup schedule.
+   *
+   * @throws InterruptedException In case there is an interrupt while sleeping.
+   */
+  public void sleep() throws InterruptedException {
     if (sleepTime < 0) {
+      // Initialize sleepTime lazily
       sleepTime = ArithmeticUtils.gcd(period, cgroupPeriod);
     }
     Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTime));
   }
 
 
-  void scheduleMulti(List<SpeAdapter> adapters,
+  /**
+   * Schedule multiple SPEs at the same time.
+   *
+   * @param adapters         The {@link SpeAdapter}s, one for each SPE.
+   * @param metricProviders  The {@link io.palyvos.scheduler.metric.MetricProvider}s, one for each
+   *                         SPE.
+   * @param translator       The translator used to apply the {@link SinglePriorityPolicy}.
+   * @param cGroupTranslator The translator used to apply the {@link CGroupPolicy}.
+   */
+  public void scheduleMulti(List<SpeAdapter> adapters,
       List<SchedulerMetricProvider> metricProviders, SinglePriorityTranslator translator,
       CGroupTranslator cGroupTranslator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
@@ -210,7 +249,8 @@ class ExecutionController {
       for (int i = 0; i < adapters.size(); i++) {
         SpeAdapter adapter = adapters.get(i);
         SchedulerMetricProvider metricProvider = metricProviders.get(i);
-        policy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), translator, metricProvider);
+        policy.apply(adapter.taskIndex().tasks(), adapter.runtimeInfo(), translator,
+            metricProvider);
       }
       onPolicyExecuted(now);
     }
@@ -225,7 +265,13 @@ class ExecutionController {
     }
   }
 
-  void initExtraMetrics(SchedulerMetricProvider metricProvider) {
+  /**
+   * Initialize extra metrics that are computed and reported to graphite, but not used for
+   * scheduling.
+   *
+   * @param metricProvider The provider used to retrieve the metrics.
+   */
+  public void initExtraMetrics(SchedulerMetricProvider metricProvider) {
     if (!extraMetric.isEmpty()) {
       LOG.info("Reporting extra metrics: {}", extraMetric);
       extraMetricReporters = MetricGraphiteReporter
@@ -240,7 +286,16 @@ class ExecutionController {
     }
   }
 
-  void schedule(SpeAdapter adapter,
+  /**
+   * Schedule one SPE
+   *
+   * @param adapter          The {@link SpeAdapter} for the SPE.
+   * @param metricProvider   The {@link io.palyvos.scheduler.metric.MetricProvider} handling the
+   *                         metrics.
+   * @param translator       The translator responsible for the {@link SinglePriorityPolicy}.
+   * @param cGroupTranslator The translator responsible for the {@link CGroupPolicy}.
+   */
+  public void schedule(SpeAdapter adapter,
       SchedulerMetricProvider metricProvider, SinglePriorityTranslator translator,
       CGroupTranslator cGroupTranslator) {
     final long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
@@ -275,20 +330,31 @@ class ExecutionController {
     lastPolicyRun = now;
   }
 
-  boolean isTimeToRunCGroupPolicy(long now) {
+  private boolean isTimeToRunCGroupPolicy(long now) {
     return lastCgroupPolicyRun + cgroupPeriod < now;
   }
 
-  boolean isTimeToRunPolicy(long now) {
+  private boolean isTimeToRunPolicy(long now) {
     return lastPolicyRun + period < now;
   }
 
-  long maxRetries() {
+  /**
+   * Maximum number of times scheduling is allowed to fail, based on the allowed {@link
+   * #MAX_SCHEDULE_RETRY_TIME} and the scheduling {@link #period}.
+   *
+   * @return The maximum number of retries.
+   */
+  public long maxRetries() {
     return MAX_SCHEDULE_RETRY_TIME / period;
   }
 
-
-  DecisionNormalizer newSinglePriorityNormalizer(boolean realTime) {
+  /**
+   * Create the appropriate {@link DecisionNormalizer} for the chosen {@link SinglePriorityPolicy}.
+   *
+   * @param realTime {@code true} if the policy uses real-time threads
+   * @return A new instance of the appropriate normalizer for the policy.
+   */
+  public DecisionNormalizer newSinglePriorityNormalizer(boolean realTime) {
     if ((policy instanceof ConstantSinglePriorityPolicy)
         || (policy instanceof NoopSinglePriorityPolicy)) {
       Validate
@@ -312,7 +378,13 @@ class ExecutionController {
     }
   }
 
-  SinglePriorityTranslator newSinglePriorityTranslator() {
+  /**
+   * Create a new translator for the chosen {@link SinglePriorityPolicy}, based on the user
+   * preferences passed as CLI args.
+   *
+   * @return A new instance of the translator.
+   */
+  public SinglePriorityTranslator newSinglePriorityTranslator() {
     LOG.info("Creating single-priority translator");
     String translatorName = translator.trim().toUpperCase();
     if (NiceSinglePriorityTranslator.NAME.equals(translatorName)) {
@@ -327,7 +399,17 @@ class ExecutionController {
         String.format("Unknown single-priority translator requested: %s", translator));
   }
 
-  DecisionNormalizer newCGroupNormalizer(Integer minPrio, Integer maxPrio) {
+  /**
+   * Create a new {@link DecisionNormalizer} for the chosen {@link CGroupPolicy}, possibly wrapped
+   * with a {@link LogDecisionNormalizer} in case the user has requested logarithmic scaling. If
+   * either of the priorit arguments is {@code null}, return an {@link IdentityDecisionNormalizer}
+   * instead.
+   *
+   * @param minPrio The minimum priority of the normalizer.
+   * @param maxPrio The maximum priority of the normalizer.
+   * @return A new instance of the normalizer.
+   */
+  public DecisionNormalizer newCGroupNormalizer(Integer minPrio, Integer maxPrio) {
     DecisionNormalizer normalizer;
     if (minPrio != null && maxPrio != null) {
       normalizer = new MinMaxDecisionNormalizer(minPrio, maxPrio, false);
@@ -344,7 +426,13 @@ class ExecutionController {
     return normalizer;
   }
 
-  CGroupTranslator newCGroupTranslator() {
+  /**
+   * Create a new translator for the {@link CGroupPolicy} based on the user preferences defined in
+   * the CLI arugments.
+   *
+   * @return A new instance of the desired translator.
+   */
+  public CGroupTranslator newCGroupTranslator() {
     LOG.info("Creating cgroup translator");
     String translatorName = cGroupTranslator.trim().toUpperCase();
     if (CpuQuotaCGroupTranslator.NAME.equals(translatorName)) {
