@@ -19,48 +19,50 @@ public class FlinkIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionController config = ExecutionController.init(args, FlinkIntegration.class);
+    ExecutionController controller = ExecutionController.init(args, FlinkIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = FlinkAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
-    FlinkAdapter adapter = initAdapter(config, config.pids);
-    SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
+    FlinkAdapter adapter = initAdapter(controller, controller.pids);
+    SchedulerMetricProvider metricProvider = initMetricProvider(controller, adapter,
+        controller.pids);
+    SinglePriorityTranslator translator = controller.newSinglePriorityTranslator();
+    CGroupTranslator cGroupTranslator = controller.newCGroupTranslator();
 
     int retries = 0;
-    config.initExtraMetrics(metricProvider);
-    config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+    controller.initExtraMetrics(metricProvider);
+    controller.policy.init(translator, metricProvider);
+    controller.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(),
+        cGroupTranslator,
         metricProvider
     );
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.schedule(adapter, metricProvider, translator, cGroupTranslator);
+        controller.schedule(adapter, metricProvider, translator, cGroupTranslator);
         retries = 0;
       } catch (Exception e) {
-        if (retries++ > config.maxRetries()) {
+        if (retries++ > controller.maxRetries()) {
           throw e;
         }
       }
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
-      config.sleep();
+      controller.sleep();
     }
   }
 
-  static FlinkAdapter initAdapter(ExecutionController config, List<Integer> pids)
+  static FlinkAdapter initAdapter(ExecutionController controller, List<Integer> pids)
       throws InterruptedException {
-    String leader = Strings.isBlank(config.distributed) ? "localhost" : config.distributed;
+    String leader = Strings.isBlank(controller.distributed) ? "localhost" : controller.distributed;
     FlinkAdapter adapter = new FlinkAdapter(pids, leader,
         FlinkAdapter.DEFAULT_FLINK_PORT, new LinuxAdapter());
-    config.tryUpdateTasks(adapter);
+    controller.tryUpdateTasks(adapter);
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController controller,
       FlinkAdapter adapter, List<Integer> pids) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new FlinkGraphiteMetricProvider(config.statisticsHost,
+        new FlinkGraphiteMetricProvider(controller.statisticsHost,
             ExecutionController.GRAPHITE_RECEIVE_PORT, adapter.taskIndex().tasks()),
         new LinuxMetricProvider(pids));
     metricProvider.setTaskIndex(adapter.taskIndex());

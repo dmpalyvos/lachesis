@@ -22,56 +22,56 @@ public class TwoSpeIntegation {
     LOG.info("Usage: --worker <storm_worker> --worker <flink_worker>");
     Thread.sleep(2000);
 
-    ExecutionController config = ExecutionController.init(args, TwoSpeIntegation.class);
+    ExecutionController controller = ExecutionController.init(args, TwoSpeIntegation.class);
 
-    Validate.isTrue(config.queryGraphPath.size() == 1,
+    Validate.isTrue(controller.queryGraphPath.size() == 1,
         "Only one query graph allowed (storm)!");
-    Validate.validState(config.pids.size() == 2,
-        "Expected 2 pids but got %d", config.pids.size());
-    Validate.isTrue((config.cgroupPolicy instanceof OneCGroupPolicy)
-            || (config.cgroupPolicy instanceof SpeCGroupPolicy),
+    Validate.validState(controller.pids.size() == 2,
+        "Expected 2 pids but got %d", controller.pids.size());
+    Validate.isTrue((controller.cgroupPolicy instanceof OneCGroupPolicy)
+            || (controller.cgroupPolicy instanceof SpeCGroupPolicy),
         "OneCGroupPolicy|SpeCGroupPolicy is hardcoded for this experiment, please define it in the config");
 
-    final List<Integer> stormPids = config.pids.subList(0, 1);
-    final List<Integer> flinkPids = config.pids.subList(1, 2);
+    final List<Integer> stormPids = controller.pids.subList(0, 1);
+    final List<Integer> flinkPids = controller.pids.subList(1, 2);
 
     StormAdapter stormAdapter = StormIntegration
-        .initAdapter(config, stormPids, config.queryGraphPath.get(0));
+        .initAdapter(controller, stormPids, controller.queryGraphPath.get(0));
     SchedulerMetricProvider stormMetricProvider = StormIntegration
-        .initMetricProvider(config, stormAdapter, stormPids);
+        .initMetricProvider(controller, stormAdapter, stormPids);
 
-    FlinkAdapter flinkAdapter = FlinkIntegration.initAdapter(config, flinkPids);
+    FlinkAdapter flinkAdapter = FlinkIntegration.initAdapter(controller, flinkPids);
     SchedulerMetricProvider flinkMetricProvider = FlinkIntegration
-        .initMetricProvider(config, flinkAdapter, flinkPids);
+        .initMetricProvider(controller, flinkAdapter, flinkPids);
 
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
+    SinglePriorityTranslator translator = controller.newSinglePriorityTranslator();
+    CGroupTranslator cGroupTranslator = controller.newCGroupTranslator();
 
     // Apply cgroup for both SPEs
-    config.cgroupPolicy.init(null, null, cGroupTranslator, null);
-    if (config.cgroupPolicy instanceof OneCGroupPolicy) {
+    controller.cgroupPolicy.init(null, null, cGroupTranslator, null);
+    if (controller.cgroupPolicy instanceof OneCGroupPolicy) {
       // Reconfigure policy to prevent repeated calls
-      config.cgroupPolicy = new OneCGroupPolicy("one", 2);
+      controller.cgroupPolicy = new OneCGroupPolicy("one", 2);
     }
 
-    config.initExtraMetrics(flinkMetricProvider);
-    config.initExtraMetrics(stormMetricProvider);
-    config.policy.init(translator, flinkMetricProvider);
-    config.policy.init(translator, stormMetricProvider);
+    controller.initExtraMetrics(flinkMetricProvider);
+    controller.initExtraMetrics(stormMetricProvider);
+    controller.policy.init(translator, flinkMetricProvider);
+    controller.policy.init(translator, stormMetricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.scheduleMulti(Arrays.asList(flinkAdapter, stormAdapter),
+        controller.scheduleMulti(Arrays.asList(flinkAdapter, stormAdapter),
             Arrays.asList(flinkMetricProvider, stormMetricProvider), translator, cGroupTranslator);
         retries = 0;
       } catch (Exception e) {
-        if (retries++ > config.maxRetries()) {
+        if (retries++ > controller.maxRetries()) {
           throw e;
         }
       }
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
-      config.sleep();
+      controller.sleep();
     }
   }
 

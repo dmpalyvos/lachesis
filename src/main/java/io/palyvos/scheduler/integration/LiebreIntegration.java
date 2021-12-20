@@ -16,49 +16,52 @@ public class LiebreIntegration {
   private static final Logger LOG = LogManager.getLogger(LiebreIntegration.class);
 
   public static void main(String[] args) throws InterruptedException {
-    ExecutionController config = ExecutionController.init(args, LiebreIntegration.class);
+    ExecutionController controller = ExecutionController.init(args, LiebreIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = LiebreAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
-    Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
-    Validate.validState(config.pids.size() == 1, "Only one Liebre instance supported!");
-    LiebreAdapter adapter = initAdapter(config, config.pids.get(0), config.queryGraphPath.get(0));
-    SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
+    Validate.isTrue(controller.queryGraphPath.size() == 1, "Only one query graph allowed!");
+    Validate.validState(controller.pids.size() == 1, "Only one Liebre instance supported!");
+    LiebreAdapter adapter = initAdapter(controller, controller.pids.get(0),
+        controller.queryGraphPath.get(0));
+    SchedulerMetricProvider metricProvider = initMetricProvider(controller, adapter);
+    SinglePriorityTranslator translator = controller.newSinglePriorityTranslator();
+    CGroupTranslator cGroupTranslator = controller.newCGroupTranslator();
 
     int retries = 0;
-    config.initExtraMetrics(metricProvider);
-    config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+    controller.initExtraMetrics(metricProvider);
+    controller.policy.init(translator, metricProvider);
+    controller.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(),
+        cGroupTranslator,
         metricProvider
     );
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.schedule(adapter, metricProvider, translator, cGroupTranslator);
+        controller.schedule(adapter, metricProvider, translator, cGroupTranslator);
         retries = 0;
       } catch (Exception e) {
-        if (retries++ > config.maxRetries()) {
+        if (retries++ > controller.maxRetries()) {
           throw e;
         }
       }
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
-      config.sleep();
+      controller.sleep();
     }
   }
 
-  static LiebreAdapter initAdapter(ExecutionController config, int pid, String queryGraphPath)
+  static LiebreAdapter initAdapter(ExecutionController controller, int pid, String queryGraphPath)
       throws InterruptedException {
     LiebreAdapter adapter = new LiebreAdapter(pid, queryGraphPath);
-    config.tryUpdateTasks(adapter);
+    controller.tryUpdateTasks(adapter);
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController controller,
       LiebreAdapter adapter) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, ExecutionController.GRAPHITE_RECEIVE_PORT,
+        new LinuxMetricProvider(controller.pids.get(0)),
+        new LiebreMetricProvider(controller.statisticsHost,
+            ExecutionController.GRAPHITE_RECEIVE_PORT,
             adapter.taskIndex().tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;

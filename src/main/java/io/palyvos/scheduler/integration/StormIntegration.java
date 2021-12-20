@@ -19,51 +19,51 @@ public class StormIntegration {
 
   public static void main(String[] args) throws InterruptedException {
 
-    ExecutionController config = ExecutionController.init(args, StormIntegration.class);
+    ExecutionController controller = ExecutionController.init(args, StormIntegration.class);
     SchedulerContext.THREAD_NAME_GRAPHITE_CONVERTER = StormAdapter.THREAD_NAME_GRAPHITE_CONVERTER;
 
-    Validate.isTrue(config.queryGraphPath.size() == 1, "Only one query graph allowed!");
-    StormAdapter adapter = initAdapter(config, config.pids, config.queryGraphPath.get(0));
-    SchedulerMetricProvider metricProvider = initMetricProvider(config, adapter, config.pids);
-    SinglePriorityTranslator translator = config.newSinglePriorityTranslator();
-    CGroupTranslator cGroupTranslator = config.newCGroupTranslator();
+    Validate.isTrue(controller.queryGraphPath.size() == 1, "Only one query graph allowed!");
+    StormAdapter adapter = initAdapter(controller, controller.pids,
+        controller.queryGraphPath.get(0));
+    SchedulerMetricProvider metricProvider = initMetricProvider(controller, adapter,
+        controller.pids);
+    SinglePriorityTranslator translator = controller.newSinglePriorityTranslator();
+    CGroupTranslator cGroupTranslator = controller.newCGroupTranslator();
 
-    config.initExtraMetrics(metricProvider);
-    config.policy.init(translator, metricProvider);
-    config.cgroupPolicy
+    controller.initExtraMetrics(metricProvider);
+    controller.policy.init(translator, metricProvider);
+    controller.cgroupPolicy
         .init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider);
     int retries = 0;
     while (true) {
       long start = System.currentTimeMillis();
       try {
-        config.schedule(adapter, metricProvider, translator, cGroupTranslator);
+        controller.schedule(adapter, metricProvider, translator, cGroupTranslator);
         retries = 0;
       } catch (Exception e) {
-        if (retries++ > config.maxRetries()) {
+        if (retries++ > controller.maxRetries()) {
           throw e;
         }
       }
       LOG.debug("Scheduling took {} ms", System.currentTimeMillis() - start);
-      config.sleep();
+      controller.sleep();
     }
   }
 
 
-  static StormAdapter initAdapter(ExecutionController config, List<Integer> pids,
+  static StormAdapter initAdapter(ExecutionController controller, List<Integer> pids,
       String queryGraphPath)
       throws InterruptedException {
-    StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(),
-        queryGraphPath);
-    config.tryUpdateTasks(adapter);
+    StormAdapter adapter = new StormAdapter(pids, new LinuxAdapter(), queryGraphPath);
+    controller.tryUpdateTasks(adapter);
     return adapter;
   }
 
-  static SchedulerMetricProvider initMetricProvider(ExecutionController config,
+  static SchedulerMetricProvider initMetricProvider(ExecutionController controller,
       StormAdapter adapter, List<Integer> pids) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
-        new StormGraphiteMetricProvider(config.statisticsHost,
-            ExecutionController.GRAPHITE_RECEIVE_PORT),
-        new LinuxMetricProvider(pids));
+        new StormGraphiteMetricProvider(controller.statisticsHost,
+            ExecutionController.GRAPHITE_RECEIVE_PORT), new LinuxMetricProvider(pids));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;
   }
