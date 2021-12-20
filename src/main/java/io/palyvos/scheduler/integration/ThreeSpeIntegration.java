@@ -74,8 +74,9 @@ public class ThreeSpeIntegration {
       long start = System.currentTimeMillis();
       try {
         config.scheduleMulti(Arrays.asList(flinkAdapter, stormAdapter, liebreAdapter),
-            Arrays.asList(flinkMetricProvider, stormMetricProvider, liebreMetricProvider), translator,
-            cGroupTranslator);
+            Arrays.asList(flinkMetricProvider, stormMetricProvider, liebreMetricProvider),
+            translator, cGroupTranslator);
+        retries = 0;
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;

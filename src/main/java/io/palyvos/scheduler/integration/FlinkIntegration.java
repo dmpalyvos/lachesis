@@ -30,12 +30,14 @@ public class FlinkIntegration {
     int retries = 0;
     config.initExtraMetrics(metricProvider);
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
+    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+        metricProvider
     );
     while (true) {
       long start = System.currentTimeMillis();
       try {
         config.schedule(adapter, metricProvider, translator, cGroupTranslator);
+        retries = 0;
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;

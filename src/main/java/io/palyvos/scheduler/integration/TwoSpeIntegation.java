@@ -28,7 +28,8 @@ public class TwoSpeIntegation {
         "Only one query graph allowed (storm)!");
     Validate.validState(config.pids.size() == 2,
         "Expected 2 pids but got %d", config.pids.size());
-    Validate.isTrue((config.cgroupPolicy instanceof OneCGroupPolicy) || (config.cgroupPolicy instanceof SpeCGroupPolicy),
+    Validate.isTrue((config.cgroupPolicy instanceof OneCGroupPolicy)
+            || (config.cgroupPolicy instanceof SpeCGroupPolicy),
         "OneCGroupPolicy|SpeCGroupPolicy is hardcoded for this experiment, please define it in the config");
 
     final List<Integer> stormPids = config.pids.subList(0, 1);
@@ -62,8 +63,8 @@ public class TwoSpeIntegation {
       long start = System.currentTimeMillis();
       try {
         config.scheduleMulti(Arrays.asList(flinkAdapter, stormAdapter),
-            Arrays.asList(flinkMetricProvider, stormMetricProvider), translator,
-            cGroupTranslator);
+            Arrays.asList(flinkMetricProvider, stormMetricProvider), translator, cGroupTranslator);
+        retries = 0;
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;

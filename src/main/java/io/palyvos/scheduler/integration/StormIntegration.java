@@ -37,6 +37,7 @@ public class StormIntegration {
       long start = System.currentTimeMillis();
       try {
         config.schedule(adapter, metricProvider, translator, cGroupTranslator);
+        retries = 0;
       } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
@@ -46,7 +47,6 @@ public class StormIntegration {
       config.sleep();
     }
   }
-
 
 
   static StormAdapter initAdapter(ExecutionController config, List<Integer> pids,

@@ -29,14 +29,15 @@ public class LiebreIntegration {
     int retries = 0;
     config.initExtraMetrics(metricProvider);
     config.policy.init(translator, metricProvider);
-    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator, metricProvider
+    config.cgroupPolicy.init(adapter.taskIndex().tasks(), adapter.runtimeInfo(), cGroupTranslator,
+        metricProvider
     );
     while (true) {
       long start = System.currentTimeMillis();
       try {
         config.schedule(adapter, metricProvider, translator, cGroupTranslator);
-      }
-      catch (Exception e) {
+        retries = 0;
+      } catch (Exception e) {
         if (retries++ > config.maxRetries()) {
           throw e;
         }
@@ -57,8 +58,8 @@ public class LiebreIntegration {
       LiebreAdapter adapter) {
     SchedulerMetricProvider metricProvider = new SchedulerMetricProvider(
         new LinuxMetricProvider(config.pids.get(0)),
-        new LiebreMetricProvider(config.statisticsHost, ExecutionController.GRAPHITE_RECEIVE_PORT, adapter.
-            taskIndex().tasks()));
+        new LiebreMetricProvider(config.statisticsHost, ExecutionController.GRAPHITE_RECEIVE_PORT,
+            adapter.taskIndex().tasks()));
     metricProvider.setTaskIndex(adapter.taskIndex());
     return metricProvider;
   }
