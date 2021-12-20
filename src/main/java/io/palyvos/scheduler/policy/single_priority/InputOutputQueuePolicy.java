@@ -6,6 +6,11 @@ import io.palyvos.scheduler.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * {@link SinglePriorityPolicy} which uses {@link BasicSchedulerMetric#TASK_QUEUE_SIZE_FROM_SUBTASK_DATA}
+ * as the primary priority and {@link BasicSchedulerMetric#TASK_OUTPUT_QUEUE_SIZE_FROM_SUBTASK_DATA}
+ * as the priority for {@link io.palyvos.scheduler.task.HelperTask}s.
+ */
 public class InputOutputQueuePolicy extends
     AbstractSinglePriorityPolicy {
 

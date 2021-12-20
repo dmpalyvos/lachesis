@@ -4,6 +4,12 @@ import io.palyvos.scheduler.task.ExternalThread;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * Translator that applies {@link CGroupPolicy} by using the linux {@code cgroup} tools.
+ *
+ * @see CpuQuotaCGroupTranslator
+ * @see CpuSharesCGroupTranslator
+ */
 public interface CGroupTranslator {
 
   void init();

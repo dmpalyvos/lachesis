@@ -8,6 +8,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link QueryCGroupPolicy} that assigns each {@link Query} to its own {@link CGroup} and gives
+ * each of these the same priority.
+ */
 public class FairQueryCGroupPolicy extends
     QueryCGroupPolicy {
 

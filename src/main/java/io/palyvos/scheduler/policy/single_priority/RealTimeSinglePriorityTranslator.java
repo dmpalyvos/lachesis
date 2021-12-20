@@ -9,6 +9,10 @@ import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Translator that uses the linux real-time threads (i.e., {@code chrt}) mechanism to apply {@link
+ * SinglePriorityPolicy}.
+ */
 public class RealTimeSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
   public static String NAME = "REAL-TIME";

@@ -6,6 +6,10 @@ import io.palyvos.scheduler.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * {@link SinglePriorityPolicy} that assigns priorities for each {@link Task} based on the value of
+ * a user-chosen {@link SchedulerMetric}.
+ */
 public class MetricSinglePriorityPolicy extends AbstractSinglePriorityPolicy {
 
   private static final Logger LOG = LogManager.getLogger();

@@ -15,6 +15,13 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * User-facing {@link MetricProvider} that can be invoked directly by {@link
+ * io.palyvos.scheduler.policy.single_priority.SinglePriorityPolicy} and {@link
+ * io.palyvos.scheduler.policy.cgroup.CGroupPolicy}. Takes care of resolving metric dependencies and
+ * delegating the computation of each metric to the highest-priority {@link MetricProvider} that can
+ * provide that metric.
+ */
 public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> {
 
   private static final Logger LOG = LogManager.getLogger(SchedulerMetricProvider.class);
@@ -24,6 +31,13 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
   private TaskIndex taskIndex;
   private TaskGraphTraverser taskGraphTraverser;
 
+  /**
+   * Construct using the user-requested providers. A {@link CompositeMetricProvider} is also added
+   * with the lowest priority, using the default {@link BaseCompositeMetric}s.
+   *
+   * @param providers The (prioritized) list of {@link MetricProvider}s that will provide the
+   *                  metrics later registered by the user.
+   */
   public SchedulerMetricProvider(MetricProvider<?>... providers) {
     Validate.notEmpty(providers, "At least one provider required!");
     List<MetricProvider<?>> providerList = new ArrayList<>(Arrays.asList(providers));
@@ -31,6 +45,14 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
     this.providers = Collections.unmodifiableList(providerList);
   }
 
+  /**
+   * Populate the provider's {@link TaskIndex}. <b>This is mandatory before metrics can be
+   * fetched!</b>
+   *
+   * @param taskIndex The {@link TaskIndex} containing the {@link io.palyvos.scheduler.task.Task}s
+   *                  for which this provider will fetch metrics.
+   * @return {@code this} for chaining
+   */
   public SchedulerMetricProvider setTaskIndex(TaskIndex taskIndex) {
     Validate.notNull(taskIndex, "taskIndex");
     this.taskIndex = taskIndex;
@@ -49,7 +71,8 @@ public class SchedulerMetricProvider implements MetricProvider<SchedulerMetric> 
     //FIXME: Ignore if metric registered already!
     for (MetricProvider provider : providers) {
       if (provider.canProvide(metric)) {
-        LOG.info("Registering metric {} with provider {}", metric, provider.getClass().getSimpleName());
+        LOG.info("Registering metric {} with provider {}", metric,
+            provider.getClass().getSimpleName());
         Metric providedMetric = provider.toProvidedMetric(metric);
         provider.register(providedMetric);
         registry.put(metric, new ProviderEntry(provider, providedMetric));

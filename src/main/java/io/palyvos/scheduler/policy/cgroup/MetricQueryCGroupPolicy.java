@@ -13,6 +13,10 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * {@link QueryCGroupPolicy} where each query is assigned to its own {@link CGroup} and the priority
+ * computed through a user defined function of the query and the metric values.
+ */
 public class MetricQueryCGroupPolicy extends QueryCGroupPolicy {
 
   public static final String NAME = "QUERY-METRIC";
@@ -21,6 +25,13 @@ public class MetricQueryCGroupPolicy extends QueryCGroupPolicy {
   private final BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction;
   private final SchedulerMetric metric;
 
+  /**
+   * Construct.
+   *
+   * @param metric                The metric to be used for priority computations.
+   * @param queryPriorityFunction {@link BiFunction} that takes as inputs the {@link Query} and the
+   *                              metric values and returns the priority for the query.
+   */
   public MetricQueryCGroupPolicy(
       SchedulerMetric metric,
       BiFunction<Query, Map<String, Double>, Double> queryPriorityFunction) {
@@ -29,7 +40,6 @@ public class MetricQueryCGroupPolicy extends QueryCGroupPolicy {
     this.metric = metric;
     this.queryPriorityFunction = queryPriorityFunction;
   }
-
 
 
   @Override

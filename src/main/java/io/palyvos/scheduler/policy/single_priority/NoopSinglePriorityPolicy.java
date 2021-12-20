@@ -7,6 +7,9 @@ import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * {@link SinglePriorityPolicy} that does nothing.
+ */
 public class NoopSinglePriorityPolicy implements
     SinglePriorityPolicy {
 

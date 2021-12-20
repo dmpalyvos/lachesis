@@ -10,6 +10,9 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Translator that uses the linux {@code nice} mechanism to apply {@link SinglePriorityPolicy}.
+ */
 public class NiceSinglePriorityTranslator extends AbstractSinglePriorityTranslator {
 
   public static final String NAME = "NICE";

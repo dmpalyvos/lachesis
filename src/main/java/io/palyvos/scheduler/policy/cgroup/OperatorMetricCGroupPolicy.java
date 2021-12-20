@@ -9,6 +9,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link CGroupPolicy} that assigns each {@link Task} to its own {@link CGroup} with the priority
+ * given by a user-chosen {@link SchedulerMetric}.
+ */
 public class OperatorMetricCGroupPolicy implements CGroupPolicy {
 
   public static final String NAME = "OPERATOR-METRIC";

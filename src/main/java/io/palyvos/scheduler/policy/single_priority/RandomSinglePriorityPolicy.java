@@ -4,6 +4,9 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * {@link SinglePriorityPolicy} that assigns random priorities to {@link Task}s.
+ */
 public class RandomSinglePriorityPolicy extends AbstractSinglePriorityPolicy {
 
   public RandomSinglePriorityPolicy(boolean scheduleHelpers) {

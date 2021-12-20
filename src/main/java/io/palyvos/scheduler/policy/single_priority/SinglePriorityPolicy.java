@@ -7,6 +7,15 @@ import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * Scheduling policy which assigns single priority values to threads.
+ *
+ * @see ConstantSinglePriorityPolicy
+ * @see InputOutputQueuePolicy
+ * @see MetricSinglePriorityPolicy
+ * @see NoopSinglePriorityPolicy
+ * @see RandomSinglePriorityPolicy
+ */
 public interface SinglePriorityPolicy {
 
   void init(SinglePriorityTranslator translator,

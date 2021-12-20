@@ -10,6 +10,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link SinglePriorityPolicy} that assigns a constant priority to all {@link Task}s.
+ */
 public class ConstantSinglePriorityPolicy implements SinglePriorityPolicy {
 
   private final double normalizedPriority;

@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Assign each {@link Query} to its own {@link CGroup} with a priority chosen by the
+ * subclass.
+ */
 public abstract class QueryCGroupPolicy implements CGroupPolicy {
 
   //FIXME: Optimize query resolution

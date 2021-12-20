@@ -428,7 +428,7 @@ class ExecutionController {
 
   /**
    * Create a new translator for the {@link CGroupPolicy} based on the user preferences defined in
-   * the CLI arugments.
+   * the CLI arguments.
    *
    * @return A new instance of the desired translator.
    */

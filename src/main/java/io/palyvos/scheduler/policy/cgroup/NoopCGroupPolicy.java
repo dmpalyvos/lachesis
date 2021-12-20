@@ -5,6 +5,9 @@ import io.palyvos.scheduler.metric.SchedulerMetricProvider;
 import io.palyvos.scheduler.task.Task;
 import java.util.Collection;
 
+/**
+ * {@link CGroupPolicy} that does nothing.
+ */
 public class NoopCGroupPolicy implements CGroupPolicy {
 
   @Override
